@@ -2212,7 +2212,7 @@
         "question": "What are PFAS limits for groundwater?",
         "question_redactions": 0,
         "status": "passages_only",
-        "explanation": "Two answers were written but both were withheld, because the second one did not pass 1 of the 8 checks in code (short sentences: sentence 1 of 3 has 30 words, and every sentence must be under 30 words: split or shorten each long one). No answer text is shown. The passages it was given are shown instead.",
+        "explanation": "Two answers were written but both were withheld, because the second one did not pass every check in code (1 of 8 failed): a sentence was too long. The passages it found are shown instead.",
         "answer": null,
         "citations": [
           {
@@ -2366,7 +2366,7 @@
             {
               "name": "numbers traced",
               "passed": true,
-              "detail": "The answer contains no numbers."
+              "detail": "Every number (1, 10, 1) was found in a cited passage or value."
             },
             {
               "name": "no verdict wording",
@@ -2381,7 +2381,7 @@
             {
               "name": "short sentences",
               "passed": false,
-              "detail": "sentence 1 of 3 has 30 words, and every sentence must be under 30 words: split or shorten each long one."
+              "detail": "sentence 1 of 3 has 33 words, and every sentence must be under 30 words: split or shorten each long one."
             },
             {
               "name": "no long quotes",

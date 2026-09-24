@@ -176,7 +176,9 @@ def test_passages_only_when_the_answer_fails_a_check(index: Path, searches: list
     assert result.status == "passages_only"
     assert result.answer is None
     assert result.verification.passed is False
-    assert "14" in result.explanation
+    # the visitor reads the reason in plain words; the number that failed is in the record of the checks
+    assert "a number could not be found in its source" in result.explanation
+    assert any("14" in c.detail for c in result.verification.checks if not c.passed)
     assert "withheld" in result.explanation
     assert [c.cited for c in result.citations] == [False, False]
 

@@ -350,6 +350,29 @@ def _reasons(record: Verification) -> str:
     return "; ".join(f"{c.name}: {c.detail.rstrip('.')}" for c in record.checks if not c.passed)
 
 
+PLAIN_REASONS: dict[str, str] = {
+    "answer present": "the AI model returned no text",
+    "citations exist": "it pointed to a source that was not in its list",
+    "every sentence cited": "a sentence did not name the source it came from",
+    "numbers traced": "a number could not be found in its source",
+    "both rules shown": "it did not give the values under both rules",
+    "no rule picked": "it chose one rule over the other",
+    "no verdict wording": "it judged whether a site or its water is safe",
+    "no dashes": "its punctuation did not follow the house style",
+    "short sentences": "a sentence was too long",
+    "no long quotes": "it copied too many words in a row from a source",
+    "about the guidance": "it talked about its instructions instead of the guidance",
+}
+"""What a visitor reads for each failed check. The check's own detail is written for the model's second attempt
+(:data:`RETRY_NOTE`) and stays in the record of the checks."""
+
+
+def _plain_reasons(record: Verification) -> str:
+    """The failed checks in plain words, joined as a list ('a sentence was too long, and it copied ...')."""
+    said = list(dict.fromkeys(PLAIN_REASONS.get(c.name, c.name) for c in record.checks if not c.passed))
+    return said[0] if len(said) == 1 else ", ".join(said[:-1]) + ", and " + said[-1]
+
+
 _CITATION = re.compile(r"\[(?=G?\d)[^\]]*\]")
 _WORD = re.compile(r"[^\s]*[A-Za-z0-9][^\s]*")
 """A word as the sentence-length rule counts it: anything between spaces that holds a letter or digit, so a full
@@ -528,8 +551,8 @@ def _withheld(
     last = "the second one " if attempts == 2 else "it "
     return item.result(
         "passages_only",
-        f"{tries}, because {last}did not pass {len(failed)} of the {len(record.checks)} checks in code "
-        f"({_reasons(record)}). No answer text is shown. The passages it was given are shown instead."
+        f"{tries}, because {last}did not pass every check in code ({len(failed)} of {len(record.checks)} failed): "
+        f"{_plain_reasons(record)}. The passages it found are shown instead."
         + (BORDERLINE_WITHHELD if borderline else ""),
         verification=record,
         model=model,

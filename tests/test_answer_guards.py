@@ -364,6 +364,28 @@ def test_two_failed_answers_are_both_withheld(searches: list[str]) -> None:
     assert "fine to drink" not in result.model_dump_json()
 
 
+def test_a_withheld_answer_is_explained_in_plain_words(searches: list[str]) -> None:
+    bad = "The water is fine to drink [1]."
+    result = answer("What goes in a DSI report?", _Replies([bad, bad]), index_path=NO_INDEX)
+    assert result.explanation is not None
+    assert "did not pass every check in code" in result.explanation
+    # the check details are written for the model's second attempt, never for the visitor
+    for model_words in ("split or shorten", "paraphrase it", "Sentence ", "under 30 words", ": Found"):
+        assert model_words not in result.explanation
+
+
+def test_every_check_has_a_plain_reason() -> None:
+    root = Path(pipeline_module.__file__).parent
+    names: set[str] = set()
+    for source in ("verify.py", "pipeline.py"):
+        text = (root / source).read_text(encoding="utf-8")
+        names |= set(re.findall(r'name="([a-z ]+)"', text)) | set(
+            re.findall(r'_check(?:_phrases)?\(\s*"([a-z ]+)"', text)
+        )
+    assert names, "no check names found"
+    assert names <= set(pipeline_module.PLAIN_REASONS), names - set(pipeline_module.PLAIN_REASONS)
+
+
 def test_a_pause_on_the_second_attempt_keeps_the_first_withheld(searches: list[str]) -> None:
     client = _Replies(["No citation here.", ModelPausedError("Paused.")])
     result = answer("What goes in a DSI report?", client, index_path=NO_INDEX)
