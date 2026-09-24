@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-AnswerStatus = Literal["answered", "passages_only", "not_covered", "guard_rail", "paused", "error"]
+AnswerStatus = Literal["answered", "passages_only", "not_covered", "guard_rail", "about", "paused", "error"]
 """What happened to the question.
 
 - ``answered``: a model wrote an answer from the passages and it passed every check.
@@ -18,6 +18,8 @@ AnswerStatus = Literal["answered", "passages_only", "not_covered", "guard_rail",
 - ``not_covered``: the indexed guidance does not appear to cover the question.
 - ``guard_rail``: the question asks for a verdict Evidenceline does not give (is the site contaminated, is the
   water safe); a fixed reply and the relevant passages are shown.
+- ``about``: the message is a greeting, thanks, or a question about Evidenceline itself ('how does this work?'); a
+  fixed reply, with no search and no model call.
 - ``paused``: live answers are paused (a spending or rate limit was reached); the passages are shown.
 - ``error``: something failed; the explanation says what, in plain English.
 """
@@ -88,7 +90,7 @@ class AnswerResult(_Model):
     status: AnswerStatus
     explanation: str = Field(description="What this result means, in plain English.")
     answer: str | None = Field(
-        description="The checked answer, with [n] citations; null unless status is answered or guard_rail."
+        description="The checked answer, with [n] citations; null unless status is answered, guard_rail or about."
     )
     citations: list[Citation]
     guideline_values: list[GuidelineValue]

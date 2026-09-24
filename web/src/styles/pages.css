@@ -116,6 +116,8 @@ footer a:hover{color:#fff}
 
 /* try it: prepared and live answers */
 .smallprint{font-size:13px;color:var(--muted);margin:10px 0 0}
+/* The note under the suggested questions: small print (not the box's 16px intro text), set apart from the buttons */
+.box > p.smallprint{font-size:13px;line-height:1.5;margin:16px 0 0}
 .answer .akind{font-weight:500;color:var(--brown);margin:0 0 6px}
 .answer p{margin:0 0 10px}
 .answer .alabel{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--sand-ink);margin:14px 0 6px}

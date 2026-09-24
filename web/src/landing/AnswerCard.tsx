@@ -103,7 +103,8 @@ function Passages({ citations }: { readonly citations: readonly Citation[] }) {
 const paragraphs = (text: string): string[] => text.split(/\n\s*\n/).filter((p) => p.trim() !== '');
 
 export function AnswerBody({ view, note }: { readonly view: AnswerView; readonly note: string }) {
-  const title = view.kind === 'answered' ? null : TRY.titles[view.kind];
+  // A checked answer and the fixed reply about Evidenceline itself need no heading.
+  const title = view.kind === 'answered' || view.kind === 'about' ? null : TRY.titles[view.kind];
   // The main text: the answer when there is one; otherwise the pipeline's own explanation of what happened.
   const main =
     view.answer !== ''
@@ -144,7 +145,7 @@ export function AnswerBody({ view, note }: { readonly view: AnswerView; readonly
           {n}
         </p>
       ))}
-      {(view.checks.length > 0 || (!explanationShownAsMain && view.explanation !== '')) && (
+      {view.kind !== 'about' && (view.checks.length > 0 || (!explanationShownAsMain && view.explanation !== '')) && (
         <More label={TRY.checksTitle}>
           {!explanationShownAsMain && view.explanation !== '' && <p className="src">{view.explanation}</p>}
           {view.checks.length > 0 && (

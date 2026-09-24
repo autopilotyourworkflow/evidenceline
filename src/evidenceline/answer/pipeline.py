@@ -2,7 +2,8 @@
 
 1. Redact the question: company and site names found by :mod:`evidenceline.answer.names` ('Harbourline Logistics
    Pty Ltd', 'my client Redgum', 'Kwinana Terminal') and the built-in patterns (emails, WA street addresses, lot
-   numbers, phone numbers).
+   numbers, phone numbers). A message that is only a greeting, thanks, or a question about Evidenceline itself
+   ('Hello, how does this work?') gets a fixed reply here: no search and no model.
 2. If it asks for a PFAS drinking-water value, take BOTH rules' values from ``guidelines.json`` (never from text).
 3. Search the indexed guidance for up to 8 passages. "Not covered" stops here, and so does a question asking for
    a verdict (is the site contaminated, is the water safe): both return without calling a model. The one exception
@@ -55,6 +56,26 @@ GUARD_RAIL_REPLY = (
     "an investigation level, not a finding that water is unsafe or a site is contaminated: a result above it "
     "means look further. In Western Australia, DWER classifies sites under the Contaminated Sites Act 2003 on the "
     "evidence. The passages below are what the indexed guidance says on the subject."
+)
+ABOUT_REPLY = (
+    'Ask a question about assessing contaminated sites, such as PFAS (the "forever chemicals") in groundwater. '
+    "Evidenceline answers from public guidance: national guidance on site contamination and PFAS, and two Western "
+    "Australian government guidelines on contaminated sites. It is free to use.\n\n"
+    "It finds the pages that best match your question, and an AI model writes a short answer from those pages only. "
+    "Before you see it, code (not AI) checks that every sentence cites a source and that every number comes from "
+    "one. An answer that fails the checks is never shown. Each answer lists its sources with links, so you can check "
+    "them yourself.\n\n"
+    "It won't say whether a particular site is contaminated or water is safe. That judgement belongs to the "
+    "scientist who signs the report and to the regulator.\n\n"
+    'To start, pick a suggested question above, or ask something like "What is a tier 1 screening assessment?" To '
+    "see who built it and why, read About just below."
+)
+"""The fixed reply to a greeting or a question about Evidenceline itself (routing.about_evidenceline)."""
+THANKS_REPLY = "Ask another question whenever you like, or pick a suggested question above."
+"""The fixed reply to thanks, a goodbye or a bare 'ok': it reads right whether or not an answer came before."""
+ABOUT_EXPLANATION = (
+    "This message is a greeting, thanks or a question about Evidenceline itself, so the guidance was not searched "
+    "and no AI model was used. The reply is fixed."
 )
 LIVE_OFF_NOTE = "Live answers are switched off on this server, so only the passages are shown."
 VALUE_NOTE = (
@@ -183,6 +204,10 @@ def answer(
     ``client`` None means live answers are off: the passages are returned with ``off_note``.
     """
     item = _Question(question, index_path)
+    about = routing.about_evidenceline(item.text)
+    if about is not None:
+        reply = THANKS_REPLY if about.kind == "thanks" else ("Hello. " if about.greeted else "") + ABOUT_REPLY
+        return item.result("about", ABOUT_EXPLANATION, answer=reply)
     try:
         found = item.search()
     except EvidencelineError as exc:

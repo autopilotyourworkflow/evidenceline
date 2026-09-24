@@ -129,6 +129,15 @@ def test_guard_rail_route(client: TestClient) -> None:
     assert body["model"] is None
 
 
+def test_about_route(client: TestClient) -> None:
+    """A greeting or 'how does this work?' gets the fixed reply about Evidenceline: no search, no model."""
+    body = _ask(client, "Hello, how does this work?").json()
+    assert body["status"] == "about"
+    assert body["answer"].startswith("Hello. Ask a question about assessing contaminated sites")
+    assert body["model"] is None
+    assert body["citations"] == []
+
+
 @pytest.mark.parametrize(
     ("payload", "words"),
     [

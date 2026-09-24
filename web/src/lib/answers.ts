@@ -29,9 +29,10 @@ export type Check = { readonly name: string; readonly passed: boolean; readonly 
 
 /**
  * answered: a checked answer with sources. passages-only: no answer shown, only the passages. not-covered: the
- * guidance does not cover it. guard-rail: a verdict it will not give. paused: live answers are paused. error: failed.
+ * guidance does not cover it. guard-rail: a verdict it will not give. about: a greeting or a question about
+ * Evidenceline itself, with a fixed reply. paused: live answers are paused. error: failed.
  */
-export type AnswerKind = 'answered' | 'passages-only' | 'not-covered' | 'guard-rail' | 'paused' | 'error';
+export type AnswerKind = 'answered' | 'passages-only' | 'not-covered' | 'guard-rail' | 'about' | 'paused' | 'error';
 
 export type AnswerView = {
   readonly kind: AnswerKind;
@@ -134,6 +135,7 @@ function readChecks(v: unknown): { checks: Check[]; summary: string } {
 
 function kindOf(status: string): AnswerKind {
   const s = status.toLowerCase().replace(/[_-]+/g, ' ');
+  if (s.trim() === 'about') return 'about';
   if (/passages/.test(s)) return 'passages-only';
   if (/not covered|out of scope|no answer/.test(s)) return 'not-covered';
   if (/guard|declin|refus|verdict/.test(s)) return 'guard-rail';

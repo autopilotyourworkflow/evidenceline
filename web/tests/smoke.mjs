@@ -636,6 +636,12 @@ for (const route of ROUTES) {
   ok('Try it: suggested questions come from answers.json', chips.length === sample.answers.length && sample.answers.every((a, k) => chips[k] === a.question), chips.join(' | '));
   const note = await p.$eval('#prepared-note', (e) => e.textContent);
   ok('Try it: small print says the answers were prepared in advance, with date and model', note.includes('answered in advance by the same pipeline') && note.includes('24 Sep 2026 with fixture-model'), note);
+  const noteBox = await p.evaluate(() => {
+    const last = document.querySelector('.chips')?.lastElementChild;
+    const n = document.getElementById('prepared-note');
+    return { gap: n && last ? Math.round(n.getBoundingClientRect().top - last.getBoundingClientRect().bottom) : null, size: n ? getComputedStyle(n).fontSize : '' };
+  });
+  ok('Try it: the small print sits apart from the suggested questions and is set as small print', noteBox.gap !== null && noteBox.gap >= 12 && noteBox.size === '13px', JSON.stringify(noteBox));
   await p.click('.chips button[data-a="0"]');
   await sleep(60);
   const a0 = await p.$eval('#answer', (a) => ({
@@ -877,6 +883,16 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     guideline_values: [],
     notes: ['An investigation level is not a clean-up level.'],
   };
+  const aboutResult = {
+    status: 'about',
+    explanation: 'This message is about Evidenceline itself, so the guidance was not searched and no model was called. The reply is fixed.',
+    answer: 'Hello. Ask a question about assessing contaminated sites, such as PFAS in groundwater, and Evidenceline answers it from public guidance.\n\nTo start, pick a suggested question above, or ask something like: What is a tier 1 screening assessment?',
+    citations: [],
+    guideline_values: [],
+    notes: [],
+    verification: { ran: false, passed: null, checks: [], summary: 'No model answer was written, so there was nothing to check.' },
+    model: null,
+  };
   const handle = async (r) => {
     if (!r.url().endsWith('/api/ask')) return false;
     if (r.method() !== 'POST') return false;
@@ -889,6 +905,7 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     else if (q.includes('broken')) await r.respond(json({ detail: 'Internal error' }, 500));
     else if (q.includes('offline')) await r.abort('failed');
     else if (q.includes('bare')) await r.respond(json(answer));
+    else if (q.includes('how does this work')) await r.respond(json({ question: q, result: aboutResult }));
     else if (q.includes('budget')) await r.respond(json({ status: 'paused', explanation: "Live answers are paused: today's limit has been reached.", answer: null, citations: answer.citations, guideline_values: [], notes: [] }));
     else await r.respond(json({ question: q, result: answer }));
     return true;
@@ -917,6 +934,19 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   ok('Live: the answer shows with numbered sources and page links', good.after.state === 'live' && good.after.text.includes('Schedule B1') && good.after.text.includes('Open page 5 (PDF page 11)') && good.after.link.endsWith('#page=11'), JSON.stringify(good.after));
   const bare = await ask('A bare result without a wrapper?');
   ok('Live: a bare result (no "result" wrapper) is read too', bare.after.state === 'live' && bare.after.text.includes('Schedule B1'));
+  const about = await ask('Hello, how does this work?');
+  const aboutShape = await p.$eval('#answer', (a) => ({
+    heading: a.querySelector('.akind')?.textContent ?? null,
+    paras: a.querySelectorAll(':scope > p:not(.src)').length,
+    sources: a.querySelectorAll('.cites').length,
+    more: a.querySelectorAll('details.more').length,
+    note: a.querySelector('.src.prepared')?.textContent ?? '',
+  }));
+  ok(
+    'Live: a greeting or "how does this work?" shows the fixed reply as two paragraphs, with no heading, sources or checks, and says no AI was used',
+    about.after.state === 'live' && about.after.text.startsWith('Hello. Ask a question about assessing contaminated sites') && aboutShape.heading === null && aboutShape.paras === 2 && aboutShape.sources === 0 && aboutShape.more === 0 && aboutShape.note.includes('no AI was used'),
+    JSON.stringify({ text: about.after.text.slice(0, 80), ...aboutShape }),
+  );
   const limited = await ask('rate limited question');
   ok('Live: rate-limited gets a friendly message', limited.after.state === 'rate-limited' && limited.after.text.includes('Too many questions') && limited.after.text.includes('try again in a minute'), limited.after.text);
   const paused = await ask('pause question');

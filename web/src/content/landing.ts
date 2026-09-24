@@ -387,9 +387,11 @@ export const TRY = {
   liveNote: (kind: AnswerKind, hasSources: boolean): string =>
     kind === 'answered'
       ? 'Answered live from the public guidance. Open a source to check the page it relied on.'
-      : kind === 'passages-only' || kind === 'paused' || kind === 'error'
-        ? `Live result: no written answer was given.${hasSources ? ' Open a passage to check its page.' : ''}`
-        : 'Live result from the public guidance search.',
+      : kind === 'about'
+        ? 'A fixed reply: the guidance was not searched and no AI was used.'
+        : kind === 'passages-only' || kind === 'paused' || kind === 'error'
+          ? `Live result: no written answer was given.${hasSources ? ' Open a passage to check its page.' : ''}`
+          : 'Live result from the public guidance search.',
   preparedNote: (when: string) => `Prepared in advance by the same pipeline${when}.`,
   preparedIntro: 'Suggested questions were answered in advance by the same pipeline as the question box.',
   fallbackIntro: 'These two examples are written by hand from the guideline values table.',
