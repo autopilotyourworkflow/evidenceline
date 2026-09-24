@@ -1,0 +1,324 @@
+{
+  "generated_by": "scripts/export_web_data.py, from tidy_lab_files(site='FDS-01')",
+  "site": "FDS-01",
+  "synthetic": "Synthetic data for a fictional site (FDS-01). Every result, name, date and address in these files is invented for the Evidenceline concept.",
+  "summary": "Read 3 files for FDS-01 (synthetic): 73 lab results for 15 samples (41 soil, 32 water), 16 chain-of-custody rows and 16 field-sheet rows. Units were converted exactly to ug/L (water) and mg/kg (soil) and dates read day first. 6 checks ran: 6 review items for the scientist to decide, 24 things checked and not flagged, each listed. Nothing was merged, rejected or corrected silently.",
+  "files": [
+    {
+      "file": "lab_results.csv",
+      "role": "lab results",
+      "header_row": 2,
+      "data_rows": 73,
+      "date_example": "12 Sep 2025 09:10 AM"
+    },
+    {
+      "file": "chain_of_custody.csv",
+      "role": "chain of custody",
+      "header_row": 2,
+      "data_rows": 16,
+      "date_example": "12/09/25 09:10"
+    },
+    {
+      "file": "field_sheet.csv",
+      "role": "field sheet",
+      "header_row": 7,
+      "data_rows": 16,
+      "date_example": "12/09/2025 09:10"
+    }
+  ],
+  "samples": 15,
+  "results": 73,
+  "review_items": [
+    {
+      "number": 1,
+      "check": "sample ids",
+      "title": "Sample id written two ways: SB3-15 in the lab file, SB3-1.5 on the chain of custody",
+      "found": "The lab file has 8 results for SB3-15 (rows 20 to 27). No sample of that name is on the chain of custody or the field sheet. SB3-1.5 is on the chain of custody and the field sheet, is not marked HOLD, and has no lab results. The two agree on everything else checked: the same sampling date and time (12 September 2025 11:40), the same matrix (soil), and the same letters and digits once punctuation is ignored. The results stay under the lab's id, SB3-15, until this is confirmed.",
+      "samples": [
+        "SB3-15",
+        "SB3-1.5"
+      ],
+      "rule": "Every sample id in the lab file must match a chain-of-custody id exactly, and every chain-of-custody id must be on the field sheet. A sample marked HOLD may have no lab results. A near match (same letters and digits, same matrix, same sampling date and time) is suggested, never merged. Sampling dates and times must agree between files, all read day first.",
+      "source": "DWER (2021) Guideline: Assessment and management of contaminated sites, PDF page 37: sample names should \"be consistent in report text, site plans, tables, chain of custody forms and laboratory analytical certificates\".",
+      "scientist_decides": "The scientist decides whether SB3-15 is SB3-1.5, for example from the lab's sample receipt record, and whether to ask the lab to reissue the report with the corrected id.",
+      "evidence": [
+        "lab_results.csv row 20",
+        "lab_results.csv row 21",
+        "lab_results.csv row 22",
+        "lab_results.csv row 23",
+        "lab_results.csv row 24",
+        "lab_results.csv row 25",
+        "lab_results.csv row 26",
+        "lab_results.csv row 27",
+        "chain_of_custody.csv row 7",
+        "field_sheet.csv row 12"
+      ]
+    },
+    {
+      "number": 2,
+      "check": "units",
+      "title": "MB2 reported in ng/L; the other water results are in ug/L",
+      "found": "MB2's 4 results (rows 52 to 55) are reported in ng/L. The other 28 water results are in ug/L. Each was converted exactly: PFOS 38 ng/L = 0.038 ug/L, PFHxS 19 ng/L = 0.019 ug/L, PFOA <1 ng/L = <0.001 ug/L and PFHxA <1 ng/L = <0.001 ug/L. MB2 has a field duplicate, QC2, reported in ug/L. Without the conversion, PFOS would compare 38 with 0.035 and give a false RPD of 199.6% instead of 8.2%.",
+      "samples": [
+        "MB2"
+      ],
+      "rule": "Within one matrix every result must be in one unit before anything is compared or an RPD is worked out. Results are converted exactly to ug/L (water) or mg/kg (soil) by moving the decimal point, and the value and unit as reported are kept beside the converted value. Different spellings of one unit are not flagged.",
+      "source": "PFAS NEMP 3.0, Table B2 (PDF page 220), gives water limits of reporting in \"Water (µg/L)\" and soil in \"Soil (mg/kg)\". Conversions are arithmetic: 1 ug/L = 1,000 ng/L and 1 mg/L = 1,000 ug/L.",
+      "scientist_decides": "The scientist decides whether ng/L is what the lab meant for MB2 or a labelling error to raise with the lab. The converted values are used everywhere else in this output.",
+      "evidence": [
+        "lab_results.csv row 52",
+        "lab_results.csv row 53",
+        "lab_results.csv row 54",
+        "lab_results.csv row 55"
+      ]
+    },
+    {
+      "number": 3,
+      "check": "field duplicates",
+      "title": "Field duplicate pair SB4-0.3 and QC1: Lead RPD 61.8%, above 50%",
+      "found": "QC1 is a blind field duplicate of SB4-0.3 (field sheet row 15). Lead: SB4-0.3 180 mg/kg and QC1 95 mg/kg. RPD = |180 - 95| / ((180 + 95) / 2) x 100 = 85 / 137.5 x 100 = 61.8%. The pair mean (137.5 mg/kg) is at least 10 x the LOR (10 x 5 = 50 mg/kg), so the limit applies: 61.8% is above 50% (investigate).",
+      "samples": [
+        "SB4-0.3",
+        "QC1"
+      ],
+      "rule": "RPD = |a - b| / ((a + b) / 2) x 100, worked out after converting both results to one unit. A non-detect takes its LOR; when both are non-detects no RPD is worked out. When the pair mean is below 10 x the LOR, the RPD is shown with no limit applied. Otherwise an RPD above 30% is flagged for review, and above 50% the flag says investigate. These thresholds are settings.",
+      "source": "NEPM Schedule B3 s3.5.1: \"If results show greater than 30% difference, a review should be conducted of the cause (e.g. instrument calibration, extraction efficiency, appropriateness of the method used, etc.).\" GHD (2014) Perth Airport Rail Link SAQP s9.1.3, quoting AS 4482.1: \"typical RPDs are expected to range between 30% and 50%\", and for a non-detect in a pair: \"the sample will be assigned the concentration of the LOR for RPD calculation purposes.\" GHD (2014) Table 6: \"< 10 x limit of reporting (LOR) No limits\" (written for laboratory duplicates; applied here to field duplicates as a stated setting).",
+      "scientist_decides": "The scientist decides the likely cause (for example uneven material in the sample, or a laboratory cause) and how the pair is reported. The tool does not choose which result to use or reject either. NEPM Schedule B2 s19.9 asks reports to show \"the highest measurement result wherever replicate measurements are taken (or all measurement results for each sample)\".",
+      "evidence": [
+        "field_sheet.csv row 15",
+        "lab_results.csv row 32",
+        "lab_results.csv row 40"
+      ]
+    },
+    {
+      "number": 4,
+      "check": "holding times",
+      "title": "Mercury in SB3-15 extracted after the holding time (30 days; limit 28 days)",
+      "found": "Mercury in SB3-15 (lab file row 25, result 0.2 mg/kg) was sampled on 12 September 2025 and extracted on 12 October 2025: 30 days later. The recommended maximum for mercury in soil is 28 days to extraction (NEPM B3 Table 1), so it is 2 days over. The lab comment reads: 'Extraction delayed: sample logged to a later batch'. SB3-15 is the lab's id and is not yet matched to a chain-of-custody id (see the id item).",
+      "samples": [
+        "SB3-15"
+      ],
+      "rule": "Days from the sampling date to the extraction date, compared with the recommended maximum for the analyte and matrix: mercury in soil 28 days, other metals in soil 6 months, PFAS in soil 28 days and PFAS in water 14 days. Extraction on the last allowed day is within the time. An extraction date before the sampling date is flagged, because one of the two dates must be wrong.",
+      "source": "NEPM Schedule B3 s4.4.1 (PDF pages 34 to 35): \"The holding times in Table 1 are the recommended maximum times before sample extraction.\" Table 1 (soil): \"Mercury & Chromium VI ... 28 days\"; other metals 6 months. PFAS holding times are not in PFAS NEMP 3.0; laboratory guidance (Envirolab Form 347 V023) gives 14 days (standard) or 28 days (trace) for water and 60 days (standard) or 28 days (trace) for soil. The shorter time is used here.",
+      "scientist_decides": "The scientist decides whether to accept, qualify or re-sample the mercury result. For context, NEPM Schedule B3 s4.4.1: \"Analytes such as metals and some semi-volatile organics (including PCBs, PAHs) are persistent in the environment and are not likely to change significantly after sampling; analysis slightly outside of these holding times is not likely to cause significant variation in results if samples have been handled and stored correctly.\" s4.4: \"State regulatory agencies may specify different holding times or container types; in which case the jurisdictional requirements should be followed.\"",
+      "evidence": [
+        "lab_results.csv row 25"
+      ]
+    },
+    {
+      "number": 5,
+      "check": "blanks",
+      "title": "PFOS detected in rinsate blank RB1; linked to a marginal result at SB2-0.2",
+      "found": "RB1 (rinsate blank, 12 September 2025) has PFOS 0.004 ug/L, 4 x its LOR of 0.001 ug/L. The field sheet lists Hand auger A on the same day for SB1-0.2, SB1-1.0, SB2-0.2, SB4-0.3, SB4-1.0 and QC1. SB1-0.2: sum of PFOS and PFHxS 0.41 + 0.087 = 0.497 mg/kg against the HIL A value for sum of PFOS and PFHxS (0.003 mg/kg), 165.67 x the value, above it by more than 1.5 x. SB1-1.0: sum of PFOS and PFHxS <0.0002 + 0.0015: between 0.0015 and 0.0017 mg/kg (a non-detect counts as 0 to its LOR) against the HIL A value for sum of PFOS and PFHxS (0.003 mg/kg), not above the value. SB2-0.2: sum of PFOS and PFHxS 0.0022 + 0.0012 = 0.0034 mg/kg against the HIL A value for sum of PFOS and PFHxS (0.003 mg/kg), 1.13 x the value: marginal (above it by no more than 1.5 x). SB4-1.0 has no lab results (held at the lab). SB4-0.3 and QC1 were not analysed for PFOS. Field sheet note for SB2-0.2: 'Drainage swale downslope of the pad; sampled after SB1 with the same auger (decontaminated between holes)'.",
+      "samples": [
+        "RB1",
+        "SB2-0.2"
+      ],
+      "rule": "Any detection in a blank is flagged with its multiple of the LOR. Linked samples come from the field sheet: the same equipment on the same day (rinsate blank), the same location on the same day (field blank), or the same day (trip and container blanks). A linked result above a value by no more than 1.5 x is marked marginal; 1.5 x is a demonstration setting, not a published rule. No result is adjusted.",
+      "source": "PFAS NEMP 3.0, B.3.5: a rinsate or equipment blank is \"used where PFAS-free water is poured over or through decontaminated field sampling equipment\", and \"Blanks should be analysed for the same analytes as all other samples.\" NEPM Schedule B2 s8.2.4.3: \"Samples of the rinsate should be included in the QA/QC program.\"",
+      "scientist_decides": "The scientist decides whether the marginal result at SB2-0.2 reflects the sample or carry-over from the equipment, and whether it needs re-sampling. Blank water (ug/L) and soil (mg/kg) results cannot be compared directly, so no result was adjusted.",
+      "evidence": [
+        "lab_results.csv row 44",
+        "field_sheet.csv row 16",
+        "field_sheet.csv row 8",
+        "field_sheet.csv row 9",
+        "field_sheet.csv row 10",
+        "field_sheet.csv row 13",
+        "field_sheet.csv row 14",
+        "field_sheet.csv row 15",
+        "lab_results.csv row 9",
+        "lab_results.csv row 10"
+      ]
+    },
+    {
+      "number": 6,
+      "check": "LOR against criteria",
+      "title": "MB3 PFOS: LOR above drinking-water value (0.008 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025); not confirmed",
+      "found": "MB3: PFOS <0.01 μg/L (<0.01 ug/L) against the drinking-water value for PFOS (0.008 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR (0.01 ug/L) is above the value, so it cannot be confirmed that PFOS is below it (not confirmed). Sum of PFOS and PFHxS <0.01 + <0.01: between 0 and 0.02 ug/L (a non-detect counts as 0 to its LOR) against the drinking-water value for sum of PFOS and PFHxS (0.07 ug/L) under PFAS NEMP 3.0 (named by WA as adopted): not above the value even with non-detects at their LOR. PFOS <0.01 μg/L (<0.01 ug/L) against the drinking-water value for sum of PFOS and PFHxS (0.07 ug/L) under PFAS NEMP 3.0 (named by WA as adopted), which also applies to each alone: the LOR is not above the value. The lab comment reads: 'Standard-level method as requested on the chain of custody'.",
+      "samples": [
+        "MB3"
+      ],
+      "rule": "A non-detect whose LOR is above a value cannot show the result is below it: it is 'not confirmed', never 'below'. A LOR equal to the value counts as not above it. For a sum, a non-detect counts as zero (lower bound) and as its LOR (upper bound); if the value lies between the two, the sum is not confirmed. Soil results are compared with HIL A values; water results with both drinking-water rules, side by side. Blanks are not compared.",
+      "source": "PFAS NEMP 3.0, Appendix B.3.4 (PDF page 219): \"The limit of reporting (LOR) for an analytical method should be lower than the benchmark (such as water quality objective, water quality guidelines or trigger values) to which the results will be compared.\" and \"If the LOR is higher than the benchmark, alternative methods of sampling and/or analysis should be investigated (for example, passive sampling).\" NEPM Schedule B2 s18.2.5: \"confirmation that the action level exceeds measurement detection limits\".",
+      "scientist_decides": "The scientist decides whether to ask the lab to re-analyse by a method with a lower LOR (for example trace level), which drinking-water rule applies, and whether drinking water is the right yardstick for this groundwater. Two drinking-water rules are shown side by side: PFAS NEMP 3.0 (named on the WA government PFAS page as adopted in WA) and the current national values (NEMP 3.1, ADWG updated 2025). Which applies is the scientist's call.",
+      "evidence": [
+        "lab_results.csv row 56",
+        "lab_results.csv row 57"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check": "sample ids",
+      "what_was_checked": "15 lab sample ids, 16 chain-of-custody rows and 16 field-sheet rows: ids matched exactly, HOLD samples, and sampling dates and times compared between files.",
+      "checked": 17,
+      "review_items": [
+        1
+      ]
+    },
+    {
+      "check": "units",
+      "what_was_checked": "The unit of each of the 73 results, within each matrix.",
+      "checked": 73,
+      "review_items": [
+        2
+      ]
+    },
+    {
+      "check": "field duplicates",
+      "what_was_checked": "2 field duplicate pairs from the field sheet, 12 analyte comparisons.",
+      "checked": 12,
+      "review_items": [
+        3
+      ]
+    },
+    {
+      "check": "holding times",
+      "what_was_checked": "Days from sampling to extraction for 73 results.",
+      "checked": 73,
+      "review_items": [
+        4
+      ]
+    },
+    {
+      "check": "blanks",
+      "what_was_checked": "16 results in 4 blanks from the field sheet.",
+      "checked": 16,
+      "review_items": [
+        5
+      ]
+    },
+    {
+      "check": "LOR against criteria",
+      "what_was_checked": "11 non-detects in samples (not blanks), compared with the soil HIL A values and with both drinking-water rules.",
+      "checked": 11,
+      "review_items": [
+        6
+      ]
+    }
+  ],
+  "checked_not_flagged": [
+    {
+      "check": "sample ids",
+      "what": "14 lab sample ids match the chain of custody and the field sheet exactly, including the blind duplicates and blanks, which the lab reports like any other sample."
+    },
+    {
+      "check": "sample ids",
+      "what": "SB4-1.0 is on the chain of custody marked HOLD ('HOLD pending SB4-0.3 results') and has no lab results: held at the lab, not missing."
+    },
+    {
+      "check": "sample ids",
+      "what": "Sampling dates and times agree across the files for 16 samples, each read day first (for SB1-0.2: lab file '12 Sep 2025 09:10 AM', chain of custody '12/09/25 09:10', field sheet '12/09/2025 09:10'). No date was read month first."
+    },
+    {
+      "check": "units",
+      "what": "All 41 soil results are in mg/kg."
+    },
+    {
+      "check": "units",
+      "what": "28 of the 32 water results are in ug/L, written 3 ways: ug/L in RB1, QC2, FB1, CB1 and TB1, µg/L (micro sign) in MB1 and μg/L (Greek mu) in MB3. These are one unit spelled differently, read as ug/L, and not an inconsistency."
+    },
+    {
+      "check": "field duplicates",
+      "what": "SB4-0.3 and QC1, pair mean below 10 x the LOR, so no limit applied: Arsenic 13.3%, Cadmium 40.0% (QC1 <0.4 mg/kg, its LOR used), Chromium (total) 14.6%, Copper 15.7%, Mercury 66.7% and Nickel 11.8%."
+    },
+    {
+      "check": "field duplicates",
+      "what": "SB4-0.3 and QC1, at or below 30%: Zinc 15.7%."
+    },
+    {
+      "check": "field duplicates",
+      "what": "MB2 and QC2, at or below 30% (after unit conversion): PFOS 8.2% and PFHxS 5.4%."
+    },
+    {
+      "check": "field duplicates",
+      "what": "MB2 and QC2: PFOA and PFHxA below the LOR in both, so no RPD."
+    },
+    {
+      "check": "holding times",
+      "what": "Mercury in soil (28 days): 3 other results within the time; the longest is SB3-0.5 Mercury at 28 days, at the limit and not over it."
+    },
+    {
+      "check": "holding times",
+      "what": "Other metals in soil (6 months): 28 results within the time; the longest is SB3-15 Arsenic at 30 days."
+    },
+    {
+      "check": "holding times",
+      "what": "PFAS in soil (28 days): 9 results within the time; the longest is SB1-0.2 PFOS at 6 days."
+    },
+    {
+      "check": "holding times",
+      "what": "PFAS in water (14 days): 32 results within the time; the longest is RB1 PFOS at 6 days."
+    },
+    {
+      "check": "blanks",
+      "what": "FB1 (field blank): PFOS, PFHxS, PFOA and PFHxA all below the LOR."
+    },
+    {
+      "check": "blanks",
+      "what": "CB1 (container blank): PFOS, PFHxS, PFOA and PFHxA all below the LOR."
+    },
+    {
+      "check": "blanks",
+      "what": "TB1 (trip blank): PFOS, PFHxS, PFOA and PFHxA all below the LOR."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "SB1-1.0: Sum of PFOS and PFHxS <0.0002 + 0.0015: between 0.0015 and 0.0017 mg/kg (a non-detect counts as 0 to its LOR) against the HIL A value for sum of PFOS and PFHxS (0.003 mg/kg): not above the value even with non-detects at their LOR. PFOS <0.0002 mg/kg against the HIL A value for sum of PFOS and PFHxS (0.003 mg/kg), which also applies to each alone: the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "SB3-0.5: Cadmium <0.4 mg/kg against the HIL A value for Cadmium (20 mg/kg): the LOR is not above the value. Mercury <0.1 mg/kg against the HIL A value for Mercury (inorganic), compared with total mercury (40 mg/kg): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "SB3-15: Cadmium <0.4 mg/kg against the HIL A value for Cadmium (20 mg/kg): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "QC1: Cadmium <0.4 mg/kg against the HIL A value for Cadmium (20 mg/kg): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "MB1: PFOA <0.001 µg/L (<0.001 ug/L) against the drinking-water value for PFOA (0.56 ug/L) under PFAS NEMP 3.0 (named by WA as adopted): the LOR is not above the value. PFOA <0.001 µg/L (<0.001 ug/L) against the drinking-water value for PFOA (0.2 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "MB2: PFOA <1 ng/L (<0.001 ug/L) against the drinking-water value for PFOA (0.56 ug/L) under PFAS NEMP 3.0 (named by WA as adopted): the LOR is not above the value. PFOA <1 ng/L (<0.001 ug/L) against the drinking-water value for PFOA (0.2 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "MB3: PFHxS <0.01 μg/L (<0.01 ug/L) against the drinking-water value for sum of PFOS and PFHxS (0.07 ug/L) under PFAS NEMP 3.0 (named by WA as adopted), which also applies to each alone: the LOR is not above the value. PFOA <0.01 μg/L (<0.01 ug/L) against the drinking-water value for PFOA (0.56 ug/L) under PFAS NEMP 3.0 (named by WA as adopted): the LOR is not above the value. PFHxS <0.01 μg/L (<0.01 ug/L) against the drinking-water value for PFHxS (0.03 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR is not above the value. PFOA <0.01 μg/L (<0.01 ug/L) against the drinking-water value for PFOA (0.2 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR is not above the value."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "QC2: PFOA <0.001 ug/L against the drinking-water value for PFOA (0.56 ug/L) under PFAS NEMP 3.0 (named by WA as adopted): the LOR is not above the value. PFOA <0.001 ug/L against the drinking-water value for PFOA (0.2 ug/L) under the current national values (NEMP 3.1, ADWG updated 2025): the LOR is not above the value."
+    }
+  ],
+  "not_checked": [
+    {
+      "check": "LOR against criteria",
+      "what": "PFHxA (4 non-detects: MB1, MB2, MB3 and QC2)",
+      "reason": "No investigation level for PFHxA is loaded, so its LOR was not compared with one."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "Detected results against investigation levels (42 detected results in samples)",
+      "reason": "This check compares only the LOR of non-detects with investigation levels. Detected results were not screened against any value here, so the review items are not a list of results above a value. For well MB2, compare_rules screens one round under both drinking-water rules; the other results are not screened by any tool yet."
+    },
+    {
+      "check": "LOR against criteria",
+      "what": "Blanks (CB1, FB1, RB1 and TB1)",
+      "reason": "Blanks are checked for detections, not compared with investigation levels."
+    }
+  ],
+  "notes": [
+    "Synthetic data for a fictional site (FDS-01). Every result, name, date and address in these files is invented for the Evidenceline concept.",
+    "A guideline value is an investigation level, not a finding that water is unsafe or that a site is contaminated.",
+    "Two drinking-water rules are shown side by side: PFAS NEMP 3.0 (named on the WA government PFAS page as adopted in WA) and the current national values (NEMP 3.1, ADWG updated 2025). Which applies is the scientist's call.",
+    "The synthetic scenario states the proposed use as residential with garden, so soil results are compared with HIL A values. Which land use applies is the scientist's call.",
+    "Groundwater is compared with drinking-water values only, the only water values loaded. Whether drinking water is the right yardstick for this groundwater is a site-specific call for the scientist.",
+    "Every review item ends with what the scientist decides. The tool flags and explains; it does not accept, reject or correct any result.",
+    "The field sheet header names a client and a site address (both fictional). They are left out of this output."
+  ]
+}

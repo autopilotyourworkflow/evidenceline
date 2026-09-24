@@ -1,0 +1,112 @@
+{
+  "verified_on": "2026-09-23",
+  "about": "Drinking-water guideline values for PFAS in groundwater. Values are stored as strings so they load as exact decimals. Verified 2026-09-23 against the primary sources named in each rule.",
+  "choice_note": "Evidenceline shows both rules side by side and does not choose between them. Which rule a report uses is the scientist's call.",
+  "rules": [
+    {
+      "id": "nemp-3.0",
+      "name": "PFAS NEMP 3.0 drinking-water values",
+      "document": "PFAS National Environmental Management Plan Version 3.0 (HEPA, March 2025)",
+      "table": "Table 4",
+      "page": "57",
+      "page_basis": "PDF page",
+      "wa_status": "The WA government PFAS page (Environment WAtch) names NEMP 3.0 as adopted for implementation in Western Australia.",
+      "links": [
+        {
+          "label": "PFAS NEMP 3.0 (PDF, archived copy of the DCCEEW file)",
+          "url": "https://web.archive.org/web/20250315173805/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf"
+        }
+      ],
+      "limits": [
+        {
+          "key": "PFOS+PFHxS",
+          "applies_to": "sum",
+          "members": [
+            "PFOS",
+            "PFHxS"
+          ],
+          "value": "0.07",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Applies to PFOS on its own, PFHxS on its own, and the sum of the two (Table 4, footnote a). Compare each of the three with 0.07 ug/L."
+        },
+        {
+          "key": "PFOA",
+          "applies_to": "single",
+          "members": [
+            "PFOA"
+          ],
+          "value": "0.56",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Compare PFOA on its own with 0.56 ug/L."
+        }
+      ]
+    },
+    {
+      "id": "current",
+      "name": "Current ADWG drinking-water values (NHMRC, updated 2025)",
+      "document": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026), listing the NHMRC Australian Drinking Water Guidelines 2011 as updated in 2025",
+      "table": "Table 4",
+      "page": "49",
+      "page_basis": "printed page",
+      "wa_status": "National guidance. As of 23 September 2026 no WA statement adopting NEMP 3.1 was found.",
+      "links": [
+        {
+          "label": "PFAS NEMP 3.1 (PDF)",
+          "url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf"
+        },
+        {
+          "label": "NHMRC drinking-water guideline fact sheet for PFAS",
+          "url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs"
+        }
+      ],
+      "limits": [
+        {
+          "key": "PFOS",
+          "applies_to": "single",
+          "members": [
+            "PFOS"
+          ],
+          "value": "0.008",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Compare PFOS on its own with 0.008 ug/L (8 ng/L). Under this rule PFOS and PFHxS are screened separately, not as a sum."
+        },
+        {
+          "key": "PFHxS",
+          "applies_to": "single",
+          "members": [
+            "PFHxS"
+          ],
+          "value": "0.03",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Compare PFHxS on its own with 0.03 ug/L (30 ng/L). Under this rule PFOS and PFHxS are screened separately, not as a sum."
+        },
+        {
+          "key": "PFOA",
+          "applies_to": "single",
+          "members": [
+            "PFOA"
+          ],
+          "value": "0.2",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Compare PFOA on its own with 0.2 ug/L (200 ng/L)."
+        },
+        {
+          "key": "PFBS",
+          "applies_to": "single",
+          "members": [
+            "PFBS"
+          ],
+          "value": "1",
+          "unit": "ug/L",
+          "scenario": "drinking water",
+          "note": "Compare PFBS on its own with 1 ug/L (1000 ng/L)."
+        }
+      ]
+    }
+  ]
+}

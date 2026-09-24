@@ -1,0 +1,23 @@
+# SYNTHETIC DATA: fictional site and invented field records, Evidenceline concept only.
+# Client: Harbourline Logistics (fictional)
+# Site address: 12 Example Road, Welshpool WA (fictional)
+# Site id: FDS-01
+# Field event: FE-2025-09, soil 12/09/2025, groundwater 16/09/2025
+# Field staff: J. Citizen (fictional)
+sample_id,date,time,location,depth_m,matrix,equipment,qa_type,parent_sample,description,notes
+SB1-0.2,12/09/2025,09:10,SB1,0.2,Soil,Hand auger A,primary,,"Grey fine SAND, damp, no odour","Former fire-training pad, centre"
+SB1-1.0,12/09/2025,09:25,SB1,1.0,Soil,Hand auger A,primary,,"Pale grey fine SAND, moist",
+SB2-0.2,12/09/2025,10:05,SB2,0.2,Soil,Hand auger A,primary,,"Dark grey SAND with organics, damp",Drainage swale downslope of the pad; sampled after SB1 with the same auger (decontaminated between holes)
+SB3-0.5,12/09/2025,11:20,SB3,0.5,Soil,Hand auger B,primary,,"FILL: grey SAND with ash and charcoal",Former burn pit; auger B used only at SB3
+SB3-1.5,12/09/2025,11:40,SB3,1.5,Soil,Hand auger B,primary,,Natural pale SAND,
+SB4-0.3,12/09/2025,13:15,SB4,0.3,Soil,Hand auger A,primary,,FILL: brown SAND with brick and slag fragments,Former workshop hardstand
+SB4-1.0,12/09/2025,13:30,SB4,1.0,Soil,Hand auger A,primary,,Natural pale SAND,On HOLD at the lab
+QC1,12/09/2025,,SB4,0.3,Soil,Hand auger A,field_duplicate,SB4-0.3,Blind field duplicate,Split from the same auger lift as SB4-0.3
+RB1,12/09/2025,13:40,,,Water,Hand auger A,rinsate_blank,,Rinsate over decontaminated auger A,Lab-supplied PFAS-free water
+MB1,16/09/2025,09:30,MB1,,Water,"Peristaltic pump, dedicated HDPE tubing",primary,,"Clear, no odour",Upgradient
+MB2,16/09/2025,11:00,MB2,,Water,"Peristaltic pump, dedicated HDPE tubing",primary,,"Clear, no odour",Downgradient of the fire-training pad
+MB3,16/09/2025,13:10,MB3,,Water,"Peristaltic pump, dedicated HDPE tubing",primary,,"Clear, no odour","Downgradient, eastern boundary"
+QC2,16/09/2025,,MB2,,Water,"Peristaltic pump, dedicated HDPE tubing",field_duplicate,MB2,Blind field duplicate,
+FB1,16/09/2025,11:05,MB2,,Water,,field_blank,,Field blank poured at MB2,Lab-supplied PFAS-free water
+CB1,16/09/2025,,,,Water,,container_blank,,Container blank,"Lab-supplied PFAS-free water, stored with the samples"
+TB1,16/09/2025,,,,Water,,trip_blank,,Trip blank (lab-prepared),

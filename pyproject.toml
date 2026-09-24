@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "evidenceline"
+version = "0.1.0"
+description = "MCP tools for PFAS monitoring work: tidy lab files, screen results, search guidance and check report text, with every number traced to its lab row or guideline table."
+readme = "DEVNOTES.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Chanon (Beam) Poovaviranon" }]
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=2.2,<3",
+    "pydantic>=2.11,<3",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+# The hosted web API (src/evidenceline/api): the website's question box and the remote MCP connector.
+# Install with `pip install ".[api]"`. The stdio MCP server never needs these.
+api = [
+    "fastapi>=0.141,<1",
+    "uvicorn>=0.53",
+    "anthropic>=1.8,<2",
+]
+
+[project.scripts]
+evidenceline-mcp = "evidenceline.server:main"
+evidenceline-api = "evidenceline.api.__main__:main"
+
+[dependency-groups]
+# The same packages as the `api` extra, for `pip install -e . --group api` in a checkout. Keep the two lists equal
+# (tests/test_packaging.py checks it).
+api = [
+    "fastapi>=0.141,<1",
+    "uvicorn>=0.53",
+    "anthropic>=1.8,<2",
+]
+# Only needed to build the guidance search index (scripts/build_index.py), not to run the server.
+corpus = [
+    "pypdf>=6.19",
+    "pdfplumber>=0.11.10",
+]
+dev = [
+    { include-group = "corpus" },
+    { include-group = "api" },
+    "pytest>=8.4",
+    "anyio>=4.9",
+    "ruff>=0.12",
+    "pyright>=1.1.400",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/evidenceline"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "N", "C4", "PT", "RET", "PL", "TID"]
+ignore = [
+    "PLR2004", # magic values are fine in tests and in the fixed guideline data
+    "PLR0911", # the claim evaluators return early on purpose
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["PLC0415"]
+
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"

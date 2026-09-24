@@ -1,0 +1,127 @@
+{
+  "_about": "Soil HIL A values used by the tidy checks (LOR against criterion, marginal results near a blank). Copied from the verified criteria set compiled 2026-09-23 (criteria-verified.md, Table A). Values are strings so they load as exact decimals.",
+  "scenario": "HIL A (residential with garden/accessible soil)",
+  "scenario_short": "HIL A",
+  "criteria": [
+    {
+      "id": "S-PFOS+PFHxS-A",
+      "label": "sum of PFOS and PFHxS",
+      "members": ["PFOS", "PFHxS"],
+      "each_member_too": true,
+      "value": "0.003",
+      "unit": "mg/kg",
+      "document": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026)",
+      "table": "Table 5",
+      "page": "printed page 52",
+      "note": "Applies to PFOS only, PFHxS only, and the sum of the two (Table 5, footnote a). The HIL A value is the same in NEMP 3.0 and 3.1."
+    },
+    {
+      "id": "S-PFOA-A",
+      "label": "PFOA",
+      "members": ["PFOA"],
+      "each_member_too": false,
+      "value": "0.06",
+      "unit": "mg/kg",
+      "document": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026)",
+      "table": "Table 5",
+      "page": "printed page 52",
+      "note": "The HIL A value is the same in NEMP 3.0 and 3.1."
+    },
+    {
+      "id": "S-As-A",
+      "label": "Arsenic",
+      "members": ["Arsenic"],
+      "each_member_too": false,
+      "value": "100",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": "Arsenic (as the table row reads); the value assumes 70% oral bioavailability (Table 1A(1), note 2)."
+    },
+    {
+      "id": "S-Cd-A",
+      "label": "Cadmium",
+      "members": ["Cadmium"],
+      "each_member_too": false,
+      "value": "20",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": ""
+    },
+    {
+      "id": "S-Cr6-A",
+      "label": "Chromium (VI), compared with total chromium",
+      "members": ["Chromium (total)"],
+      "each_member_too": false,
+      "value": "100",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": "The value is for chromium (VI). Comparing total chromium with it is a conservative screen."
+    },
+    {
+      "id": "S-Cu-A",
+      "label": "Copper",
+      "members": ["Copper"],
+      "each_member_too": false,
+      "value": "6000",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": ""
+    },
+    {
+      "id": "S-Pb-A",
+      "label": "Lead",
+      "members": ["Lead"],
+      "each_member_too": false,
+      "value": "300",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": "Based on blood lead models (IEUBK for HIL A)."
+    },
+    {
+      "id": "S-Hg-A",
+      "label": "Mercury (inorganic), compared with total mercury",
+      "members": ["Mercury"],
+      "each_member_too": false,
+      "value": "40",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": "The value is for inorganic mercury and does not address elemental mercury. Comparing total mercury with it is a conservative screen."
+    },
+    {
+      "id": "S-Ni-A",
+      "label": "Nickel",
+      "members": ["Nickel"],
+      "each_member_too": false,
+      "value": "400",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": ""
+    },
+    {
+      "id": "S-Zn-A",
+      "label": "Zinc",
+      "members": ["Zinc"],
+      "each_member_too": false,
+      "value": "7400",
+      "unit": "mg/kg",
+      "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+      "table": "Table 1A(1)",
+      "page": "printed page 48 (PDF page 56)",
+      "note": ""
+    }
+  ]
+}

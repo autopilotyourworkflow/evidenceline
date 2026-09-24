@@ -1,0 +1,77 @@
+# Render Blueprint for the Evidenceline API: the website's live question box (/api/ask) and the hosted, read-only
+# MCP connector (/mcp). The public address is the website: its Cloudflare Worker (web/worker/index.js, using the
+# proxy in web/functions/_lib/proxy.js) forwards /api/* and /mcp here, so people never need this service's own
+# onrender.com address.
+#
+# No secret values live in this file. Render asks for the ones marked "sync: false" when the Blueprint is created.
+# Steps for the owner: DEPLOY.md.
+services:
+  - type: web
+    name: evidenceline-api
+    runtime: python
+    region: singapore
+    # Render's Starter instance (0.5 CPU, 512 MB, about 7 USD a month). Render's Blueprint spec names plans by size.
+    plan: 0.5c-512mb
+    branch: main
+    # Deploy a new commit only after its GitHub checks (.github/workflows/ci.yml) have passed.
+    autoDeployTrigger: checksPass
+    healthCheckPath: /api/health
+    # Installs the package with the web API packages (fastapi, uvicorn, anthropic) and the PDF packages needed to build
+    # the search index, then downloads the public guidance documents and builds the index at build time. The
+    # documents are never in the repository; each download's SHA-256 is compared with the manifest and a change is
+    # reported in the build log.
+    buildCommand: >-
+      pip install --upgrade pip &&
+      pip install -e . --group api --group corpus &&
+      python scripts/fetch_corpus.py &&
+      python scripts/build_index.py
+    startCommand: >-
+      uvicorn evidenceline.api.app:create_app --factory
+      --host 0.0.0.0 --port $PORT
+      --no-proxy-headers --no-server-header
+      --timeout-graceful-shutdown 20
+    envVars:
+      # Render needs a full version number here (major.minor.patch).
+      - key: PYTHON_VERSION
+        value: "3.12.11"
+      # Where the downloads, extracted text and search index live (inside the deployed checkout).
+      - key: EVIDENCELINE_CORPUS_DIR
+        value: /opt/render/project/src/.cache/corpus
+      # Redaction for the hosted demo: the packaged identifier file for the fictional site FDS-01, so its made-up
+      # client name and site address become placeholders in the connector's tools and in the question box, as they
+      # would for a firm with its own file. It lists nothing else, and the connector's instructions say so. A value
+      # that names a missing file stops every tool and every question (fail closed).
+      - key: EVIDENCELINE_REDACT
+        value: builtin:fds01-demo
+      # The Anthropic API key from the dedicated "evidenceline-demo" workspace (15 USD monthly limit).
+      # Left empty, the question box still works but shows passages only, with no written answer.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: EVIDENCELINE_MODEL
+        value: claude-sonnet-5
+      # Browsers may call the API only from the website. The site calls it on its own address through the proxy,
+      # so this matters only for someone calling the onrender.com address from another page.
+      - key: EVIDENCELINE_ALLOWED_ORIGINS
+        value: https://evidenceline.autopilotyourworkflow.com
+      # The proxy passes the caller's address in this header (web/functions/_lib/proxy.js). Without it, every
+      # visitor would share one rate limit, because Render sees only Cloudflare's address.
+      - key: EVIDENCELINE_CLIENT_IP_HEADER
+        value: x-evidenceline-client-ip
+      # A long random value shared with the website's Cloudflare Worker (its PROXY_SHARED_SECRET secret), so the API can
+      # accept the client IP header only from the proxy. The owner's assistant generates it (DEPLOY.md step 3).
+      - key: EVIDENCELINE_PROXY_SECRET
+        sync: false
+      # Limits. Questions per address per hour and per day; model calls across everyone per day (the spending
+      # brake); MCP requests per address per hour.
+      - key: EVIDENCELINE_ASK_PER_HOUR
+        value: "10"
+      - key: EVIDENCELINE_ASK_PER_DAY
+        value: "30"
+      - key: EVIDENCELINE_ANSWERS_PER_DAY
+        value: "300"
+      - key: EVIDENCELINE_MCP_PER_HOUR
+        value: "600"
+      # Optional Cloudflare Turnstile secret. Set it only after the website is built with VITE_TURNSTILE_SITE_KEY
+      # (see DEPLOY.md for the order); without the widget every question would fail with a 403.
+      - key: TURNSTILE_SECRET
+        sync: false

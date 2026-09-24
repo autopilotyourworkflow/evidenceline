@@ -1,0 +1,123 @@
+# Checks every push and pull request: Python lint, types and tests; the guidance search scored on both question
+# sets; the accuracy summary the website's Accuracy page reads; the website's own checks; and the pre-publish scan.
+# Render deploys a commit only after this passes (render.yaml: autoDeployTrigger checksPass).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PY: .venv/bin/python
+  PYTHONUTF8: "1"
+
+jobs:
+  python:
+    name: Python, search evaluation and accuracy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # Same layout as local development: pyright reads the .venv named in pyproject.toml.
+      - name: Install
+        run: |
+          python -m venv .venv
+          $PY -m pip install --upgrade pip
+          $PY -m pip install -e . --group dev --group api
+
+      - name: Pre-publish scan (secrets, private paths, dashes, large files)
+        run: $PY scripts/prepublish_check.py
+
+      - name: Ruff
+        run: |
+          $PY -m ruff check src tests scripts
+          $PY -m ruff format --check src tests scripts
+
+      - name: Pyright (strict)
+        run: $PY -m pyright
+
+      # The public guidance documents are downloaded, never committed. Cached by the manifest's checksums; the index
+      # is always rebuilt, because it depends on the extraction and chunking code.
+      - name: Cache guidance downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/corpus/downloads
+          key: corpus-${{ hashFiles('src/evidenceline/data/corpus_manifest.json') }}
+
+      - name: Fetch guidance and build the search index
+        run: |
+          $PY scripts/fetch_corpus.py --timeout 30
+          $PY scripts/build_index.py
+
+      - name: Tests
+        id: tests
+        run: |
+          mkdir -p reports
+          $PY -m pytest -q --junitxml=reports/pytest.xml
+
+      - name: Search evaluation (tuning set and held-out set)
+        run: |
+          $PY -m evidenceline.guidance.evaluate | tee reports/search-golden.txt
+          $PY -m evidenceline.guidance.evaluate --heldout | tee reports/search-heldout.txt
+
+      # Runs even when a test failed, so the failures show up in accuracy.json; it exits 1 in that case too.
+      - name: Build the accuracy summary
+        if: ${{ !cancelled() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
+        run: |
+          $PY scripts/build_accuracy.py --check-summary
+          $PY scripts/build_accuracy.py --junit reports/pytest.xml
+
+      - name: Upload accuracy.json and reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: accuracy
+          path: |
+            web/public/data/accuracy.json
+            reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  web:
+    name: Website
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    env:
+      # The smoke test drives the Chrome that GitHub's Ubuntu image already has.
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Proxy and Worker tests
+        run: node --test tests/functions.test.mjs tests/worker.test.mjs
+
+      - name: Data check, lint, build and browser smoke test
+        run: npm run check

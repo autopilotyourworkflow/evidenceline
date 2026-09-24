@@ -1,0 +1,560 @@
+{
+  "pass_id": "A",
+  "date": "2026-09-24",
+  "independence": "Checked from primary sources only. The compiled criteria notes and the other verification pass were not read.",
+  "method": "Each value in guidelines.json and fds01_site/soil_criteria.json was compared with the primary source text. NEMP 3.0: the official DCCEEW PDF, fetched from its Wayback Machine capture of 15 March 2025 (dcceew.gov.au times out from this machine), text extracted page by page with pypdf 6.19.0, so PDF and printed pages are exact. ASC NEPM Schedule B1: PDF downloaded directly from legislation.gov.au and extracted with pypdf. NEMP 3.1: a text rendering of the official DCCEEW PDF through the r.jina.ai reader, because direct download and WebFetch both timed out and no archive copy exists; printed pages read from running headers (see caveat). ADWG PFAS fact sheet, ADWG table of updates and the WA Environment WAtch PFAS page: HTML downloaded directly and converted to text. Quotes are verbatim from the extracted text; ' / ' marks a line or cell break inside a table and '...' marks skipped text.",
+  "verdicts": {
+    "confirmed": "Value, unit, scenario, document, table and page all match the source.",
+    "mismatch": "Something the file says differs from the source (the value itself may still be right; see value_confirmed).",
+    "could_not_verify": "The source could not be reached, or the source text does not contain the claim."
+  },
+  "files_checked": [
+    "src/evidenceline/data/guidelines.json",
+    "src/evidenceline/data/fds01_site/soil_criteria.json"
+  ],
+  "sources": [
+    {
+      "id": "nemp-3.0",
+      "title": "PFAS National Environmental Management Plan Version 3.0 (HEPA 2025)",
+      "url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "fetched_from": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "pdf_pages": 311,
+      "sha256": "abcc5c28177e2a96747e292e991ae46dd3d8a0099b3ca80e1750192411ce196e",
+      "read_as": "PDF, pypdf"
+    },
+    {
+      "id": "nemp-3.1",
+      "title": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026)",
+      "url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "fetched_from": "https://r.jina.ai/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "pdf_pages": 315,
+      "sha256_of_text_rendering": "06efc203468f805ecccade97e0d673b3e28bce911ea3e0093e1f203fa1316c4e",
+      "read_as": "text rendering of the PDF through a reader proxy"
+    },
+    {
+      "id": "nepm-b1",
+      "title": "ASC NEPM 1999 as amended, Schedule B1 (F2013C00288, compilation start date 16 May 2013, Volume 2)",
+      "url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_pages": 89,
+      "sha256": "17788fb3339c5163139dc72cf67234b2276de9115d272ae7770f36c4bd77ad99",
+      "read_as": "PDF, pypdf"
+    },
+    {
+      "id": "adwg-pfas",
+      "title": "Australian Drinking Water Guidelines, Part 5 fact sheet: Per- and poly-fluoroalkyl substances (PFAS) (endorsed 2025)",
+      "url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs",
+      "read_as": "HTML"
+    },
+    {
+      "id": "adwg-updates",
+      "title": "Australian Drinking Water Guidelines, Table of updates (PFAS update June 2025, version 4.0)",
+      "url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/table-of-updates",
+      "read_as": "HTML"
+    },
+    {
+      "id": "wa-pfas",
+      "title": "PFAS Investigations in Western Australia, Environment WAtch (DWER), last modified 2026-03-10",
+      "url": "https://environmentwatch.wa.gov.au/pfas-investigations-in-western-australia/",
+      "read_as": "HTML"
+    }
+  ],
+  "summary": {
+    "values_checked": 16,
+    "confirmed": 15,
+    "mismatch": 1,
+    "could_not_verify": 0,
+    "value_numbers_confirmed": 16,
+    "rule_checks": 5,
+    "rule_checks_confirmed": 5,
+    "note_checks_could_not_verify": 1
+  },
+  "rule_checks": [
+    {
+      "id": "guidelines.json/nemp-3.0/document",
+      "file_says": "PFAS National Environmental Management Plan Version 3.0 (HEPA, March 2025)",
+      "source_says": [
+        "PDF page 2: This publication (and any material sourced from it) should be attributed as: HEPA 2025, PFAS National Environmental Management Plan Version 3.0 , Heads of EPA Australia and New Zealand 2025. CC BY 4.0.",
+        "WA Environment WAtch: Version 3.0 of the PFAS NEMP was published in March 2025 and has been adopted for implementation in Western Australia."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "verdict": "confirmed",
+      "reason": "Title, HEPA and 2025 are on the PDF. 'March 2025' is stated by the WA page and matches the PDF metadata (created 3 March 2025)."
+    },
+    {
+      "id": "guidelines.json/nemp-3.0/wa_status",
+      "file_says": "The WA government PFAS page (Environment WAtch) names NEMP 3.0 as adopted for implementation in Western Australia.",
+      "source_says": [
+        "The current version of the PFAS NEMP (PFAS NEMP 3.0) – adopted for implementation in Western Australia – was published in March 2025 and can be found on the Australian Government Department of Climate Change, Energy, the Environment and Water website.",
+        "Version 3.0 of the PFAS NEMP was published in March 2025 and has been adopted for implementation in Western Australia."
+      ],
+      "source_url": "https://environmentwatch.wa.gov.au/pfas-investigations-in-western-australia/",
+      "verdict": "confirmed",
+      "reason": "Fetched 2026-09-24 (page metadata: last modified 2026-03-10). The page says Version 3.0 'has been adopted for implementation in Western Australia'."
+    },
+    {
+      "id": "guidelines.json/current/document",
+      "file_says": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026), listing the NHMRC Australian Drinking Water Guidelines 2011 as updated in 2025",
+      "source_says": [
+        "HEPA 202 6,PFAS National Environmental Management Plan Version 3.1, Heads of EPA Australia and New Zealand 202 6. CC BY 4.0.",
+        "Table 4 source column: NHMRC 2011 updated 2025 c",
+        "ADWG table of updates: Updated guidance on per- and polyfluoroalkyl substances (PFAS) ... June 2025 4.0"
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "verdict": "confirmed",
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "Edition, year and the 'NHMRC 2011 updated 2025' citation all match ('202 6' is how the text rendering splits '2026')."
+    },
+    {
+      "id": "guidelines.json/current/wa_status",
+      "file_says": "National guidance. As of 23 September 2026 no WA statement adopting NEMP 3.1 was found.",
+      "source_says": [
+        "WA Environment WAtch PFAS page, fetched 2026-09-24: The current version of the PFAS NEMP (PFAS NEMP 3.0) – adopted for implementation in Western Australia – was published in March 2025 ... (no mention of Version 3.1 anywhere on the page)"
+      ],
+      "source_url": "https://environmentwatch.wa.gov.au/pfas-investigations-in-western-australia/",
+      "verdict": "confirmed",
+      "reason": "The WA page still names only 3.0, and a web search on 2026-09-24 found no WA statement adopting 3.1. This is an absence finding that holds only as of the check date."
+    },
+    {
+      "id": "soil_criteria.json/scenario",
+      "file_says": "HIL A (residential with garden/accessible soil)",
+      "source_says": [
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools.",
+        "NEMP 3.1 Table 5: Residential with garden/ accessible soil (HIL A)"
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "verdict": "confirmed",
+      "reason": "Both sources use this name for HIL A."
+    }
+  ],
+  "values": [
+    {
+      "id": "guidelines.json/nemp-3.0/PFOS+PFHxS",
+      "file_says": {
+        "value": "0.07",
+        "unit": "ug/L",
+        "applies_to": "sum",
+        "members": [
+          "PFOS",
+          "PFHxS"
+        ],
+        "scenario": "drinking water",
+        "document": "PFAS National Environmental Management Plan Version 3.0 (HEPA, March 2025)",
+        "table": "Table 4",
+        "page": "57",
+        "page_basis": "PDF page",
+        "note": "Add PFOS and PFHxS together and compare the total with 0.07 ug/L. This rule has no separate value for PFOS or PFHxS on its own."
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOA / Drinking water quality guideline 0.07µg/L 0.56µg/L NHMRC 2011 / New Zealand Government Department of Internal Affairs 2022",
+        "a Where the criteria refer to the sum of PFOS and PFHxS, this means concentrations of PFOS only, PFHxS only, and the sum of the two."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "fetched_from": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "pdf_page": 57,
+      "printed_page": 48,
+      "verdict": "mismatch",
+      "value_confirmed": true,
+      "reason": "Value 0.07 ug/L, unit, drinking-water scenario, Table 4 and PDF page 57 (printed page 48) are all confirmed. The mismatch is in the note. Footnote a of Table 4 says the sum criterion means 'PFOS only, PFHxS only, and the sum of the two', so 0.07 ug/L also applies to PFOS alone and to PFHxS alone. The note's sentence 'This rule has no separate value for PFOS or PFHxS on its own' contradicts that. When both are measured, passing the sum check means both single checks pass too; but when only one of the two is reported, that one should still be compared with 0.07 ug/L rather than marked as having no value. soil_criteria.json already models the same footnote with each_member_too: true."
+    },
+    {
+      "id": "guidelines.json/nemp-3.0/PFOA",
+      "file_says": {
+        "value": "0.56",
+        "unit": "ug/L",
+        "applies_to": "single",
+        "scenario": "drinking water",
+        "table": "Table 4",
+        "page": "57",
+        "page_basis": "PDF page",
+        "note": "Compare PFOA on its own with 0.56 ug/L."
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOA / Drinking water quality guideline 0.07µg/L 0.56µg/L NHMRC 2011 / New Zealand Government Department of Internal Affairs 2022"
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "fetched_from": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "pdf_page": 57,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "NEMP 3.0 Table 4 gives the PFOA drinking water quality guideline as 0.56 ug/L, on PDF page 57 (printed page 48)."
+    },
+    {
+      "id": "guidelines.json/current/PFOS",
+      "file_says": {
+        "value": "0.008",
+        "unit": "ug/L",
+        "applies_to": "single",
+        "scenario": "drinking water",
+        "document": "PFAS NEMP Version 3.1 (HEPA 2026), listing the NHMRC ADWG 2011 as updated in 2025",
+        "table": "Table 4",
+        "page": "49",
+        "page_basis": "printed page",
+        "ng_per_L_in_note": "8"
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOS PFHxS PFOA PFBS Source / Drinking water quality guideline values (μg/L) / 0.07 0.56 For New Zealand only: New Zealand Government Department of Internal Affairs 2022 b / 0.008 0.03 0.2 1 NHMRC 2011 updated 2025 c",
+        "c Based on TDIs in Version 4 (updated 2025) of NHMRC (2011).",
+        "Note that when screening drinking water, the NHMRC’s drinking water guideline values allow PFOS and PFHxS to be considered separately (see Table 4 ).",
+        "Based on human health considerations, the concentration of perfluorooctane sulfonic acid (PFOS) in drinking water should not exceed 8 ng/L (0.008 μg/L)."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs",
+      "pdf_page": null,
+      "printed_page": 49,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 4 lists PFOS at 0.008 ug/L with the source 'NHMRC 2011 updated 2025', and Table 4 starts on printed page 49. The NHMRC ADWG PFAS fact sheet (endorsed 2025; ADWG version 4.0, June 2025) independently gives 8 ng/L (0.008 ug/L). Both sources treat PFOS and PFHxS separately for drinking water, as the note says."
+    },
+    {
+      "id": "guidelines.json/current/PFHxS",
+      "file_says": {
+        "value": "0.03",
+        "unit": "ug/L",
+        "applies_to": "single",
+        "scenario": "drinking water",
+        "document": "PFAS NEMP Version 3.1 (HEPA 2026), listing the NHMRC ADWG 2011 as updated in 2025",
+        "table": "Table 4",
+        "page": "49",
+        "page_basis": "printed page",
+        "ng_per_L_in_note": "30"
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOS PFHxS PFOA PFBS Source / Drinking water quality guideline values (μg/L) / 0.07 0.56 For New Zealand only: New Zealand Government Department of Internal Affairs 2022 b / 0.008 0.03 0.2 1 NHMRC 2011 updated 2025 c",
+        "c Based on TDIs in Version 4 (updated 2025) of NHMRC (2011).",
+        "Note that when screening drinking water, the NHMRC’s drinking water guideline values allow PFOS and PFHxS to be considered separately (see Table 4 ).",
+        "Based on human health considerations, the concentration of perfluorohexane sulfonic acid (PFHxS) in drinking water should not exceed 30 ng/L (0.03 μg/L)."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs",
+      "pdf_page": null,
+      "printed_page": 49,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 4 lists PFHxS at 0.03 ug/L with the source 'NHMRC 2011 updated 2025', and Table 4 starts on printed page 49. The NHMRC ADWG PFAS fact sheet (endorsed 2025; ADWG version 4.0, June 2025) independently gives 30 ng/L (0.03 ug/L). Both sources treat PFOS and PFHxS separately for drinking water, as the note says."
+    },
+    {
+      "id": "guidelines.json/current/PFOA",
+      "file_says": {
+        "value": "0.2",
+        "unit": "ug/L",
+        "applies_to": "single",
+        "scenario": "drinking water",
+        "document": "PFAS NEMP Version 3.1 (HEPA 2026), listing the NHMRC ADWG 2011 as updated in 2025",
+        "table": "Table 4",
+        "page": "49",
+        "page_basis": "printed page",
+        "ng_per_L_in_note": "200"
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOS PFHxS PFOA PFBS Source / Drinking water quality guideline values (μg/L) / 0.07 0.56 For New Zealand only: New Zealand Government Department of Internal Affairs 2022 b / 0.008 0.03 0.2 1 NHMRC 2011 updated 2025 c",
+        "c Based on TDIs in Version 4 (updated 2025) of NHMRC (2011).",
+        "Based on human health considerations, the concentration of perfluorooctanoic acid (PFOA) in drinking water should not exceed 200 ng/L (0.2 μg/L)."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs",
+      "pdf_page": null,
+      "printed_page": 49,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 4 lists PFOA at 0.2 ug/L with the source 'NHMRC 2011 updated 2025', and Table 4 starts on printed page 49. The NHMRC ADWG PFAS fact sheet (endorsed 2025; ADWG version 4.0, June 2025) independently gives 200 ng/L (0.2 ug/L)."
+    },
+    {
+      "id": "guidelines.json/current/PFBS",
+      "file_says": {
+        "value": "1",
+        "unit": "ug/L",
+        "applies_to": "single",
+        "scenario": "drinking water",
+        "document": "PFAS NEMP Version 3.1 (HEPA 2026), listing the NHMRC ADWG 2011 as updated in 2025",
+        "table": "Table 4",
+        "page": "49",
+        "page_basis": "printed page",
+        "ng_per_L_in_note": "1000"
+      },
+      "source_says": [
+        "Table 4 Health-based guideline values developed by health authorities / Description / Sum of PFOS and PFHxS a PFOS PFHxS PFOA PFBS Source / Drinking water quality guideline values (μg/L) / 0.07 0.56 For New Zealand only: New Zealand Government Department of Internal Affairs 2022 b / 0.008 0.03 0.2 1 NHMRC 2011 updated 2025 c",
+        "c Based on TDIs in Version 4 (updated 2025) of NHMRC (2011).",
+        "Based on human health considerations, the concentration of perfluorobutane sulfonic acid (PFBS) in drinking water should not exceed 1000 ng/L (1 µg/L)."
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs",
+      "pdf_page": null,
+      "printed_page": 49,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 4 lists PFBS at 1 ug/L with the source 'NHMRC 2011 updated 2025', and Table 4 starts on printed page 49. The NHMRC ADWG PFAS fact sheet (endorsed 2025; ADWG version 4.0, June 2025) independently gives 1000 ng/L (1 ug/L)."
+    },
+    {
+      "id": "soil_criteria.json/S-PFOS+PFHxS-A",
+      "file_says": {
+        "value": "0.003",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "members": [
+          "PFOS",
+          "PFHxS"
+        ],
+        "each_member_too": true,
+        "document": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026)",
+        "table": "Table 5",
+        "page": "printed page 52",
+        "note": "Applies to PFOS only, PFHxS only, and the sum of the two (Table 5, footnote a). The HIL A value is the same in NEMP 3.0 and 3.1."
+      },
+      "source_says": [
+        "Table 5 Human health investigation levels for soil / Land use / Sum of PFOS and PFHxS a (mg/kg) / PFOA (mg/ kg) / Comments and source / Residential with garden/ accessible soil (HIL A) 0.003 0.06 Assumes home-grown produce makes up to 10% of fruit and vegetable consumed",
+        "aWhere the criteria refer to the sum of PFOS and PFHxS, this means concentrations of PFOS only, PFHxS only, and the sum of the two.",
+        "this resulted in changes to the ‘residential with garden/accessible soil’ investigation levels listed in the previous version of the PFAS NEMP ( PFAS NEMP 2.0 ). These were not revised for NEMP 3.1.",
+        "NEMP 3.0, PDF page 59, printed page 50: Table 5 Human health investigation levels for soil ... Residential with garden/ accessible soil (HIL A) 0.003 0.06"
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "pdf_page": null,
+      "printed_page": 52,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 5, HIL A row, sum of PFOS and PFHxS 0.003 mg/kg, on printed page 52; footnote a says 'PFOS only, PFHxS only, and the sum of the two'. NEMP 3.0 Table 5 (PDF page 59, printed page 50) has the same 0.003, and NEMP 3.1 says the HIL A values 'were not revised for NEMP 3.1'."
+    },
+    {
+      "id": "soil_criteria.json/S-PFOA-A",
+      "file_says": {
+        "value": "0.06",
+        "unit": "mg/kg",
+        "scenario": "HIL A",
+        "document": "PFAS National Environmental Management Plan Version 3.1 (HEPA 2026)",
+        "table": "Table 5",
+        "page": "printed page 52",
+        "note": "The HIL A value is the same in NEMP 3.0 and 3.1."
+      },
+      "source_says": [
+        "Table 5 Human health investigation levels for soil / Land use / Sum of PFOS and PFHxS a (mg/kg) / PFOA (mg/ kg) / Comments and source / Residential with garden/ accessible soil (HIL A) 0.003 0.06 Assumes home-grown produce makes up to 10% of fruit and vegetable consumed",
+        "this resulted in changes to the ‘residential with garden/accessible soil’ investigation levels listed in the previous version of the PFAS NEMP ( PFAS NEMP 2.0 ). These were not revised for NEMP 3.1.",
+        "NEMP 3.0, PDF page 59, printed page 50: Table 5 Human health investigation levels for soil ... Residential with garden/ accessible soil (HIL A) 0.003 0.06"
+      ],
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3-1.pdf",
+      "second_source_url": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "pdf_page": null,
+      "printed_page": 52,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "caveat": "NEMP 3.1 was read as a text rendering of the official PDF URL (through the r.jina.ai reader), because www.dcceew.gov.au timed out from this machine and the Wayback Machine has no capture. The printed page comes from the running header 'PFAS NEMP 3.1 Section 8 NN', which the rendering places at the start of each page. That placement was checked against NEMP 3.0, whose true PDF page breaks are known and whose layout is the same (a section divider page, then 'Section 2 10' followed by the section 2 heading). The PDF page number could not be read from this rendering.",
+      "reason": "NEMP 3.1 Table 5, HIL A row, PFOA 0.06 mg/kg, on printed page 52. NEMP 3.0 Table 5 has the same value."
+    },
+    {
+      "id": "soil_criteria.json/S-As-A",
+      "file_says": {
+        "analyte": "Arsenic",
+        "value": "100",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": "Total arsenic; the value assumes 70% oral bioavailability."
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Arsenic2 100 500 300 3 000",
+        "(2) Arsenic: HIL assumes 70% oral bioavailability. Site-specific bioavailability may be important and should be considered where appropriate (refer Schedule B7).",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Arsenic 100 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013.",
+      "note_check": {
+        "verdict": "could_not_verify",
+        "reason": "The 70% oral bioavailability part is confirmed by footnote 2. The word 'total' is not in Table 1A(1) or its notes; the row reads just 'Arsenic'. Comparing a total arsenic result with it is usual practice, but the source text does not say 'total'."
+      }
+    },
+    {
+      "id": "soil_criteria.json/S-Cd-A",
+      "file_says": {
+        "analyte": "Cadmium",
+        "value": "20",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": ""
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Cadmium 20 150 90 900",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Cadmium 20 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013."
+    },
+    {
+      "id": "soil_criteria.json/S-Cr6-A",
+      "file_says": {
+        "analyte": "Chromium (VI)",
+        "value": "100",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": "The value is for chromium (VI). Comparing total chromium with it is a conservative screen."
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Chromium (VI) 100 500 300 3600",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Chromium (VI) 100 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013.",
+      "note_check": {
+        "verdict": "confirmed",
+        "reason": "The table row is 'Chromium (VI)', as the note says. Calling a total chromium comparison conservative is the file's own reasoning, not a quote."
+      }
+    },
+    {
+      "id": "soil_criteria.json/S-Cu-A",
+      "file_says": {
+        "analyte": "Copper",
+        "value": "6000",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": ""
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Copper 6000 30 000 17 000 240 000",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Copper 6000 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013."
+    },
+    {
+      "id": "soil_criteria.json/S-Pb-A",
+      "file_says": {
+        "analyte": "Lead",
+        "value": "300",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": "Based on blood lead models (IEUBK for HIL A)."
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Lead3 300 1200 600 1 500",
+        "(3) Lead: HIL is based on blood lead models (IEUBK for HILs A, B and C and adult lead model for HIL D where 50% oral bioavailability has been considered.",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Lead 300 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013.",
+      "note_check": {
+        "verdict": "confirmed",
+        "reason": "Footnote 3 says the lead HIL uses IEUBK for HILs A, B and C."
+      }
+    },
+    {
+      "id": "soil_criteria.json/S-Hg-A",
+      "file_says": {
+        "analyte": "Mercury (inorganic)",
+        "value": "40",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": "The value is for inorganic mercury and does not address elemental mercury. Comparing total mercury with it is a conservative screen."
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Mercury (inorganic)5 40 120 80 730",
+        "(5) Elemental mercury: HIL does not address elemental mercury. A site-specific assessment should be considered if elemental mercury is present, or suspected to be present,",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Mercury (inorganic) 40 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013.",
+      "note_check": {
+        "verdict": "confirmed",
+        "reason": "The row is 'Mercury (inorganic)' and footnote 5 says the HIL does not address elemental mercury. The 'conservative screen' remark is the file's own reasoning."
+      }
+    },
+    {
+      "id": "soil_criteria.json/S-Ni-A",
+      "file_says": {
+        "analyte": "Nickel",
+        "value": "400",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": ""
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Nickel 400 1200 1200 6 000",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Nickel 400 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013."
+    },
+    {
+      "id": "soil_criteria.json/S-Zn-A",
+      "file_says": {
+        "analyte": "Zinc",
+        "value": "7400",
+        "unit": "mg/kg",
+        "scenario": "HIL A (residential with garden/accessible soil)",
+        "document": "ASC NEPM 1999 Schedule B1 (compilation F2013C00288, 16 May 2013)",
+        "table": "Table 1A(1)",
+        "page": "printed page 48 (PDF page 56)",
+        "note": ""
+      },
+      "source_says": [
+        "Table 1A(1) Health investigation levels for soil contaminants / Chemical / Health-based investigation levels (mg/kg) / Residential1 A Residential1 B Recreational1 C Commercial/ industrial1 D / Metals and Inorganics",
+        "Zinc 7400 60 000 30 000 400 000",
+        "(1) Generic land uses are described in detail in Schedule B7 Section 3 / HIL A ... Residential with garden/accessible soil (home grown produce <10% fruit and vegetable intake (no poultry), also includes childcare centres, preschools and primary schools."
+      ],
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "pdf_page": 56,
+      "printed_page": 48,
+      "verdict": "confirmed",
+      "value_confirmed": true,
+      "reason": "Table 1A(1), column Residential A (HIL A), Zinc 7400 mg/kg, on PDF page 56, whose header reads 'Schedule B 1 - Guideline on Investigation Levels for Soil and Groundwater 48'. The PDF identifies itself as Federal Register of Legislative Instruments F2013C00288, compilation start date 16 May 2013."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+# SYNTHETIC DATA: invented results for a fictional site (FDS-01), Evidenceline concept only. Laboratory: Example Environmental Laboratory (fictional).
+lab_report,lab_sample_id,sample_id,sampled,matrix,analyte,cas,prefix,result,unit,lor,lor_unit,method,extracted,analysed,lab_comment
+SYN-250912,SYN-250912_001,SB1-0.2,12 Sep 2025 09:10 AM,Soil,PFOS,1763-23-1,,0.41,mg/kg,0.0002,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_001,SB1-0.2,12 Sep 2025 09:10 AM,Soil,PFHxS,355-46-4,,0.087,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_001,SB1-0.2,12 Sep 2025 09:10 AM,Soil,PFOA,335-67-1,,0.012,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_002,SB1-1.0,12 Sep 2025 09:25 AM,Soil,PFOS,1763-23-1,<,0.0002,mg/kg,0.0002,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_002,SB1-1.0,12 Sep 2025 09:25 AM,Soil,PFHxS,355-46-4,,0.0015,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_002,SB1-1.0,12 Sep 2025 09:25 AM,Soil,PFOA,335-67-1,,0.0003,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_003,SB2-0.2,12 Sep 2025 10:05 AM,Soil,PFOS,1763-23-1,,0.0022,mg/kg,0.0002,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_003,SB2-0.2,12 Sep 2025 10:05 AM,Soil,PFHxS,355-46-4,,0.0012,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_003,SB2-0.2,12 Sep 2025 10:05 AM,Soil,PFOA,335-67-1,,0.0004,mg/kg,0.0001,mg/kg,LC-MS/MS isotope dilution,18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Arsenic,7440-38-2,,6,mg/kg,2,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Cadmium,7440-43-9,<,0.4,mg/kg,0.4,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Chromium (total),7440-47-3,,15,mg/kg,5,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Copper,7440-50-8,,22,mg/kg,5,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Lead,7439-92-1,,40,mg/kg,5,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Mercury,7439-97-6,<,0.1,mg/kg,0.1,mg/kg,Acid digest CV-AAS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Nickel,7440-02-0,,6,mg/kg,5,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_004,SB3-0.5,12 Sep 2025 11:20 AM,Soil,Zinc,7440-66-6,,120,mg/kg,5,mg/kg,Acid digest ICP-MS,10 Oct 2025,13 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Arsenic,7440-38-2,,4,mg/kg,2,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Cadmium,7440-43-9,<,0.4,mg/kg,0.4,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Chromium (total),7440-47-3,,12,mg/kg,5,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Copper,7440-50-8,,10,mg/kg,5,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Lead,7439-92-1,,18,mg/kg,5,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Mercury,7439-97-6,,0.2,mg/kg,0.1,mg/kg,Acid digest CV-AAS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Nickel,7440-02-0,,5,mg/kg,5,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_005,SB3-15,12 Sep 2025 11:40 AM,Soil,Zinc,7440-66-6,,60,mg/kg,5,mg/kg,Acid digest ICP-MS,12 Oct 2025,14 Oct 2025,Extraction delayed: sample logged to a later batch
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Arsenic,7440-38-2,,8,mg/kg,2,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Cadmium,7440-43-9,,0.6,mg/kg,0.4,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Chromium (total),7440-47-3,,22,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Copper,7440-50-8,,48,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Lead,7439-92-1,,180,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Mercury,7439-97-6,,0.2,mg/kg,0.1,mg/kg,Acid digest CV-AAS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Nickel,7440-02-0,,9,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_006,SB4-0.3,12 Sep 2025 01:15 PM,Soil,Zinc,7440-66-6,,310,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Arsenic,7440-38-2,,7,mg/kg,2,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Cadmium,7440-43-9,<,0.4,mg/kg,0.4,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Chromium (total),7440-47-3,,19,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Copper,7440-50-8,,41,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Lead,7439-92-1,,95,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Mercury,7439-97-6,,0.1,mg/kg,0.1,mg/kg,Acid digest CV-AAS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Nickel,7440-02-0,,8,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_007,QC1,12 Sep 2025,Soil,Zinc,7440-66-6,,265,mg/kg,5,mg/kg,Acid digest ICP-MS,17 Sep 2025,18 Sep 2025,
+SYN-250912,SYN-250912_008,RB1,12 Sep 2025 01:40 PM,Water,PFOS,1763-23-1,,0.004,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_008,RB1,12 Sep 2025 01:40 PM,Water,PFHxS,355-46-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_008,RB1,12 Sep 2025 01:40 PM,Water,PFOA,335-67-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),18 Sep 2025,19 Sep 2025,
+SYN-250912,SYN-250912_008,RB1,12 Sep 2025 01:40 PM,Water,PFHxA,307-24-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),18 Sep 2025,19 Sep 2025,
+SYN-250916,SYN-250916_001,MB1,16 Sep 2025 09:30 AM,Water,PFOS,1763-23-1,,0.002,µg/L,0.001,µg/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_001,MB1,16 Sep 2025 09:30 AM,Water,PFHxS,355-46-4,,0.001,µg/L,0.001,µg/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_001,MB1,16 Sep 2025 09:30 AM,Water,PFOA,335-67-1,<,0.001,µg/L,0.001,µg/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_001,MB1,16 Sep 2025 09:30 AM,Water,PFHxA,307-24-4,<,0.001,µg/L,0.001,µg/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_002,MB2,16 Sep 2025 11:00 AM,Water,PFOS,1763-23-1,,38,ng/L,1,ng/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_002,MB2,16 Sep 2025 11:00 AM,Water,PFHxS,355-46-4,,19,ng/L,1,ng/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_002,MB2,16 Sep 2025 11:00 AM,Water,PFOA,335-67-1,<,1,ng/L,1,ng/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_002,MB2,16 Sep 2025 11:00 AM,Water,PFHxA,307-24-4,<,1,ng/L,1,ng/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_003,MB3,16 Sep 2025 01:10 PM,Water,PFOS,1763-23-1,<,0.01,μg/L,0.01,μg/L,LC-MS/MS isotope dilution (standard),19 Sep 2025,20 Sep 2025,Standard-level method as requested on the chain of custody
+SYN-250916,SYN-250916_003,MB3,16 Sep 2025 01:10 PM,Water,PFHxS,355-46-4,<,0.01,μg/L,0.01,μg/L,LC-MS/MS isotope dilution (standard),19 Sep 2025,20 Sep 2025,Standard-level method as requested on the chain of custody
+SYN-250916,SYN-250916_003,MB3,16 Sep 2025 01:10 PM,Water,PFOA,335-67-1,<,0.01,μg/L,0.01,μg/L,LC-MS/MS isotope dilution (standard),19 Sep 2025,20 Sep 2025,Standard-level method as requested on the chain of custody
+SYN-250916,SYN-250916_003,MB3,16 Sep 2025 01:10 PM,Water,PFHxA,307-24-4,<,0.01,μg/L,0.01,μg/L,LC-MS/MS isotope dilution (standard),19 Sep 2025,20 Sep 2025,Standard-level method as requested on the chain of custody
+SYN-250916,SYN-250916_004,QC2,16 Sep 2025,Water,PFOS,1763-23-1,,0.035,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_004,QC2,16 Sep 2025,Water,PFHxS,355-46-4,,0.018,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_004,QC2,16 Sep 2025,Water,PFOA,335-67-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_004,QC2,16 Sep 2025,Water,PFHxA,307-24-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_005,FB1,16 Sep 2025 11:05 AM,Water,PFOS,1763-23-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_005,FB1,16 Sep 2025 11:05 AM,Water,PFHxS,355-46-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_005,FB1,16 Sep 2025 11:05 AM,Water,PFOA,335-67-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_005,FB1,16 Sep 2025 11:05 AM,Water,PFHxA,307-24-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_006,CB1,16 Sep 2025,Water,PFOS,1763-23-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_006,CB1,16 Sep 2025,Water,PFHxS,355-46-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_006,CB1,16 Sep 2025,Water,PFOA,335-67-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_006,CB1,16 Sep 2025,Water,PFHxA,307-24-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_007,TB1,16 Sep 2025,Water,PFOS,1763-23-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_007,TB1,16 Sep 2025,Water,PFHxS,355-46-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_007,TB1,16 Sep 2025,Water,PFOA,335-67-1,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,
+SYN-250916,SYN-250916_007,TB1,16 Sep 2025,Water,PFHxA,307-24-4,<,0.001,ug/L,0.001,ug/L,LC-MS/MS isotope dilution (trace),19 Sep 2025,20 Sep 2025,

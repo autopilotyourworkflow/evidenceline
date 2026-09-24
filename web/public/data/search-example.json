@@ -1,0 +1,175 @@
+{
+  "generated_by": "scripts/export_web_data.py, from search_guidelines(question, k=2) on the local index",
+  "note": "Example answers from the indexed public guidance. Excerpts are short, with each document's licence notice. Never read a guideline value from an excerpt; open the cited page.",
+  "answers": [
+    {
+      "question": "What must a detailed site investigation report include?",
+      "status": "passages found",
+      "explanation": "2 passages from the indexed guidance, best match first. Each gives the document, edition, page and a short excerpt; open the link to read it in context. These are search results, not an answer or advice.",
+      "passages": [
+        {
+          "rank": 1,
+          "document_id": "dwer-amcs",
+          "document_title": "Guideline: Assessment and management of contaminated sites",
+          "edition": "November 2021",
+          "publication_date": "2021-11",
+          "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+          "pdf_page": 34,
+          "printed_page": "29",
+          "printed_page_basis": "printed on the page",
+          "section": "9.1 Introduction",
+          "section_path": "9 Detailed site investigation > 9.1 Introduction",
+          "location": "p. 29 (PDF p. 34), 9.1 Introduction",
+          "excerpt": "...You should compile a DSI following Schedule B2 of the ASC NEPM. See below for a discussion about the elements of a DSI and the checklist in Appendix A for examples of information you should include in a DSI report...",
+          "excerpt_words": 40,
+          "licence_lane": "B",
+          "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+          "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+          "official_url": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf",
+          "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=34",
+          "matched": [
+            "detailed site investigation",
+            "report",
+            "include"
+          ],
+          "coverage": "1.00",
+          "note": "Extracted text with spacing and dashes tidied; check the wording on the page before quoting it. Short excerpt only because of the document's licence; read the rest at the official link."
+        },
+        {
+          "rank": 2,
+          "document_id": "dwer-amcs",
+          "document_title": "Guideline: Assessment and management of contaminated sites",
+          "edition": "November 2021",
+          "publication_date": "2021-11",
+          "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+          "pdf_page": 38,
+          "printed_page": "33",
+          "printed_page_basis": "printed on the page",
+          "section": "9.4 Data evaluation",
+          "section_path": "9 Detailed site investigation > 9.4 Data evaluation",
+          "location": "p. 33 (PDF p. 38), 9.4 Data evaluation",
+          "excerpt": "9.4 Data evaluation Your DSI report should evaluate the data against the investigation objectives as incorporated in the DQOs and discuss the data’s precision, accuracy or bias, Minimum number of samples There is no minimum number of sampling...",
+          "excerpt_words": 38,
+          "licence_lane": "B",
+          "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+          "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+          "official_url": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf",
+          "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=38",
+          "matched": [
+            "detailed site investigation",
+            "report",
+            "include"
+          ],
+          "coverage": "1.00",
+          "note": "Extracted text with spacing and dashes tidied; check the wording on the page before quoting it. Short excerpt only because of the document's licence; read the rest at the official link."
+        }
+      ],
+      "notes": [
+        "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+      ],
+      "indexed_documents": [
+        "ASC NEPM Schedule B1, Compilation F2013C00288 (Measure as amended 2013)",
+        "PFAS NEMP 3.0, Version 3.0 (HEPA 2025)",
+        "DWER Assessment and management of contaminated sites, November 2021",
+        "DWER Identification, reporting and classification of contaminated sites, February 2025",
+        "ADWG PFAS fact sheet, Version 4.0, updated June 2025 (fact sheet endorsed 2025)"
+      ],
+      "unavailable_documents": [
+        "PFAS NEMP 3.1, Version 3.1 (HEPA 2026): Not indexed. On 24 September 2026 (Bangkok time) www.dcceew.gov.au timed out from the build machine (90 s, browser User-Agent) and the Wayback Machine has no capture of this file. The fetch script still tries it on every run."
+      ]
+    },
+    {
+      "question": "What is a tier 1 screening assessment?",
+      "status": "passages found",
+      "explanation": "2 passages from the indexed guidance, best match first. Each gives the document, edition, page and a short excerpt; open the link to read it in context. These are search results, not an answer or advice.",
+      "passages": [
+        {
+          "rank": 1,
+          "document_id": "dwer-amcs",
+          "document_title": "Guideline: Assessment and management of contaminated sites",
+          "edition": "November 2021",
+          "publication_date": "2021-11",
+          "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+          "pdf_page": 49,
+          "printed_page": "44",
+          "printed_page_basis": "printed on the page",
+          "section": "10.4 Tier 1 screening risk assessment",
+          "section_path": "10 Risk assessment framework > 10.4 Tier 1 screening risk assessment",
+          "location": "p. 44 (PDF p. 49), 10.4 Tier 1 screening risk assessment",
+          "excerpt": "10.4 Tier 1 screening risk assessment Schedule B1 of the ASC NEPM is the primary guidance for carrying out a Tier 1 screening assessment. At this level, you compare site data with generic assessment levels. You may also need...",
+          "excerpt_words": 39,
+          "licence_lane": "B",
+          "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+          "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+          "official_url": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf",
+          "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=49",
+          "matched": [
+            "tier",
+            "screening",
+            "assessment"
+          ],
+          "coverage": "1.00",
+          "note": "Extracted text with spacing and dashes tidied; check the wording on the page before quoting it. Short excerpt only because of the document's licence; read the rest at the official link."
+        },
+        {
+          "rank": 2,
+          "document_id": "dwer-amcs",
+          "document_title": "Guideline: Assessment and management of contaminated sites",
+          "edition": "November 2021",
+          "publication_date": "2021-11",
+          "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+          "pdf_page": 50,
+          "printed_page": "45",
+          "printed_page_basis": "printed on the page",
+          "section": "10.4 Tier 1 screening risk assessment",
+          "section_path": "10 Risk assessment framework > 10.4 Tier 1 screening risk assessment",
+          "location": "p. 45 (PDF p. 50), 10.4 Tier 1 screening risk assessment",
+          "excerpt": "...Decision-making framework for risk assessment A Tier 1 screening risk assessment also needs to consider if other factors may be relevant to the nature and extent of contamination which require further assessment: Example of a Tier 1 screening risk...",
+          "excerpt_words": 39,
+          "licence_lane": "B",
+          "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+          "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+          "official_url": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf",
+          "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=50",
+          "matched": [
+            "tier",
+            "screening",
+            "assessment"
+          ],
+          "coverage": "1.00",
+          "note": "Extracted text with spacing and dashes tidied; check the wording on the page before quoting it. Short excerpt only because of the document's licence; read the rest at the official link."
+        }
+      ],
+      "notes": [
+        "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+      ],
+      "indexed_documents": [
+        "ASC NEPM Schedule B1, Compilation F2013C00288 (Measure as amended 2013)",
+        "PFAS NEMP 3.0, Version 3.0 (HEPA 2025)",
+        "DWER Assessment and management of contaminated sites, November 2021",
+        "DWER Identification, reporting and classification of contaminated sites, February 2025",
+        "ADWG PFAS fact sheet, Version 4.0, updated June 2025 (fact sheet endorsed 2025)"
+      ],
+      "unavailable_documents": [
+        "PFAS NEMP 3.1, Version 3.1 (HEPA 2026): Not indexed. On 24 September 2026 (Bangkok time) www.dcceew.gov.au timed out from the build machine (90 s, browser User-Agent) and the Wayback Machine has no capture of this file. The fetch script still tries it on every run."
+      ]
+    },
+    {
+      "question": "What does the NSW EPA sampling design guideline require?",
+      "status": "not covered",
+      "explanation": "The indexed guidelines don't appear to cover this: the question is about NSW rules, and the corpus holds only Western Australian and national guidance.",
+      "passages": [],
+      "notes": [],
+      "indexed_documents": [
+        "ASC NEPM Schedule B1, Compilation F2013C00288 (Measure as amended 2013)",
+        "PFAS NEMP 3.0, Version 3.0 (HEPA 2025)",
+        "DWER Assessment and management of contaminated sites, November 2021",
+        "DWER Identification, reporting and classification of contaminated sites, February 2025",
+        "ADWG PFAS fact sheet, Version 4.0, updated June 2025 (fact sheet endorsed 2025)"
+      ],
+      "unavailable_documents": [
+        "PFAS NEMP 3.1, Version 3.1 (HEPA 2026): Not indexed. On 24 September 2026 (Bangkok time) www.dcceew.gov.au timed out from the build machine (90 s, browser User-Agent) and the Wayback Machine has no capture of this file. The fetch script still tries it on every run."
+      ]
+    }
+  ]
+}

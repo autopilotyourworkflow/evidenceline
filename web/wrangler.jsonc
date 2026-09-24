@@ -1,0 +1,34 @@
+// Cloudflare Worker for the Evidenceline website. Steps and checks: ../DEPLOY.md.
+// Nothing secret lives here. PROXY_SHARED_SECRET is a Worker secret, set with `wrangler secret put` (DEPLOY.md).
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "evidenceline",
+  // The Autopilot Cloudflare account. Pinned so that a deploy can only ever go to this account: a login or token for
+  // any other account fails instead of publishing somewhere else.
+  "account_id": "a2d57c1e05c835fb5f259ca1b2725b59",
+  "main": "./worker/index.js",
+  "compatibility_date": "2026-09-01",
+  // The site is served only at its own address: no workers.dev address and no preview addresses.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "evidenceline.autopilotyourworkflow.com", "custom_domain": true }],
+  "assets": {
+    // Built by `npm run build:launch` (connector and question box "coming soon") or `npm run build` (everything on).
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Routes are client-side: an unknown path gets index.html, and the page shows its own "not found" view.
+    "not_found_handling": "single-page-application",
+    // Only these paths run the Worker (worker/index.js). Everything else is a static file, with dist/_headers applied.
+    "run_worker_first": ["/api", "/api/*", "/mcp", "/mcp/*"]
+  },
+  "vars": {
+    // The API service's origin on Render, with no trailing slash, such as https://evidenceline-api-xxxx.onrender.com.
+    // Empty until the service exists: /api and /mcp then answer 503 "The live service is not connected yet".
+    // It is not a secret; set it here when switching on (DEPLOY.md) so that every later deploy keeps it.
+    "API_ORIGIN": ""
+  },
+  // No usage data is sent to Cloudflare from wrangler runs on this computer.
+  "send_metrics": false,
+  // No request logs are kept: the site stores nothing about its visitors.
+  "observability": { "enabled": false }
+}

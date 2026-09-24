@@ -1,0 +1,5 @@
+# Store and check out text files with LF everywhere (the code and data are written with LF).
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.woff2 binary

@@ -1,0 +1,18 @@
+# SYNTHETIC DATA: invented chain of custody for a fictional site (FDS-01), Evidenceline concept only.
+coc_number,sample_id,sampled,matrix,containers,analyses,hold,comments,relinquished_by,relinquished,received,temp_on_receipt_c
+COC-FDS-01,SB1-0.2,12/09/25 09:10,S,1 x 250 mL PP jar,PFAS-3,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB1-1.0,12/09/25 09:25,S,1 x 250 mL PP jar,PFAS-3,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB2-0.2,12/09/25 10:05,S,1 x 250 mL PP jar,PFAS-3,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB3-0.5,12/09/25 11:20,S,1 x 250 mL glass jar,M8,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB3-1.5,12/09/25 11:40,S,1 x 250 mL glass jar,M8,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB4-0.3,12/09/25 13:15,S,1 x 250 mL glass jar,M8,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,SB4-1.0,12/09/25 13:30,S,1 x 250 mL glass jar,M8,Y,HOLD pending SB4-0.3 results,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,QC1,12/09/25,S,1 x 250 mL glass jar,M8,N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-01,RB1,12/09/25 13:40,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),12/09/25 15:30,12/09/25 17:05,4.2
+COC-FDS-02,MB1,16/09/25 09:30,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,MB2,16/09/25 11:00,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,MB3,16/09/25 13:10,W,2 x 60 mL PP bottle,PFAS-4 (standard),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,QC2,16/09/25,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,FB1,16/09/25 11:05,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,CB1,16/09/25,W,2 x 250 mL PP bottle,PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8
+COC-FDS-02,TB1,16/09/25,W,2 x 250 mL PP bottle (lab-prepared),PFAS-4 (trace),N,,J. Citizen (fictional),16/09/25 15:00,16/09/25 16:40,3.8

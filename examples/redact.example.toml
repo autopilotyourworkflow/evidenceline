@@ -1,0 +1,37 @@
+# Evidenceline redaction identifiers: an EXAMPLE. Every name, address, lot, email and phone number below is
+# fictional.
+#
+# Copy this file to ~/.evidenceline/redact.toml, or set EVIDENCELINE_REDACT to the path of your copy, and replace
+# the entries with your own. Keep the real file on your own computer; never commit it.
+#
+# Each [[type]] block is one identity. Every name in its list becomes the same placeholder, so "Quokka Ridge
+# Holdings Pty Ltd" and "QRH" below both become [CLIENT-1]. Matching ignores case and extra spaces and only
+# matches whole words. Types: client, site, person, address, lot, email, phone.
+#
+# Built-in patterns also catch email addresses, Australian phone numbers, WA lots ("Lot 123") and street addresses
+# ending in a suburb and "WA", so list here what those patterns cannot know: client, site and people's names, and
+# addresses written without "WA".
+
+[[client]]
+names = ["Quokka Ridge Holdings Pty Ltd", "Quokka Ridge Holdings", "QRH"]
+
+[[client]]
+names = ["Banksia Flats Transport (fictional)"]
+
+[[site]]
+names = ["Sampleton Fuel Depot", "the Sampleton depot"]
+
+[[person]]
+names = ["Jane Citizen", "J. Citizen"]
+
+[[address]]
+names = ["42 Imaginary Road Sampleton"]
+
+[[lot]]
+names = ["Lot 9999 on Deposited Plan 99999"]
+
+[[email]]
+names = ["site.contact@example.com"]
+
+[[phone]]
+names = ["08 5550 1234"]

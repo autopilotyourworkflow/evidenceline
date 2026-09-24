@@ -1,0 +1,519 @@
+{
+  "synthetic": true,
+  "synthetic_notice": "Synthetic data. FDS-01 is a made-up site and these are made-up lab results, created to show how Evidenceline works.",
+  "site_id": "FDS-01",
+  "site_description": "A fictional former depot, Perth",
+  "well_id": "MB2",
+  "unit": "ug/L",
+  "row_numbering": "The header is row 1, as in a spreadsheet.",
+  "rounds": [
+    {
+      "round": 1,
+      "date": "2024-03-12",
+      "sample_id": "MB2-20240312",
+      "lab_report_id": "SYN-240312",
+      "site_id": "FDS-01",
+      "well_id": "MB2",
+      "matrix": "groundwater",
+      "file": "mb2_round1_lab.csv",
+      "path": "src/evidenceline/data/mb2_round1_lab.csv",
+      "results": [
+        {
+          "analyte": "PFOS",
+          "reported": "0.062",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 14
+        },
+        {
+          "analyte": "PFHxS",
+          "reported": "0.021",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 15
+        }
+      ],
+      "other_analytes": [
+        {
+          "analyte": "PFBA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 2
+        },
+        {
+          "analyte": "PFPeA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 3
+        },
+        {
+          "analyte": "PFHxA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 4
+        },
+        {
+          "analyte": "PFHpA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 5
+        },
+        {
+          "analyte": "PFOA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 6
+        },
+        {
+          "analyte": "PFNA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 7
+        },
+        {
+          "analyte": "PFDA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 8
+        },
+        {
+          "analyte": "PFBS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 9
+        },
+        {
+          "analyte": "PFPeS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 10
+        },
+        {
+          "analyte": "PFHpS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 11
+        },
+        {
+          "analyte": "4:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 12
+        },
+        {
+          "analyte": "6:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 13
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "date": "2024-11-19",
+      "sample_id": "MB2-20241119",
+      "lab_report_id": "SYN-241119",
+      "site_id": "FDS-01",
+      "well_id": "MB2",
+      "matrix": "groundwater",
+      "file": "mb2_round2_lab.csv",
+      "path": "src/evidenceline/data/mb2_round2_lab.csv",
+      "results": [
+        {
+          "analyte": "PFOS",
+          "reported": "0.041",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 14
+        },
+        {
+          "analyte": "PFHxS",
+          "reported": "0.018",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 15
+        }
+      ],
+      "other_analytes": [
+        {
+          "analyte": "PFBA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 2
+        },
+        {
+          "analyte": "PFPeA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 3
+        },
+        {
+          "analyte": "PFHxA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 4
+        },
+        {
+          "analyte": "PFHpA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 5
+        },
+        {
+          "analyte": "PFOA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 6
+        },
+        {
+          "analyte": "PFNA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 7
+        },
+        {
+          "analyte": "PFDA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 8
+        },
+        {
+          "analyte": "PFBS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 9
+        },
+        {
+          "analyte": "PFPeS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 10
+        },
+        {
+          "analyte": "PFHpS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 11
+        },
+        {
+          "analyte": "4:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 12
+        },
+        {
+          "analyte": "6:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 13
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "date": "2025-09-16",
+      "sample_id": "MB2-20250916",
+      "lab_report_id": "SYN-250916",
+      "site_id": "FDS-01",
+      "well_id": "MB2",
+      "matrix": "groundwater",
+      "file": "mb2_round3_lab.csv",
+      "path": "src/evidenceline/data/mb2_round3_lab.csv",
+      "results": [
+        {
+          "analyte": "PFOS",
+          "reported": "0.038",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 14
+        },
+        {
+          "analyte": "PFHxS",
+          "reported": "0.019",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 15
+        }
+      ],
+      "other_analytes": [
+        {
+          "analyte": "PFBA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 2
+        },
+        {
+          "analyte": "PFPeA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 3
+        },
+        {
+          "analyte": "PFHxA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 4
+        },
+        {
+          "analyte": "PFHpA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 5
+        },
+        {
+          "analyte": "PFOA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 6
+        },
+        {
+          "analyte": "PFNA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 7
+        },
+        {
+          "analyte": "PFDA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 8
+        },
+        {
+          "analyte": "PFBS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 9
+        },
+        {
+          "analyte": "PFPeS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 10
+        },
+        {
+          "analyte": "PFHpS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 11
+        },
+        {
+          "analyte": "4:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 12
+        },
+        {
+          "analyte": "6:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 13
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "date": "2026-05-05",
+      "sample_id": "MB2-20260505",
+      "lab_report_id": "SYN-260505",
+      "site_id": "FDS-01",
+      "well_id": "MB2",
+      "matrix": "groundwater",
+      "file": "mb2_round4_lab.csv",
+      "path": "src/evidenceline/data/mb2_round4_lab.csv",
+      "results": [
+        {
+          "analyte": "PFOS",
+          "reported": "0.006",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 14
+        },
+        {
+          "analyte": "PFHxS",
+          "reported": "0.009",
+          "detected": true,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 15
+        }
+      ],
+      "other_analytes": [
+        {
+          "analyte": "PFBA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 2
+        },
+        {
+          "analyte": "PFPeA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 3
+        },
+        {
+          "analyte": "PFHxA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 4
+        },
+        {
+          "analyte": "PFHpA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 5
+        },
+        {
+          "analyte": "PFOA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 6
+        },
+        {
+          "analyte": "PFNA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 7
+        },
+        {
+          "analyte": "PFDA",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 8
+        },
+        {
+          "analyte": "PFBS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 9
+        },
+        {
+          "analyte": "PFPeS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 10
+        },
+        {
+          "analyte": "PFHpS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 11
+        },
+        {
+          "analyte": "4:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 12
+        },
+        {
+          "analyte": "6:2 FTS",
+          "reported": "<0.001",
+          "detected": false,
+          "detection_limit": "0.001",
+          "unit": "ug/L",
+          "row": 13
+        }
+      ]
+    }
+  ]
+}

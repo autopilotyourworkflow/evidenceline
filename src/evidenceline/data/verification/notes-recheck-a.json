@@ -1,0 +1,85 @@
+{
+  "pass": "A",
+  "kind": "re-check of two explanatory notes corrected after the first verification",
+  "date": "2026-09-24",
+  "method": "Downloaded both primary sources afresh on 2026-09-24 and compared them with the repository files. PFAS NEMP 3.0: the dcceew.gov.au host timed out after 60 seconds, so the pinned Wayback capture of the official file was used (10,682,963 bytes, SHA-256 abcc5c28177e2a96747e292e991ae46dd3d8a0099b3ca80e1750192411ce196e, the same file the corpus manifest records; PDF metadata: title 'PFAS National Environmental Management Plan version 3.0', author 'Heads of EPA Australia and New Zealand', created 3 March 2025). ASC NEPM Schedule B1: downloaded directly from legislation.gov.au (2,615,692 bytes, SHA-256 17788fb3339c5163139dc72cf67234b2276de9115d272ae7770f36c4bd77ad99, footer 'Federal Register of Legislative Instruments F2013C00288'). Text was extracted with pdfplumber and the table pages were also rendered to images and read by eye to confirm footnote markers and superscripts. Quotes below are copied from the extracted text and checked against the rendered page; line breaks are joined with a space. The server wording was read from src/evidenceline/server.py, and core.lookup_limit was run for PFOS, PFHxS and PFOS+PFHxS under 'nemp-3.0' to see what the tool actually returns. This pass did not read the other re-check or the earlier pass files. It is an automated check, not a review by a practitioner.",
+  "notes": [
+    {
+      "id": "nemp-3.0/PFOS+PFHxS",
+      "file": "src/evidenceline/data/guidelines.json",
+      "location": "rules[id=nemp-3.0].limits[key=PFOS+PFHxS].note",
+      "file_says": "Applies to PFOS on its own, PFHxS on its own, and the sum of the two (Table 4, footnote a). Compare each of the three with 0.07 ug/L.",
+      "source_says": {
+        "table_title": "Table 4 Health-based guideline values developed by health authorities",
+        "column_header": "Sum of PFOS and PFHxS a",
+        "row": "Drinking water quality guideline | 0.07µg/L | 0.56µg/L | NHMRC 2011; New Zealand Government Department of Internal Affairs 2022",
+        "footnote_a": "Where the criteria refer to the sum of PFOS and PFHxS, this means concentrations of PFOS only, PFHxS only, and the sum of the two."
+      },
+      "source": "PFAS National Environmental Management Plan Version 3.0 (HEPA 2025)",
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "copy_used": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "page": "PDF page 57, printed page 48 (Section 8.6.1); table and footnote a are on the same page",
+      "verdict": "confirmed",
+      "reason": "Footnote a is attached to the 'Sum of PFOS and PFHxS' column header, so it governs the 0.07 µg/L drinking-water cell. It says that value means PFOS only, PFHxS only, and the sum of the two. The note says the same thing in plain words and correctly tells the reader to compare each of the three with 0.07 ug/L. Table, footnote letter, value and unit all match. The file's page field ('57', PDF page) is also right."
+    },
+    {
+      "id": "fds01-soil/S-PFOS+PFHxS-A (related, NEMP 3.0 part only)",
+      "file": "src/evidenceline/data/fds01_site/soil_criteria.json",
+      "location": "criteria[id=S-PFOS+PFHxS-A].note",
+      "file_says": "Applies to PFOS only, PFHxS only, and the sum of the two (Table 5, footnote a). The HIL A value is the same in NEMP 3.0 and 3.1.",
+      "source_says": {
+        "table_title": "Table 5 Human health investigation levels for soil",
+        "row": "Residential with garden/accessible soil (HIL A) | 0.003 (sum of PFOS and PFHxS a, mg/kg) | 0.06 (PFOA, mg/kg)",
+        "footnote_a": "Where the criteria refer to the sum of PFOS and PFHxS, this means concentrations of PFOS only, PFHxS only, and the sum of the two."
+      },
+      "source": "PFAS National Environmental Management Plan Version 3.0 (HEPA 2025)",
+      "source_url": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "copy_used": "http://web.archive.org/web/20250315173805id_/https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf",
+      "page": "HIL A row: PDF page 59, printed page 50; footnote a: PDF page 60, printed page 51 (Table 5 continued)",
+      "verdict": "could_not_verify",
+      "reason": "soil_criteria.json has no note on the 0.07 ug/L drinking-water value; this is the only note there that touches the same footnote. The NEMP 3.0 half is confirmed: NEMP 3.0 Table 5 footnote a is word for word the same as Table 4 footnote a, and the NEMP 3.0 HIL A value is 0.003 mg/kg for the sum (0.06 mg/kg for PFOA), as the file says. The cited document is NEMP 3.1 (Table 5, printed page 52), which this re-check did not fetch, so the 3.1 footnote and the claim that the value is the same in 3.1 were not checked here."
+    },
+    {
+      "id": "fds01-soil/S-As-A",
+      "file": "src/evidenceline/data/fds01_site/soil_criteria.json",
+      "location": "criteria[id=S-As-A].note",
+      "file_says": "Arsenic (as the table row reads); the value assumes 70% oral bioavailability (Table 1A(1), note 2).",
+      "source_says": {
+        "table_title": "Table 1A(1) Health investigation levels for soil contaminants",
+        "section": "Metals and Inorganics",
+        "row": "Arsenic2 | Residential A 100 | Residential B 500 | Recreational C 300 | Commercial/industrial D 3 000 (mg/kg; the 2 is a superscript note marker)",
+        "note_2": "(2) Arsenic: HIL assumes 70% oral bioavailability. Site-specific bioavailability may be important and should be considered where appropriate (refer Schedule B7)."
+      },
+      "source": "National Environment Protection (Assessment of Site Contamination) Measure 1999, Schedule B1, Guideline on Investigation Levels for Soil and Groundwater (compilation F2013C00288)",
+      "source_url": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "copy_used": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2",
+      "page": "Row: PDF page 56, printed page 48. Note 2: PDF page 57, printed page 49 (the notes follow the table's continuation)",
+      "verdict": "confirmed",
+      "reason": "The row label is just 'Arsenic', with the superscript 2 pointing to note 2, and the HIL A value is 100 mg/kg. Note 2 says the HIL assumes 70% oral bioavailability. The note now matches both: it no longer says 'Total', and '(Table 1A(1), note 2)' is the right note number. Small points that are not errors: the note leaves out the second sentence of note 2 (site-specific bioavailability may matter, see Schedule B7), and note 2 sits on printed page 49 while the criterion's page field gives printed page 48, which is correct for the row itself."
+    }
+  ],
+  "server_wording": [
+    {
+      "id": "server/INSTRUCTIONS",
+      "file": "src/evidenceline/server.py",
+      "text": "\"nemp-3.0\" (PFAS NEMP 3.0, named as adopted on the WA government page) screens the SUM of PFOS and PFHxS, and PFOS alone and PFHxS alone, against 0.07 ug/L (Table 4, footnote a).",
+      "verdict": "confirmed",
+      "reason": "Names all three quantities the footnote names and cites the right table and footnote. The capital letters on SUM put more weight on the sum than the footnote does, but the meaning is the same. The next sentence, about the 'current' rule having no sum, is about NEMP 3.1 and was not checked here."
+    },
+    {
+      "id": "server/lookup_limit docstring",
+      "file": "src/evidenceline/server.py",
+      "text": "Under 'nemp-3.0', 0.07 ug/L applies to PFOS alone, PFHxS alone and their sum (Table 4, footnote a): asking for either returns that value, with the footnote quoted.",
+      "verdict": "confirmed",
+      "reason": "Matches the footnote. Run on 2026-09-24, lookup_limit('PFOS', 'nemp-3.0') and lookup_limit('PFHxS', 'nemp-3.0') both return 0.07 ug/L with a caveat quoting the footnote's words \"PFOS only, PFHxS only, and the sum of the two\". Only that part of the footnote is quoted, not the whole sentence; that is accurate. 'either' means PFOS or PFHxS, which is clear from the context."
+    },
+    {
+      "id": "core.lookup_limit returned fields (related, not owned here)",
+      "file": "src/evidenceline/core.py",
+      "text": "For analyte 'PFOS' (and 'PFHxS') under 'nemp-3.0' the result has applies_to 'sum' and compared_quantity 'sum of PFOS and PFHxS'. The docstring says the result tells you 'whether it applies to the analyte on its own or to the sum of PFOS and PFHxS'.",
+      "verdict": "mismatch",
+      "reason": "Under footnote a the value applies to PFOS on its own as well as to the sum. When the caller asked about PFOS, a field that says the compared quantity is the sum points a reader or a model at the sum only, while the note and caveat in the same result say PFOS alone counts too. The note text is right; these two structured fields lag behind it. Suggested change for the owner of core.py (line 129) and models.py: for a member lookup under a rule whose sum value also applies to each member, set compared_quantity to the member on its own, for example 'PFOS on its own (the same value also applies to PFHxS on its own and to the sum)', and either add a third applies_to value such as 'each and sum' or reword the docstring so it no longer promises an either/or answer."
+    }
+  ],
+  "summary": "Both corrected notes now match their sources: the NEMP 3.0 note says what Table 4 footnote a says, and the arsenic note matches the Table 1A(1) row label and note 2. The server instructions and the lookup_limit docstring say the same as the footnote. One related issue outside the notes: lookup_limit still labels the compared quantity as the sum when asked about PFOS or PFHxS alone under NEMP 3.0. The NEMP 3.1 half of the soil PFOS and PFHxS note was not checked."
+}

@@ -1,0 +1,57 @@
+# Environments
+.venv/
+venv/
+
+# Python caches and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Test reports (pytest junit, evaluation output, CI artefacts)
+reports/
+*.junit.xml
+junit*.xml
+
+# Website: packages, build output, local settings, Cloudflare local state, smoke-test screenshots
+node_modules/
+web/dist/
+web/.wrangler/
+.wrangler/
+web/tests/screens/
+
+# Local secrets and settings: deploy tokens, environment files (the documented templates are kept)
+.deploy/
+.env
+.env.*
+!.env.example
+!web/.env.production
+*.local
+
+# Local redaction identifier files and audit logs (they live in ~/.evidenceline by default)
+redact.toml
+redaction-audit*.jsonl
+*.audit.jsonl
+.evidenceline/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Guidance corpus: downloads, extracted text and the search index (never committed)
+.cache/
+
+# Local design drafts, their screenshot scripts and the design brief (kept local; the site in web/ replaces them)
+design-options/
+PRODUCT.md

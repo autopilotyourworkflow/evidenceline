@@ -1,0 +1,129 @@
+{
+  "_about": "TEST FIXTURE for tests/smoke.mjs only. Not published and not real pipeline output. Same shape as public/data/answers.json (scripts/precompute_answers.py, AnswerResult in src/evidenceline/answer/models.py). Guideline values are copied from src/evidenceline/data/guidelines.json.",
+  "prepared_on": "2026-09-24",
+  "model": "fixture-model",
+  "label": "Test fixture prepared for the smoke test.",
+  "answers": [
+    {
+      "question": "What must a detailed site investigation report include?",
+      "prepared_on": "2026-09-24",
+      "label": "Fixture answer, prepared in advance by the same pipeline with fixture-model. It passed every check.",
+      "result": {
+        "question": "What must a detailed site investigation report include?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by fixture-model from the numbered passages only, then checked in code.",
+        "answer": "A detailed site investigation report should follow Schedule B2 of the ASC NEPM [1]. The WA guideline lists the elements to include in its Appendix A checklist [1].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER).",
+            "printed_page": "29",
+            "pdf_page": 34,
+            "location": "p. 29 (PDF p. 34), 9. Detailed site investigation",
+            "section": "9. Detailed site investigation",
+            "excerpt": "...You should compile a DSI following Schedule B2 of the ASC NEPM...",
+            "licence": "Copyright Government of Western Australia",
+            "notice": "Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=34"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER).",
+            "printed_page": "18",
+            "pdf_page": 23,
+            "location": "p. 18 (PDF p. 23), 6.4 Reporting framework",
+            "section": "6.4 Reporting framework",
+            "excerpt": "...reporting framework...",
+            "licence": "Copyright Government of Western Australia",
+            "notice": "Government of Western Australia.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=23"
+          }
+        ],
+        "guideline_values": [],
+        "notes": ["Short excerpt only because of the document's licence; read the rest at the official link."],
+        "verification": { "ran": true, "passed": true, "checks": [{ "name": "every sentence cited", "passed": true, "detail": "All 2 sentence(s) carry a citation." }], "summary": "" },
+        "model": "fixture-model"
+      }
+    },
+    {
+      "question": "What is the drinking-water value for PFOS?",
+      "prepared_on": "2026-09-24",
+      "label": "Fixture answer: the model's answer did not pass the checks, so only the passages are shown.",
+      "result": {
+        "question": "What is the drinking-water value for PFOS?",
+        "question_redactions": 0,
+        "status": "passages_only",
+        "explanation": "An answer was written but withheld, because it did not pass the checks. The passages it was given are shown instead.",
+        "answer": null,
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "adwg-pfas",
+            "document": "Australian Drinking Water Guidelines, fact sheet: PFAS",
+            "edition": "updated June 2025",
+            "wa_status": "National drinking-water guidelines.",
+            "printed_page": null,
+            "pdf_page": null,
+            "location": "section 'Guideline' (web page, no page numbers)",
+            "section": "Guideline",
+            "excerpt": "...a short excerpt...",
+            "licence": "Copyright Commonwealth of Australia (NHMRC)",
+            "notice": "Commonwealth of Australia (NHMRC). One short excerpt only.",
+            "link": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs"
+          }
+        ],
+        "guideline_values": [
+          { "marker": "G1", "rule": "current", "rule_name": "current national values", "analyte": "PFOS", "available": true, "compared_quantity": "PFOS", "value": "0.008", "unit": "ug/L", "source_document": "PFAS NEMP 3.1", "table": "Table 4", "page": "49", "page_basis": "printed page", "wa_status": "", "note": "Compare PFOS on its own." },
+          { "marker": "G2", "rule": "nemp-3.0", "rule_name": "PFAS NEMP 3.0", "analyte": "PFOS", "available": true, "compared_quantity": "sum of PFOS and PFHxS", "value": "0.07", "unit": "ug/L", "source_document": "PFAS NEMP 3.0", "table": "Table 4", "page": "57", "page_basis": "PDF page", "wa_status": "", "note": "" }
+        ],
+        "notes": ["Choosing which rule applies is the scientist's call."],
+        "verification": { "ran": true, "passed": false, "checks": [{ "name": "every sentence cited", "passed": false, "detail": "one sentence has no citation." }], "summary": "" },
+        "model": "fixture-model"
+      }
+    },
+    {
+      "question": "What does the NSW EPA sampling design guideline require?",
+      "prepared_on": "2026-09-24",
+      "label": "Fixture answer. No model was called: the indexed guidance does not cover this question.",
+      "result": {
+        "question": "What does the NSW EPA sampling design guideline require?",
+        "question_redactions": 0,
+        "status": "not_covered",
+        "explanation": "The indexed guidelines don't appear to cover this: the corpus holds only Western Australian and national guidance.",
+        "answer": null,
+        "citations": [],
+        "guideline_values": [],
+        "notes": [],
+        "verification": { "ran": false, "passed": null, "checks": [], "summary": "No model answer was written, so there was nothing to check." },
+        "model": null
+      }
+    },
+    {
+      "question": "Is this site contaminated?",
+      "prepared_on": "2026-09-24",
+      "label": "Fixture answer. No model was called: questions like this get a fixed reply.",
+      "result": {
+        "question": "Is this site contaminated?",
+        "question_redactions": 0,
+        "status": "guard_rail",
+        "explanation": "This question asks for a verdict that Evidenceline does not give. No model was called.",
+        "answer": "Evidenceline does not decide whether a site is contaminated or whether water is safe. A guideline value is an investigation level, not a finding that water is unsafe or a site is contaminated.",
+        "citations": [],
+        "guideline_values": [],
+        "notes": [],
+        "verification": { "ran": false, "passed": null, "checks": [], "summary": "No model answer was written, so there was nothing to check." },
+        "model": null
+      }
+    }
+  ]
+}

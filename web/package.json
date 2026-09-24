@@ -1,0 +1,40 @@
+{
+  "name": "evidenceline-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "data": "node scripts/build-data.mjs",
+    "data:check": "node scripts/build-data.mjs --check",
+    "typecheck": "tsc -b",
+    "build": "tsc -b && vite build",
+    "build:launch": "tsc -b && node scripts/build-launch.mjs",
+    "build:offline": "tsc -b && vite build --mode offline",
+    "verify:launch": "node scripts/verify-build.mjs launch",
+    "verify:full": "node scripts/verify-build.mjs full",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test:node": "node --test tests/functions.test.mjs tests/worker.test.mjs",
+    "test:turnstile": "node tests/turnstile.mjs",
+    "smoke": "node tests/smoke.mjs",
+    "check": "npm run data:check && npm run lint && npm run test:node && npm run build && npm run smoke",
+    "worker:check": "wrangler deploy --dry-run --outdir node_modules/.tmp/worker-dry-run"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "puppeteer-core": "^25.12.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "wrangler": "^4.137.0"
+  }
+}

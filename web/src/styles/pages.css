@@ -1,0 +1,182 @@
+/* The detail pages (sample site, tidy, sources, accuracy) in the landing's design language:
+   white reading page, brown and sand accents, 2px corners, 1px hairlines, Roboto Light headings. */
+
+footer a{color:var(--sand)}
+footer a:hover{color:#fff}
+
+.pagehead{background:var(--quiet);border-bottom:1px solid var(--hair)}
+.pagehead .wrap{padding-top:56px;padding-bottom:44px}
+.pagehead h1{font-weight:300;font-size:clamp(30px,3.6vw,46px);line-height:1.15;margin:0 0 14px;max-width:22em;text-wrap:balance}
+.pagehead .lead{margin:0}
+.pagehead .lead p{margin:0}
+.backlink{margin:18px 0 0;font-size:15px}
+.backlink a{text-decoration:none;border-bottom:1px solid var(--sand);padding-bottom:1px}
+.backlink a:hover{border-bottom-color:var(--brown)}
+
+.pagebody{padding:44px 0 80px}
+.pagebody h2{font-weight:300;font-size:clamp(24px,2.4vw,30px);line-height:1.2;margin:0 0 10px}
+.pagebody h3{font-weight:400;font-size:21px;line-height:1.3;margin:0 0 14px}
+.pagebody h4{font-weight:500;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--sand-ink);margin:22px 0 8px}
+.block{margin:0 0 44px}
+.note{font-size:15px;color:var(--muted);margin:0 0 16px}
+.muted{color:var(--muted)}
+.status-line{font-size:16px;color:var(--muted)}
+.status-line.error{color:var(--above)}
+
+.synth{display:flex;gap:10px;align-items:baseline;background:var(--sand-soft);color:var(--brown);border-radius:var(--r);padding:12px 16px;margin:0 0 36px;font-size:15.5px}
+.synth span{color:var(--sand-ink);font-size:11px}
+
+.facts{display:grid;grid-template-columns:150px minmax(0,1fr);gap:0;margin:0;font-size:16px}
+.facts dt,.facts dd{padding:10px 0;border-top:1px solid var(--hair);margin:0}
+.facts dt{color:var(--muted);padding-right:16px}
+.facts dd{color:var(--ink);overflow-wrap:anywhere}
+
+.tablewrap{overflow-x:auto;margin:0 0 18px}
+.dtable{width:100%;border-collapse:collapse;font-size:15.5px}
+.dtable th,.dtable td{text-align:left;vertical-align:top;padding:12px 14px 12px 0;border-bottom:1px solid var(--hair)}
+.dtable thead th{font-size:13px;font-weight:500;color:var(--muted);border-bottom:1px solid #d9d3c5;padding-top:0}
+.dtable tbody th{font-weight:400;color:var(--ink)}
+.dtable .v{font-size:17px;color:var(--ink)}
+.dtable .prov{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+/* /sample-site: a result opens its lab file row */
+.rowbtn{font:inherit;color:inherit;background:none;border:0;padding:2px 0;text-align:inherit;cursor:pointer;min-height:24px}
+.rowbtn .v{text-decoration:underline dotted var(--sand-ink);text-underline-offset:4px}
+.rowbtn[aria-expanded=true] .v{text-decoration-style:solid}
+.labrow{max-width:340px;margin-top:8px;padding:10px 12px;border:1px solid var(--hair);border-radius:var(--r);background:var(--quiet);font-size:13.5px;text-align:left}
+.labrow .k{margin:0 0 6px;color:var(--muted)}
+.labrow dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;margin:0 0 8px}
+.labrow dl div{display:contents}
+.labrow dt{color:var(--muted);font-family:ui-monospace,Consolas,monospace}
+.labrow dd{margin:0;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.labrow p.status-line{margin:0 0 8px}
+.dtable.compact{font-size:14.5px}
+.dtable.compact th,.dtable.compact td{padding:8px 14px 8px 0}
+
+.drawer{margin-top:8px}
+.drawer summary{font-size:15.5px}
+.drawer summary::before{content:"";width:0;height:0;border-left:5px solid var(--brown);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .2s}
+.drawer[open] summary::before{transform:rotate(90deg)}
+.drawer .note{margin-top:12px}
+
+.boundary{border-left:3px solid var(--sand);padding:4px 0 4px 16px;margin:8px 0 28px;font-size:16px;color:var(--text);max-width:52em}
+
+.callout{background:var(--sand-soft);border-radius:var(--r);padding:24px 28px;margin:0 0 14px}
+.callout h2{margin-bottom:8px}
+.callout p{margin:0 0 8px;max-width:52em}
+.callout p:last-child{margin:0}
+
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin:28px 0 36px;align-items:start}
+.rulecard{background:#fff;border:1px solid var(--hair);border-radius:var(--r);padding:26px 28px}
+.rule-id{font:400 13px ui-monospace,Consolas,monospace;color:var(--sand-ink);margin:0 0 6px}
+.limits,.doclinks,.plainlist{list-style:none;margin:0;padding:0}
+.limits li{padding:12px 0;border-top:1px solid var(--hair)}
+.limit-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.limit-head b{font-weight:500;color:var(--ink)}
+.limit-head .v{font-size:18px;color:var(--ink);white-space:nowrap}
+.limits .scenario{font-size:13px;color:var(--sand-ink)}
+.limits p{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.doclinks li{padding:6px 0;font-size:15.5px}
+.plainlist li{padding:10px 0;border-top:1px solid var(--hair)}
+
+.pending{display:flex;gap:14px;align-items:center;background:var(--quiet);border:1px dashed #cfc6b2;border-radius:var(--r);padding:22px 24px}
+.pending p{margin:0;font-size:17px;color:var(--ink)}
+.pending-dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--sand);box-shadow:0 0 0 4px var(--sand-soft)}
+
+/* tidy: the numbers at a glance, then numbered review items with a technical drawer each */
+.stats{list-style:none;margin:0 0 44px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--hair)}
+.stats li{padding:18px 20px 4px 0}
+.stats li+li{padding-left:20px;border-left:1px solid var(--hair)}
+.stats b{display:block;font-weight:300;font-size:40px;line-height:1.1;color:var(--ink)}
+.stats span{display:block;font-size:15px;color:var(--muted);margin-top:4px}
+.ritems{list-style:none;margin:8px 0 0;padding:0;max-width:60em}
+.ritem{display:grid;grid-template-columns:36px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--hair)}
+.ritem:last-child{border-bottom:1px solid var(--hair)}
+.rnum{width:32px;height:32px;border-radius:50%;background:var(--sand-soft);color:var(--brown);display:grid;place-items:center;font-size:15px;font-weight:500}
+.ritem .plain{margin:3px 0 0;font-size:18px;line-height:1.5;color:var(--ink)}
+.ritem details{margin-top:12px}
+.tfield{margin:0 0 14px}
+.tfield .k{display:block;font-size:13px;font-weight:500;color:var(--sand-ink);margin-bottom:2px}
+.tfield p{margin:0}
+.tfield blockquote{margin:0;padding:2px 0 2px 14px;border-left:2px solid var(--hair);color:var(--text)}
+.evidence{list-style:none;margin:0;padding:0;font:400 13.5px/1.7 ui-monospace,Consolas,monospace;color:var(--text)}
+.plainlist small{font-size:13px}
+
+/* sources: soil values table */
+.soiltable .v{white-space:nowrap}
+.soil .linkrow{margin-top:4px}
+.water .linkrow{margin-top:-8px}
+
+/* accuracy: a result is always a word and a symbol, never colour alone */
+.st{display:inline-flex;gap:6px;align-items:baseline;font-size:14.5px;padding:1px 8px;border-radius:var(--r);white-space:nowrap}
+.st.ok{background:var(--below-tint);color:var(--below-ink)}
+.st.no{background:var(--above-tint);color:var(--above)}
+.dtable tr.failrow th,.dtable tr.failrow td{background:#fbf3ef}
+.facts.passes{margin:0 0 22px}
+[data-results].callout{margin-bottom:44px}
+
+/* try it: prepared and live answers */
+.smallprint{font-size:13px;color:var(--muted);margin:10px 0 0}
+.answer .akind{font-weight:500;color:var(--brown);margin:0 0 6px}
+.answer p{margin:0 0 10px}
+.answer .alabel{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--sand-ink);margin:14px 0 6px}
+.cites,.gvals{list-style:none;margin:0;padding:0}
+.cites li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--hair);font-size:14.5px;line-height:1.5}
+.cites b{font-weight:500}
+.cn{width:22px;height:22px;border-radius:50%;background:var(--brown);color:#fff;display:grid;place-items:center;font-size:12px;margin-top:1px}
+.cites .excerpt{display:block;color:var(--muted);font-size:13.5px;margin-top:4px;font-style:italic;overflow-wrap:anywhere}
+.cites a{overflow-wrap:anywhere}
+.gvals li{padding:6px 0;border-top:1px solid var(--hair);font-size:15px}
+.gvals small{display:block;font-size:13px;color:var(--muted)}
+.answer .prepared{margin-top:12px}
+.answer .loading{display:flex;gap:12px;align-items:center;color:var(--muted)}
+.ask button:disabled{opacity:.6;cursor:progress}
+.pending.later{padding:16px 18px;margin-top:4px}
+.pending.later p{font-size:15.5px}
+.pending.soon{margin:0 0 14px}
+/* the Turnstile check: space kept for it (65 px, Cloudflare's height) so the page does not jump when it appears */
+.robot{margin-top:12px;min-height:65px;max-width:100%}
+.robot[data-state="unavailable"]{min-height:0;margin-top:0}
+
+/* Accuracy notes: the note column holds the wording, so it keeps a readable width beside four verdict columns. */
+@media (min-width:561px){.dtable.notes th[scope="row"]{width:24%;min-width:200px}}
+@media (max-width:980px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats li:nth-child(3){padding-left:0;border-left:0}
+  .stats li:nth-child(n+3){border-top:1px solid var(--hair)}
+  .pagehead .wrap{padding-top:36px;padding-bottom:30px}
+  .pagebody{padding:32px 0 56px}
+  .rules{grid-template-columns:minmax(0,1fr);gap:20px}
+  .rulecard{padding:20px 18px}
+  .callout{padding:20px}
+}
+@media (max-width:560px){
+  .stats b{font-size:32px}
+  .ritem{grid-template-columns:30px minmax(0,1fr);gap:12px}
+  .rnum{width:28px;height:28px;font-size:14px}
+  .ritem .plain{font-size:17px}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .facts dt{border-top:1px solid var(--hair);padding-bottom:0}
+  .facts dd{border-top:0;padding-top:2px}
+  /* stacked rows: each table row becomes a small card, labels from data-label */
+  .dtable.stack thead{position:absolute;left:-999px}
+  .dtable.stack tr{display:block;border-top:1px solid var(--hair);padding:10px 0}
+  .dtable.stack th,.dtable.stack td{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px;border:0;padding:4px 0}
+  .dtable.stack th::before,.dtable.stack td::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:400}
+}
+
+/* try it: passages, licence notices, value markers and the checks drawer */
+.answer details.more{margin-top:10px;padding-top:8px}
+.answer details.more summary{font-size:14.5px}
+.cites .lic{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;overflow-wrap:anywhere}
+/* Pipeline text can hold long unbroken runs (contents-page dot leaders, web addresses): wrap them on a phone. */
+.answer p,.answer li,.answer small{overflow-wrap:anywhere}
+.gvals .marker{display:inline-block;font:500 12px ui-monospace,Consolas,monospace;color:var(--sand-ink);margin-right:8px}
+.checks{list-style:none;margin:8px 0 0;padding:0}
+.checks li{padding:6px 0;border-top:1px solid var(--hair);font-size:14px;line-height:1.5}
+.checks b{font-weight:500}
+/* Accuracy: questions a search set missed, one click away */
+.misses{margin-top:12px}
+.misses summary{cursor:pointer;font-size:14.5px}
+.misses .prov{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+/* Suggested questions: a chip that wraps to two lines keeps its text left-aligned, like the one-line chips */
+.chips button{text-align:left}

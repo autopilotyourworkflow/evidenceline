@@ -1,0 +1,8 @@
+{
+  "_about": "Site settings for the synthetic site FDS-01. Everything in this folder is invented for the Evidenceline concept.",
+  "site_id": "FDS-01",
+  "name": "Fictional Depot Site",
+  "synthetic": "Synthetic data for a fictional site (FDS-01). Every result, name, date and address in these files is invented for the Evidenceline concept.",
+  "soil_scenario": "The synthetic scenario states the proposed use as residential with garden, so soil results are compared with HIL A values. Which land use applies is the scientist's call.",
+  "water_scenario": "Groundwater is compared with drinking-water values only, the only water values loaded. Whether drinking water is the right yardstick for this groundwater is a site-specific call for the scientist."
+}

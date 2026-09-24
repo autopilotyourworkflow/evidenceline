@@ -1,0 +1,8 @@
+{
+  "status": "pending",
+  "message": "Results will appear here when the automated tests run.",
+  "method": "Guideline values are checked by two independent automated passes against the source pages, not reviewed by a practitioner.",
+  "last_run": null,
+  "suites": [],
+  "not_checked": []
+}

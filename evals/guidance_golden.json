@@ -1,0 +1,557 @@
+{
+  "_about": "Golden questions for search_guidelines. Each expected page was checked by reading the extracted page text on 2026-09-24 (the 'evidence' field says what is on the page, without quoting it, to keep lane B and C text out of the repository). A hit is a returned passage from the expected document on one of the expected PDF pages (or, for the ADWG web page, in one of the expected sections). Out-of-scope questions must return 'not covered'. 'expects_numeric_note' marks questions that ask for a value, where the lookup_limit note must appear; for the others the note is not checked. One expected page was added after reviewing search output (g02, marked added_after_review); every other expectation was set before running the search. Group 'practitioner' (p01 to p07, added 2026-09-24): questions a practitioner asked while testing the search; the expected pages were set by reading the extracted text before the search was changed, and the same questions were used to tune the search, so they are not a held-out test. Group 'casual' (c01 to c12, added 2026-09-24): everyday wordings of in-scope questions and chatty off-topic ones, written after held-out set 1 showed that casual questions were refused; their expected pages were set by reading the extracted text, and they were used to tune the search.",
+  "corpus": "nepm-b1, nemp-3.0, dwer-amcs, dwer-irc, adwg-pfas (nemp-3.1 not indexed: host unreachable)",
+  "in_scope": [
+    {
+      "id": "g01",
+      "question": "What is the health investigation level for lead in residential soil with a garden (HIL A)?",
+      "expected": [
+        {
+          "doc": "nepm-b1",
+          "pdf_pages": [56, 57]
+        }
+      ],
+      "evidence": "Table 1A(1) with the lead row (printed p. 48, PDF p. 56) and the table notes defining HIL A (printed p. 49, PDF p. 57).",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "g02",
+      "question": "Where do the groundwater investigation levels for drinking water come from?",
+      "expected": [
+        {
+          "doc": "nepm-b1",
+          "pdf_pages": [25, 74, 81]
+        },
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [73],
+          "added_after_review": true
+        }
+      ],
+      "evidence": "Section 2.8 says GILs are based on the ADWG (PDF p. 25); Table 1C has the drinking water column (PDF p. 74) and footnote B naming the ADWG (PDF p. 81). Added after reviewing a search run: DWER-AMCS section 11 says the drinking water assessment levels are derived from NHMRC and NRMMC 2011 (printed p. 68, PDF p. 73).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g03",
+      "question": "How is an ecological investigation level calculated from the added contaminant limit and the ambient background concentration?",
+      "expected": [
+        {
+          "doc": "nepm-b1",
+          "pdf_pages": [21, 22, 52]
+        }
+      ],
+      "evidence": "Section 2.5 introduces EILs, ACL and ABC (PDF p. 21); 2.5.8 defines the ACL (PDF p. 22); the worked example sums ABC and ACL (PDF p. 52).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g04",
+      "question": "What are the limitations of the petroleum health screening levels?",
+      "expected": [
+        {
+          "doc": "nepm-b1",
+          "pdf_pages": [14, 20]
+        }
+      ],
+      "evidence": "Section 2.4.13 Limitations of the HSLs (PDF p. 20); section 2.4.1 tells professionals to know the HSL limitations (PDF p. 14).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g05",
+      "question": "Which soil textures were the petroleum HSLs developed for?",
+      "expected": [
+        {
+          "doc": "nepm-b1",
+          "pdf_pages": [17]
+        }
+      ],
+      "evidence": "Section 2.4.7 Soil texture: HSLs developed for sand, silt and clay (PDF p. 17). Petroleum screening is outside Evidenceline's checks, so a scope note is expected.",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g06",
+      "question": "What is the NEMP 3.0 drinking water guideline for the sum of PFOS and PFHxS?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [57]
+        }
+      ],
+      "evidence": "Table 4 Health-based guideline values developed by health authorities, drinking water row (printed p. 48, PDF p. 57).",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "g07",
+      "question": "What does the PFAS NEMP say about using the total oxidisable precursor assay?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [187, 188, 189, 190, 193]
+        }
+      ],
+      "evidence": "Section 19 analysis methods: the TOP assay row of the methods table (PDF p. 187), 19.1.1 to 19.3 on TOP and TOF assays (PDF pp. 188 to 193).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g08",
+      "question": "What is the freshwater 99% species protection value for PFOS?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [68]
+        }
+      ],
+      "evidence": "Table 8 Ecological water quality guideline values, freshwater 99% species protection row (PDF p. 68).",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "g09",
+      "question": "Can PFAS-contaminated soil be reused on another site?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [115, 116, 118, 119]
+        }
+      ],
+      "evidence": "Section 12 Reuse of PFAS-contaminated materials: 12.1 Reuse of soil, decision tree and detailed risk assessment (PDF pp. 115 to 119).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g10",
+      "question": "Which PFAS are listed under the Stockholm Convention?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [19, 20]
+        }
+      ],
+      "evidence": "Section 2.1: the PFAS listed as persistent organic pollutants under the Stockholm Convention (PDF pp. 19 and 20).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g11",
+      "question": "What is the drinking water guideline for PFBS?",
+      "expected": [
+        {
+          "doc": "adwg-pfas",
+          "sections": ["Guideline", "Derivation of guideline > PFBS"]
+        }
+      ],
+      "evidence": "ADWG PFAS fact sheet, Guideline section (PFBS statement) and the PFBS derivation subsection.",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "g12",
+      "question": "How are PFAS measured in water samples in the laboratory?",
+      "expected": [
+        {
+          "doc": "adwg-pfas",
+          "sections": ["Measurement"]
+        },
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [188]
+        }
+      ],
+      "evidence": "ADWG PFAS fact sheet, Measurement section; NEMP 3.0 19.1.1 Standard methods (PDF p. 188).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g13",
+      "question": "How can PFAS be removed from drinking water by treatment?",
+      "expected": [
+        {
+          "doc": "adwg-pfas",
+          "sections": ["Treatment of drinking water"]
+        }
+      ],
+      "evidence": "ADWG PFAS fact sheet, Treatment of drinking water section.",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g14",
+      "question": "What must a detailed site investigation report include according to the DWER reporting checklist?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [111, 112]
+        }
+      ],
+      "evidence": "Appendix A, Table A1 Reporting checklist for PSI and DSI reports (PDF pp. 111 and 112).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g15",
+      "question": "What triggers a site assessment?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [20]
+        }
+      ],
+      "evidence": "Section 6.1 Triggers for site assessment (printed p. 15, PDF p. 20).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g16",
+      "question": "Which older contaminated sites guidelines have been superseded?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [8]
+        }
+      ],
+      "evidence": "Section 2 Introduction lists the superseded contaminated sites management series (printed p. 3, PDF p. 8).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g17",
+      "question": "What should a sampling and analysis quality plan include?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [36, 37]
+        }
+      ],
+      "evidence": "Section 9.2 Sampling and analysis quality plans (PDF p. 36) and 9.3 on what the SAQP should demonstrate (PDF p. 37).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g18",
+      "question": "Which industries and land uses are potentially contaminating?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [31, 139, 140]
+        }
+      ],
+      "evidence": "Section 8.2 Potentially contaminating activities (PDF p. 31) and Appendix B Potentially contaminating industries, activities and land uses (PDF pp. 139 and 140).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g19",
+      "question": "How long do I have to report a known contaminated site to DWER?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [19, 32]
+        }
+      ],
+      "evidence": "Section 6.4 Timeframes for reporting: known contamination within 21 days (PDF p. 32); section 5.3 refers to the 21-day duty (PDF p. 19).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g20",
+      "question": "What are the seven site classifications under the Contaminated Sites Act?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [15, 16, 34]
+        }
+      ],
+      "evidence": "Table 2 Site classifications under the CS Act (PDF p. 15, continued p. 16) and the classification table in section 7 (PDF p. 34).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g21",
+      "question": "When is a memorial registered on the certificate of title?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [46, 50]
+        }
+      ],
+      "evidence": "Section 7.7 Memorials on certificates of title (PDF p. 46) and 7.10 Summary of restrictions on use and memorials (PDF p. 50).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "g22",
+      "question": "How should asbestos found in soil be reported?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [24]
+        }
+      ],
+      "evidence": "Section 5.5 Asbestos contamination (PDF p. 24).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p01",
+      "group": "practitioner",
+      "question": "How should PFAS samples be stored and what containers should be used?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [171, 172, 173, 226, 227, 228]
+        }
+      ],
+      "evidence": "Section 18.2.1: polypropylene or HDPE sample containers, not glass with lined lids (PDF pp. 171 to 173); Appendix B.3.6 Collecting samples: laboratory-supplied bottles, double bags, on ice or in a fridge below 4 C (PDF pp. 226 to 228).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p02",
+      "group": "practitioner",
+      "question": "What is the ecological soil value for PFOS?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [63, 64, 65]
+        }
+      ],
+      "evidence": "Section 8.7.1 Ecological soil guideline values, direct and indirect exposure (PDF pp. 63 and 64) and Table 6 Ecological guideline values for soil (PDF p. 65).",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "p03",
+      "group": "practitioner",
+      "question": "How many soil samples are needed for a site of one hectare?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [38]
+        }
+      ],
+      "evidence": "Section 9.4, box 'Minimum number of samples': no minimum number of sampling points is recommended for a given size of site; the number follows from the CSM and the DQOs (PDF p. 38). No indexed document gives a number per hectare.",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p04",
+      "group": "practitioner",
+      "question": "How long after installing a monitoring well should I wait before sampling groundwater?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [172, 173, 227, 228]
+        }
+      ],
+      "evidence": "No indexed document states a waiting time. The closest guidance: section 18.2.1 Groundwater, well development for PFAS (PDF pp. 172 and 173), and Appendix B.3.6, purge until parameters are stable before sampling (PDF pp. 227 and 228).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p05",
+      "group": "practitioner",
+      "question": "What should a DSI report contain?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [111, 112]
+        }
+      ],
+      "evidence": "Appendix A, Table A1 Reporting checklist for PSI and DSI reports (PDF pp. 111 and 112).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p06",
+      "group": "practitioner",
+      "question": "What is a conceptual site model?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [27, 28]
+        }
+      ],
+      "evidence": "Section 7 Conceptual site model, 7.1 Overview: what a CSM describes and that it is iterative (PDF pp. 27 and 28).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "p07",
+      "group": "practitioner",
+      "question": "When do I have to report contamination to DWER?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [19, 25, 32]
+        }
+      ],
+      "evidence": "Section 6.1 persons with a duty to report (PDF p. 25); 6.4 Timeframes for reporting, Table 8: known contamination within 21 days, suspected as soon as reasonably practicable (PDF p. 32); 5.3 refers to the 21-day duty (PDF p. 19).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "c01",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "what paperwork do I need to give DWER when I find contamination?",
+      "expected": [
+        {
+          "doc": "dwer-irc",
+          "pdf_pages": [29, 30]
+        }
+      ],
+      "evidence": "6.3.1 Prescribed form for reporting known or suspected contamination: the signed Form 1 with supporting information (PDF p. 29); what the report must include, title copies and where to send it (PDF p. 30).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "c02",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "can you grow veg on PFAS contaminated soil?",
+      "expected": [
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [58, 59]
+        }
+      ],
+      "evidence": "8.6.2 Human health investigation levels for soil: the residential value assumes some home-grown produce, and eating poultry, eggs and livestock is not included (PDF p. 58); Table 5 notes on higher shares of home-grown produce (PDF p. 59).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "c03",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "is there a limit for PFAS in drinking water?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [165]
+        },
+        {
+          "doc": "nemp-3.0",
+          "pdf_pages": [57]
+        }
+      ],
+      "evidence": "Appendix D table of drinking water values, with rows for PFOS plus PFHxS and for PFOA (PDF p. 165); the text around Table 4 on how the drinking water values were derived (PDF p. 57). Values themselves come from lookup_limit.",
+      "expects_numeric_note": true
+    },
+    {
+      "id": "c04",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "what's a DSI?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [34]
+        }
+      ],
+      "evidence": "9.1 Introduction to the detailed site investigation: what it is for and that it follows ASC NEPM Schedule B2 (PDF p. 34).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "c05",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "how do I know if my site needs an auditor?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [11, 12]
+        }
+      ],
+      "evidence": "4.2 Accredited contaminated site auditors (starts PDF p. 11) and regulation 31, when a mandatory auditor's report is required (PDF p. 12).",
+      "expects_numeric_note": false
+    },
+    {
+      "id": "c06",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; expected pages set by reading the extracted page text; used to tune the search",
+      "question": "what do I do if a neighbour's bore might be affected?",
+      "expected": [
+        {
+          "doc": "dwer-amcs",
+          "pdf_pages": [54, 74, 76]
+        }
+      ],
+      "evidence": "Worked example of contamination reaching a neighbour's garden bore and the risk assessment that follows (PDF p. 54); Department of Health advice on domestic bore water use (PDF p. 74); garden bores are not registered, so affected users may be unknown (PDF p. 76).",
+      "expects_numeric_note": false
+    }
+  ],
+  "out_of_scope": [
+    {
+      "id": "o01",
+      "question": "What does the NSW EPA Sampling Design guideline require for the number of sampling points?",
+      "why": "A New South Wales rule; the corpus holds WA and national guidance only."
+    },
+    {
+      "id": "o02",
+      "question": "What PFAS concentrations were measured in groundwater at RAAF Base Pearce?",
+      "why": "Results for a specific real site; no site data is indexed."
+    },
+    {
+      "id": "o03",
+      "question": "What noise limits apply to drilling rigs working at night?",
+      "why": "Noise regulation is not covered by the indexed contaminated-sites guidance."
+    },
+    {
+      "id": "o04",
+      "question": "Which laboratory in Perth is cheapest for PFAS analysis?",
+      "why": "A commercial question the guidance does not address."
+    },
+    {
+      "id": "o05",
+      "group": "added",
+      "added": "2026-09-24, with the passage search; used to tune the not-covered rule",
+      "question": "What salary does an environmental scientist earn in Perth?",
+      "why": "Pay is not a guidance topic."
+    },
+    {
+      "id": "o06",
+      "group": "added",
+      "added": "2026-09-24, with the passage search; used to tune the not-covered rule",
+      "question": "What is the capital gains tax on selling a contaminated property?",
+      "why": "Tax law is not in the indexed guidance."
+    },
+    {
+      "id": "o07",
+      "group": "added",
+      "added": "2026-09-24, with the passage search; used to tune the not-covered rule",
+      "question": "What earthquake design loads apply to buildings in Perth?",
+      "why": "Structural design is not in the indexed guidance; the old search returned a DWER case study that shares 'buildings' and 'Perth'."
+    },
+    {
+      "id": "o08",
+      "group": "added",
+      "added": "2026-09-24, with the passage search; used to tune the not-covered rule",
+      "question": "How do I renew a driver's licence in Western Australia?",
+      "why": "Shares only 'licence' and 'Western Australia' with the guidance."
+    },
+    {
+      "id": "o09",
+      "group": "added",
+      "added": "2026-09-24, with the passage search; used to tune the not-covered rule",
+      "question": "Which PFAS treatment vendors operate in Perth?",
+      "why": "A commercial question; the guidance describes treatment technologies, not suppliers."
+    },
+    {
+      "id": "c07",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "can you tell me what the weather's doing in Perth tomorrow?",
+      "why": "Weather is not a guidance topic."
+    },
+    {
+      "id": "c08",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "what's the go with the footy this weekend?",
+      "why": "Sport is not a guidance topic."
+    },
+    {
+      "id": "c09",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "any idea how much a PFAS lab test costs?",
+      "why": "A price; the guidance does not list laboratory prices."
+    },
+    {
+      "id": "c10",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "can you tell me what Queensland says about PFAS in soil?",
+      "why": "Another state's rules; the corpus is WA and national guidance only."
+    },
+    {
+      "id": "c11",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "what's a good recipe for dinner tonight?",
+      "why": "Cooking is not a guidance topic."
+    },
+    {
+      "id": "c12",
+      "group": "casual",
+      "added": "2026-09-24, for casual questions; used to tune the search",
+      "question": "I need to know how to fix my car's brakes",
+      "why": "Car repairs are not a guidance topic."
+    }
+  ]
+}

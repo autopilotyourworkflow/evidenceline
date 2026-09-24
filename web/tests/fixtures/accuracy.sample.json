@@ -1,0 +1,27 @@
+{
+  "_about": "TEST FIXTURE for tests/smoke.mjs only. The numbers are made up to exercise the page, including a failure and a disagreement.",
+  "status": "published",
+  "message": "Results from the automated test run.",
+  "method": "Guideline values are checked by two independent automated passes against the source pages, not reviewed by a practitioner.",
+  "last_run": "2026-09-24",
+  "build": "local build",
+  "suites": [
+    { "name": "Tidy lab results", "passed": 120, "failed": 0, "skipped": 0 },
+    { "name": "Paragraph checker", "passed": 88, "failed": 1, "skipped": 0 },
+    { "name": "Guidance search", "passed": 30, "failed": 0, "skipped": 2 }
+  ],
+  "search": [
+    { "set": "golden", "label": "Tuning set", "questions": 26, "metrics": [ { "name": "hit@1", "hits": 12, "of": 22 }, { "name": "hit@5", "hits": 19, "of": 22 }, { "name": "out-of-scope accuracy", "hits": 4, "of": 4 } ] },
+    { "set": "held-out", "label": "Held-out set", "questions": 12, "metrics": { "hit@1": { "hits": 5, "of": 10 }, "hit@5": "8 of 10" } }
+  ],
+  "verification": {
+    "passes": [
+      { "id": "A", "method": "reads the value from the PDF text of the cited page" },
+      { "id": "B", "method": "reads the value from a rendered image of the cited page" }
+    ],
+    "values": [
+      { "id": "nemp-3.0/PFOS+PFHxS", "label": "PFOS and PFHxS added together, NEMP 3.0", "value": "0.07", "unit": "ug/L", "source": "Table 4, PDF page 57", "verdicts": { "A": "match", "B": "match" } },
+      { "id": "current/PFOS", "label": "PFOS on its own, current national values", "value": "0.008", "unit": "ug/L", "source": "Table 4, printed page 49", "verdicts": [ { "pass": "A", "verdict": "match" }, { "pass": "B", "verdict": "mismatch", "note": "fixture: page image not readable" } ] }
+    ]
+  }
+}

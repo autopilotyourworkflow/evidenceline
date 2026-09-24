@@ -1,0 +1,55 @@
+# Evidenceline built-in demo identifiers for the fictional site FDS-01. SYNTHETIC: every name and address below is
+# invented, and appears only in the header of field_sheet.csv in this folder.
+#
+# Selected with EVIDENCELINE_REDACT=builtin:fds01-demo. The hosted demo (the web API and its MCP connector) loads it,
+# so the fictional client name and site address are replaced with placeholders there, as they would be for a firm
+# running Evidenceline with its own identifier file. It lists nothing else: any other name typed into the hosted demo
+# is not redacted. For real client work, write your own file (see examples/redact.example.toml).
+#
+# Matching ignores letter case and the separators between words ("HARBOURLINE-LOGISTICS", "harbourline_logistics",
+# "Harbour%20Line", "harbourlinelogistics.com.au"), and finds a name inside a file name or code
+# ("DSI_Harbourline_2025.pdf", "HarbourlineDSI"). Separators are only ignored between the words of a listed name,
+# so "Harbour Line" is listed as well as "Harbourline". The longest listed name wins, so the suburb, state and
+# postcode go with the street: the address is listed with and without its number, both street spellings and every
+# ending, so no part of it is left beside the placeholder.
+
+[[client]]
+names = [
+    "Harbourline Logistics Pty Ltd",
+    "Harbourline Logistics",
+    "Harbour Line Logistics",
+    "Harbourline",
+    "Harbour Line",
+]
+
+[[address]]
+names = [
+    "12 Example Road, Welshpool Western Australia 6106",
+    "12 Example Road, Welshpool Western Australia",
+    "12 Example Road, Welshpool WA 6106",
+    "12 Example Road, Welshpool WA",
+    "12 Example Road, Welshpool 6106",
+    "12 Example Road, Welshpool",
+    "12 Example Road",
+    "12 Example Rd, Welshpool Western Australia 6106",
+    "12 Example Rd, Welshpool Western Australia",
+    "12 Example Rd, Welshpool WA 6106",
+    "12 Example Rd, Welshpool WA",
+    "12 Example Rd, Welshpool 6106",
+    "12 Example Rd, Welshpool",
+    "12 Example Rd",
+    "Example Road, Welshpool Western Australia 6106",
+    "Example Road, Welshpool Western Australia",
+    "Example Road, Welshpool WA 6106",
+    "Example Road, Welshpool WA",
+    "Example Road, Welshpool 6106",
+    "Example Road, Welshpool",
+    "Example Road",
+    "Example Rd, Welshpool Western Australia 6106",
+    "Example Rd, Welshpool Western Australia",
+    "Example Rd, Welshpool WA 6106",
+    "Example Rd, Welshpool WA",
+    "Example Rd, Welshpool 6106",
+    "Example Rd, Welshpool",
+    "Example Rd",
+]
