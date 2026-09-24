@@ -56,6 +56,7 @@ a note pointing to ``lookup_limit`` (verified PFAS drinking-water values) or to 
 from __future__ import annotations
 
 import re
+from collections import Counter
 from collections.abc import Sequence
 from decimal import Decimal
 from functools import cache
@@ -113,6 +114,11 @@ def _open_index(path: Path) -> GuidanceIndex:
 
 def default_index_path() -> Path:
     return cache_dir() / INDEX_NAME
+
+
+def indexed_words(index_path: Path | None = None) -> Counter[str]:
+    """Every word in the indexed passages with how often it appears (see :mod:`evidenceline.guidance.spelling`)."""
+    return _open_index(index_path or default_index_path()).word_counts()
 
 
 def _validate(question: str, k: int) -> str:

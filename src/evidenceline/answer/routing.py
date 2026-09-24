@@ -177,9 +177,12 @@ _ABOUT = re.compile(
             rf"(?:\s+(?:with\s+)?{_TOOL})?",
             rf"how\s+to\s+(?:use|start|ask)(?:\s+{_TOOL})?",
             # what it is and what it is for
-            rf"{_WHAT_IS}\s+{_TOOL_STRICT}{_ADVERB}(?:\s+(?:for|about|used\s+for))?",
+            rf"{_WHAT_IS}\s+{_TOOL_STRICT}{_ADVERB}(?:\s+(?:for|about|used\s+for|called|named))?",
+            rf"{_WHAT_IS}\s+(?:the\s+)?name\s+of\s+{_TOOL_STRICT}|what(?:\s+is|\s*'s|s)\s+(?:your|its)\s+name",
+            r"what\s+do\s+(?:you|they|we|i|people)\s+call\s+(?:this|it|you)|"
+            r"(?:does|do)\s+(?:this|it|you)\s+have\s+a\s+name",
             rf"{_WHAT_IS}\s+this\s+(?:web\s*)?site(?:\s+about)?",
-            r"what\s+are\s+you(?:\s+(?:for|exactly|about))?",
+            r"what\s+are\s+you(?:\s+(?:for|exactly|about|called))?",
             rf"{_WHAT_IS}\s+(?:the\s+)?(?:point|purpose|idea|deal)\s+(?:of|with)\s+{_TOOL_STRICT}",
             rf"{_WHAT_IS}\s+the\s+idea(?:\s+here)?",
             r"what'?s\s+going\s+on(?:\s+here)?|what'?s\s+in(?:\s+here)?",

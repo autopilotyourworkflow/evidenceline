@@ -102,27 +102,54 @@ function Passages({ citations }: { readonly citations: readonly Citation[] }) {
 
 const paragraphs = (text: string): string[] => text.split(/\n\s*\n/).filter((p) => p.trim() !== '');
 
-export function AnswerBody({ view, note }: { readonly view: AnswerView; readonly note: string }) {
+/** Questions to try instead, as buttons that ask them. */
+function Suggestions({ items, label, onAsk }: { readonly items: readonly string[]; readonly label: string | null; readonly onAsk: (question: string) => void }) {
+  return (
+    <>
+      {label !== null && <p className="alabel">{label}</p>}
+      <div className="chips suggest">
+        {items.map((question) => (
+          <button key={question} type="button" onClick={() => onAsk(question)}>
+            {question}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+export function AnswerBody({ view, note, onAsk }: { readonly view: AnswerView; readonly note: string; readonly onAsk?: (question: string) => void }) {
   // A checked answer and the fixed reply about Evidenceline itself need no heading.
   const title = view.kind === 'answered' || view.kind === 'about' ? null : TRY.titles[view.kind];
-  // The main text: the answer when there is one; otherwise the pipeline's own explanation of what happened.
-  const main =
-    view.answer !== ''
+  const notCovered = view.kind === 'not-covered';
+  const suggestions = onAsk === undefined ? [] : view.suggestions;
+  // The main text: the answer when there is one; otherwise the pipeline's own explanation of what happened. A
+  // not-covered result leads with plain words and keeps the search's reason one click away.
+  const main = notCovered
+    ? TRY.notCoveredLead(suggestions.length > 0)
+    : view.answer !== ''
       ? view.answer
       : view.explanation !== ''
         ? view.explanation
-        : view.kind === 'not-covered'
-          ? TRY.notCoveredDefault
-          : view.kind === 'guard-rail'
-            ? TRY.guardRailDefault
-            : '';
-  const explanationShownAsMain = view.answer === '' && view.explanation !== '';
+        : view.kind === 'guard-rail'
+          ? TRY.guardRailDefault
+          : '';
+  const explanationShownAsMain = !notCovered && view.answer === '' && view.explanation !== '';
   return (
     <>
+      {view.corrected !== '' && (
+        <p className="searched">
+          {TRY.searchedFor}
+          <b>{view.corrected}</b>
+        </p>
+      )}
       {title !== null && <p className="akind">{title}</p>}
       {paragraphs(main).map((para) => (
         <p key={para}>{prettyUnits(para)}</p>
       ))}
+      {suggestions.length > 0 && onAsk !== undefined && (
+        <Suggestions items={suggestions} label={notCovered ? null : TRY.suggestTitle} onAsk={onAsk} />
+      )}
       {view.values.length > 0 && (
         <>
           <p className="alabel">{TRY.valuesTitle}</p>
@@ -138,14 +165,23 @@ export function AnswerBody({ view, note }: { readonly view: AnswerView; readonly
           </ul>
         </>
       )}
-      <Passages citations={view.citations} />
+      {notCovered ? (
+        (view.explanation !== '' || view.citations.length > 0) && (
+          <More label={TRY.whyNotCovered}>
+            {view.explanation !== '' && <p className="src">{view.explanation}</p>}
+            <Passages citations={view.citations} />
+          </More>
+        )
+      ) : (
+        <Passages citations={view.citations} />
+      )}
       {view.redactions > 0 && <p className="src">{TRY.redacted(view.redactions)}</p>}
       {view.notes.map((n) => (
         <p className="src" key={n}>
           {n}
         </p>
       ))}
-      {view.kind !== 'about' && (view.checks.length > 0 || (!explanationShownAsMain && view.explanation !== '')) && (
+      {view.kind !== 'about' && !notCovered && (view.checks.length > 0 || (!explanationShownAsMain && view.explanation !== '')) && (
         <More label={TRY.checksTitle}>
           {!explanationShownAsMain && view.explanation !== '' && <p className="src">{view.explanation}</p>}
           {view.checks.length > 0 && (

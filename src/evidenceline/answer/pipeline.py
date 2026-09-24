@@ -5,8 +5,13 @@
    numbers, phone numbers). A message that is only a greeting, thanks, or a question about Evidenceline itself
    ('Hello, how does this work?') gets a fixed reply here: no search and no model.
 2. If it asks for a PFAS drinking-water value, take BOTH rules' values from ``guidelines.json`` (never from text).
-3. Search the indexed guidance for up to 8 passages. "Not covered" stops here, and so does a question asking for
-   a verdict (is the site contaminated, is the water safe): both return without calling a model. The one exception
+3. Search the indexed guidance for up to 8 passages. If nothing matches the words as typed, and the question is not
+   ruled out for a plain reason (another state, prices, a document that is not indexed), its misspelt words are
+   corrected to words the guidance uses (:mod:`evidenceline.guidance.spelling`) and it is searched once more; the
+   result then names the corrected question (``corrected_question``), which the website shows first. A "not
+   covered" result also carries questions to try instead (:mod:`evidenceline.answer.suggest`). "Not covered" stops
+   here, and so does a question asking for a verdict (is the site contaminated, is the water safe): both return
+   without calling a model. The one exception
    is a borderline "not covered" (the search's closest passages are a near miss, see
    :data:`evidenceline.guidance.search.BORDERLINE_COVERAGE`): with live answers on, those passages go to the model
    with an added instruction to reply NOT_COVERED unless they answer the question. Another state's rules, prices,
@@ -40,12 +45,14 @@ from evidenceline.answer.models import (
 )
 from evidenceline.answer.names import find_names
 from evidenceline.answer.prompt import MAX_QUOTED_WORDS, MAX_SENTENCE_WORDS, NOT_COVERED, SYSTEM, build_prompt
+from evidenceline.answer.suggest import suggestions
 from evidenceline.answer.values import describe, guideline_values
 from evidenceline.answer.verify import citations, sentences, verify
 from evidenceline.errors import EvidencelineError
 from evidenceline.guidance.models import GuidanceSearch, Passage
-from evidenceline.guidance.scope import NUMERIC_NOTE
-from evidenceline.guidance.search import default_index_path, search_guidelines
+from evidenceline.guidance.scope import NUMERIC_NOTE, read_question
+from evidenceline.guidance.search import default_index_path, indexed_words, search_guidelines
+from evidenceline.guidance.spelling import corrected
 from evidenceline.redact import RedactionConfig, Redactor
 from evidenceline.screening import INVESTIGATION_LEVEL, RULE_CHOICE
 
@@ -58,20 +65,20 @@ GUARD_RAIL_REPLY = (
     "evidence. The passages below are what the indexed guidance says on the subject."
 )
 ABOUT_REPLY = (
-    'Ask a question about assessing contaminated sites, such as PFAS (the "forever chemicals") in groundwater. '
-    "Evidenceline answers from public guidance: national guidance on site contamination and PFAS, and two Western "
-    "Australian government guidelines on contaminated sites. It is free to use.\n\n"
+    'This is Evidenceline. Ask it about assessing contaminated sites, such as PFAS (the "forever chemicals") in '
+    "groundwater. It answers only from public guidance: national guidance on site contamination and PFAS, and two "
+    "Western Australian government guidelines on contaminated sites. It is free to use.\n\n"
     "It finds the pages that best match your question, and an AI model writes a short answer from those pages only. "
     "Before you see it, code (not AI) checks that every sentence cites a source and that every number comes from "
     "one. An answer that fails the checks is never shown. Each answer lists its sources with links, so you can check "
     "them yourself.\n\n"
     "It won't say whether a particular site is contaminated or water is safe. That judgement belongs to the "
     "scientist who signs the report and to the regulator.\n\n"
-    'To start, pick a suggested question above, or ask something like "What is a tier 1 screening assessment?" To '
-    "see who built it and why, read About just below."
+    'To start, pick one of the questions below, or ask your own, such as "How should groundwater samples be '
+    'collected?" To see who built it and why, read About further down this page.'
 )
 """The fixed reply to a greeting or a question about Evidenceline itself (routing.about_evidenceline)."""
-THANKS_REPLY = "Ask another question whenever you like, or pick a suggested question above."
+THANKS_REPLY = "Ask another question whenever you like, or pick one of the questions below."
 """The fixed reply to thanks, a goodbye or a bare 'ok': it reads right whether or not an answer came before."""
 ABOUT_EXPLANATION = (
     "This message is a greeting, thanks or a question about Evidenceline itself, so the guidance was not searched "
@@ -142,8 +149,12 @@ def _citations(passages: Sequence[Passage], cited: set[int]) -> list[Citation]:
 class _Question:
     """One question on its way through the pipeline: holds what every result needs."""
 
-    def __init__(self, question: str, index_path: Path | None) -> None:
-        self.text, self.redactions = _redact(question)
+    def __init__(self, question: str, index_path: Path | None, *, redacted: int | None = None) -> None:
+        """``redacted``: the question was redacted already (a spelling-corrected copy), with this many replaced."""
+        self.text, self.redactions = _redact(question) if redacted is None else (question, redacted)
+        self.corrected: str | None = None
+        self.suggest_from = self.text
+        """What suggestions are ranked against: the spelling-corrected words when a correction was tried."""
         self.index_path = index_path or default_index_path()
         analytes = routing.drinking_water_analytes(self.text)
         self.values: list[GuidelineValue] = guideline_values(analytes) if analytes else []
@@ -180,6 +191,8 @@ class _Question:
             notes=self.notes,
             verification=verification,
             model=model,
+            corrected_question=self.corrected,
+            suggestions=suggestions(self.suggest_from) if status in {"not_covered", "about"} else [],
         )
 
     def search(self) -> GuidanceSearch:
@@ -216,6 +229,8 @@ def answer(
         return item.result("error", "The guidance index could not be read. It needs to be rebuilt on the server.")
 
     if found.status == "not covered":
+        item, found = _spelling_retry(item, found)
+    if found.status == "not covered":
         closest = list(found.closest_passages)
         if closest and client is not None and not routing.asks_for_verdict(item.text):
             item.passages = closest
@@ -233,6 +248,28 @@ def answer(
         item.notes.append(off_note)
         return item.result("passages_only", "Passages from the indexed guidance, best match first. " + off_note)
     return _ask_model(item, client)
+
+
+def _spelling_retry(item: _Question, found: GuidanceSearch) -> tuple[_Question, GuidanceSearch]:
+    """The question with its misspelt words corrected and searched again, when that finds passages; otherwise the
+    first try, unchanged. Not tried for a plain-reason "not covered" (another state, an off-topic subject, a named
+    document that is not indexed)."""
+    scope = read_question(item.text)
+    if scope.other_jurisdiction is not None or scope.off_topic is not None or scope.named_documents:
+        return item, found
+    try:
+        fixed = corrected(item.text, indexed_words(item.index_path))
+        if fixed is None:
+            return item, found
+        retry = _Question(fixed, item.index_path, redacted=item.redactions)
+        second = retry.search()
+    except (EvidencelineError, sqlite3.Error):
+        return item, found
+    if second.status != "passages found":
+        item.suggest_from = fixed
+        return item, found
+    retry.corrected = fixed
+    return retry, second
 
 
 RETRY_NOTE = (

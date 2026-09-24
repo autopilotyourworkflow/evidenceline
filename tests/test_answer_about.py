@@ -123,6 +123,13 @@ ABOUT = [
     "?",
     "What is this site?",
     "How does this site work?",
+    # naming it (24 Sep 2026: "Hi. How do I use this? And what is this called?")
+    "Hi. How do I use this? And what is this called?",
+    "What's it called?",
+    "What is the name of this tool?",
+    "What's your name?",
+    "What are you called?",
+    "Does it have a name?",
 ]
 
 THANKS = [
@@ -228,10 +235,10 @@ def test_no_evaluation_or_prepared_question_is_read_as_about_evidenceline() -> N
 
 
 def test_the_example_in_the_reply_is_a_real_question() -> None:
-    found = re.search(r'something like "([^"]+)"', ABOUT_REPLY)
+    found = re.search(r'ask your own, such as "([^"]+)"', ABOUT_REPLY)
     assert found is not None
     example = found.group(1)
-    assert example == "What is a tier 1 screening assessment?"
+    assert example == "How should groundwater samples be collected?"
     assert about_evidenceline(example) is None
     assert not asks_for_verdict(example)
 

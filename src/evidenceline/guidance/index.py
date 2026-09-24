@@ -16,7 +16,9 @@ host; lexical search with a synonym map is measured in :mod:`evidenceline.guidan
 from __future__ import annotations
 
 import datetime as dt
+import re
 import sqlite3
+from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
@@ -28,6 +30,7 @@ from evidenceline.guidance.chunking import Chunk
 from evidenceline.guidance.labels import LabelBasis
 
 INDEX_NAME = "guidance.sqlite"
+_WORD = re.compile(r"[a-z]+")
 FORMAT_VERSION = "2"
 """2: passage chunks with heading path and captions columns (1 was one chunk per page)."""
 TOKENIZER = "porter unicode61 remove_diacritics 2"
@@ -141,6 +144,7 @@ class GuidanceIndex:
                 "'python scripts/fetch_corpus.py' and then 'python scripts/build_index.py'."
             )
         self.path = path
+        self._words: Counter[str] | None = None
         self._db = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False)
         version = self.meta().get("format_version")
         if version != FORMAT_VERSION:
@@ -223,3 +227,14 @@ class GuidanceIndex:
     def text(self, rowid: int) -> str:
         row = self._db.execute("SELECT text FROM chunks WHERE id = ?", (rowid,)).fetchone()
         return "" if row is None else str(row[0])
+
+    def word_counts(self) -> Counter[str]:
+        """How often each word (lower case, letters only) appears in the passages, headings and captions. Read once
+        per index and kept: it is what a misspelt word is corrected to (:mod:`evidenceline.guidance.spelling`)."""
+        if self._words is None:
+            words: Counter[str] = Counter()
+            for row in self._db.execute("SELECT headings, captions, text FROM chunks"):
+                for column in row:
+                    words.update(_WORD.findall(str(column or "").lower()))
+            self._words = words
+        return self._words

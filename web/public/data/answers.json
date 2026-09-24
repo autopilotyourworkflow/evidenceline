@@ -965,7 +965,13 @@
           "checks": [],
           "summary": "No model answer was written, so there was nothing to check."
         },
-        "model": null
+        "model": null,
+        "corrected_question": null,
+        "suggestions": [
+          "What are health investigation levels for soil?",
+          "What is a tier 1 screening assessment?",
+          "What is a preliminary site investigation?"
+        ]
       }
     }
   ]

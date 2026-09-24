@@ -45,7 +45,7 @@ function waitText(retryAfter: number | null): string {
   return ` in about ${Math.ceil(minutes / 60)} hours`;
 }
 
-function Answer({ shown, prepared }: { readonly shown: Shown; readonly prepared: readonly PreparedAnswer[] }) {
+function Answer({ shown, prepared, onAsk }: { readonly shown: Shown; readonly prepared: readonly PreparedAnswer[]; readonly onAsk: (question: string) => void }) {
   const open = { display: 'block' } as const;
   switch (shown.kind) {
     case 'none':
@@ -55,7 +55,7 @@ function Answer({ shown, prepared }: { readonly shown: Shown; readonly prepared:
       if (entry === undefined) return <div className="answer" id="answer" aria-live="polite" />;
       return (
         <div className="answer" id="answer" aria-live="polite" style={open} data-state="prepared">
-          <AnswerBody view={entry.view} note={preparedNote(entry.prepared)} />
+          <AnswerBody view={entry.view} note={preparedNote(entry.prepared)} onAsk={onAsk} />
         </div>
       );
     }
@@ -76,7 +76,7 @@ function Answer({ shown, prepared }: { readonly shown: Shown; readonly prepared:
     case 'live':
       return (
         <div className="answer" id="answer" aria-live="polite" style={open} data-state="live">
-          <AnswerBody view={shown.view} note={TRY.liveNote(shown.view.kind, shown.view.citations.length > 0)} />
+          <AnswerBody view={shown.view} note={TRY.liveNote(shown.view.kind, shown.view.citations.length > 0)} onAsk={onAsk} />
         </div>
       );
     case 'loading':
@@ -129,14 +129,21 @@ function AskBox() {
   const [shown, setShown] = useState<Shown>({ kind: 'none' });
   const inflight = useRef<AbortController | null>(null);
   // The robot check exists only when the live service does: without it there is nothing to protect.
-  const { enabled: robotOn, attach: attachRobot, state: robotState, token: robotToken, spend: spendRobot, unavailable: robotUnavailable } =
-    useRobotCheck(CONFIG.apiBase === null ? null : CONFIG.turnstileSiteKey);
+  const {
+    enabled: robotOn,
+    attach: attachRobot,
+    state: robotState,
+    interactive: robotInteractive,
+    token: robotToken,
+    spend: spendRobot,
+    unavailable: robotUnavailable,
+  } = useRobotCheck(CONFIG.apiBase === null ? null : CONFIG.turnstileSiteKey);
 
   useEffect(() => () => inflight.current?.abort(), []);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const q = question.trim();
+  /** Answers a question: from the prepared copy when it was prepared in advance, otherwise from the live service. */
+  const ask = (text: string) => {
+    const q = text.trim();
     if (q === '') return;
     inflight.current?.abort();
     // A question that was prepared in advance is answered from the prepared copy: no live call, no cost.
@@ -174,6 +181,17 @@ function AskBox() {
     })();
   };
 
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    ask(question);
+  };
+
+  /** A suggested question from an answer: put it in the box and ask it. */
+  const askSuggested = (text: string) => {
+    setQuestion(text);
+    ask(text);
+  };
+
   const choose = (text: string, next: Shown) => {
     inflight.current?.abort();
     setQuestion(text);
@@ -208,7 +226,17 @@ function AskBox() {
           Ask
         </button>
       </form>
-      {robotOn && <div className="robot" id="robot" ref={attachRobot} role="group" aria-label={TRY.robotLabel} data-state={robotState} />}
+      {robotOn && (
+        <div
+          className="robot"
+          id="robot"
+          ref={attachRobot}
+          role="group"
+          aria-label={TRY.robotLabel}
+          data-state={robotState}
+          data-interactive={robotInteractive ? 'true' : 'false'}
+        />
+      )}
       {loaded.state !== 'loading' && (
         <>
           <div className="chips">
@@ -229,7 +257,7 @@ function AskBox() {
           </p>
         </>
       )}
-      <Answer shown={shown} prepared={prepared} />
+      <Answer shown={shown} prepared={prepared} onAsk={askSuggested} />
     </div>
   );
 }

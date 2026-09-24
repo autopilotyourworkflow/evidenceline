@@ -41,7 +41,8 @@ const TURNSTILE_HOST = 'challenges.cloudflare.com';
 /**
  * A local stand-in for Cloudflare's Turnstile script (the smoke test never uses the internet). It follows the
  * documented explicit-render API: calls the onload function named in its URL, renders a 65 px box, gives the test
- * token shortly after render and after each reset, and counts calls in window.__turnstileStub.
+ * token shortly after render and after each reset, and counts calls in window.__turnstileStub. Its interact(true)
+ * and interact(false) call the widget's before- and after-interactive callbacks, as Cloudflare does around a tick.
  */
 const TURNSTILE_STUB = `(() => {
   const onload = new URL(document.currentScript.src).searchParams.get('onload');
@@ -52,7 +53,7 @@ const TURNSTILE_STUB = `(() => {
     render(el, options) {
       const id = 'w' + (widgets.size + 1);
       widgets.set(id, options);
-      stub.renders.push({ sitekey: options.sitekey, size: options.size, action: options.action });
+      stub.renders.push({ sitekey: options.sitekey, size: options.size, action: options.action, appearance: options.appearance });
       const box = document.createElement('div');
       box.style.cssText = 'box-sizing:border-box;width:100%;min-width:300px;height:65px;border:1px solid #ccc;background:#fafafa;font:14px sans-serif;padding:22px 12px';
       box.textContent = 'Stand-in for the Turnstile check';
@@ -62,6 +63,9 @@ const TURNSTILE_STUB = `(() => {
     },
     reset(id) { stub.resets += 1; give(id); },
     remove(id) { stub.removes += 1; widgets.delete(id); },
+  };
+  stub.interact = (on) => {
+    for (const options of widgets.values()) options[on ? 'before-interactive-callback' : 'after-interactive-callback']?.();
   };
   window[onload]();
 })();`;
@@ -893,6 +897,17 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     verification: { ran: false, passed: null, checks: [], summary: 'No model answer was written, so there was nothing to check.' },
     model: null,
   };
+  const notCoveredResult = {
+    status: 'not_covered',
+    explanation: 'The indexed guidelines don\'t appear to cover this. None of the documents mention: poem.',
+    answer: null,
+    citations: [],
+    guideline_values: [],
+    notes: [],
+    verification: { ran: false, passed: null, checks: [], summary: 'No model answer was written, so there was nothing to check.' },
+    model: null,
+    suggestions: ['What is a tier 1 screening assessment?', 'What is a preliminary site investigation?', 'What are the classification categories for contaminated sites?'],
+  };
   const handle = async (r) => {
     if (!r.url().endsWith('/api/ask')) return false;
     if (r.method() !== 'POST') return false;
@@ -906,6 +921,8 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     else if (q.includes('offline')) await r.abort('failed');
     else if (q.includes('bare')) await r.respond(json(answer));
     else if (q.includes('how does this work')) await r.respond(json({ question: q, result: aboutResult }));
+    else if (q.includes('poem')) await r.respond(json({ question: q, result: notCoveredResult }));
+    else if (q.includes('waht')) await r.respond(json({ question: q, result: { ...answer, corrected_question: 'what is a tier 1 screening assessment' } }));
     else if (q.includes('budget')) await r.respond(json({ status: 'paused', explanation: "Live answers are paused: today's limit has been reached.", answer: null, citations: answer.citations, guideline_values: [], notes: [] }));
     else await r.respond(json({ question: q, result: answer }));
     return true;
@@ -928,6 +945,21 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   ok('Turnstile: the script comes from challenges.cloudflare.com with explicit rendering, once the box is near', turnstileUrl.startsWith(`https://${TURNSTILE_HOST}/turnstile/v0/api.js?render=explicit&onload=`), turnstileUrl);
   const stub = await p.evaluate(() => window.__turnstileStub);
   ok('Turnstile: one widget, with the site key from the build, flexible width', stub?.renders.length === 1 && stub.renders[0].sitekey === TURNSTILE_TEST_KEY && stub.renders[0].size === 'flexible', JSON.stringify(stub));
+  const robotHeight = () => p.$eval('#robot', (r) => Math.round(r.getBoundingClientRect().height));
+  const quiet = await robotHeight();
+  await p.evaluate(() => window.__turnstileStub.interact(true));
+  await sleep(80);
+  const ticking = await robotHeight();
+  await p.evaluate(() => window.__turnstileStub.interact(false));
+  await sleep(200);
+  const justTicked = await robotHeight();
+  await sleep(1600);
+  const folded = await robotHeight();
+  ok(
+    'Turnstile: shown only when a tick is needed (interaction-only): no room taken, then the box, then folded away after the tick',
+    stub?.renders[0]?.appearance === 'interaction-only' && quiet === 0 && ticking >= 65 && justTicked >= 65 && folded === 0,
+    JSON.stringify({ appearance: stub?.renders[0]?.appearance, quiet, ticking, justTicked, folded }),
+  );
   ok('Turnstile: the question is sent with turnstile_token', asked[0]?.token === TURNSTILE_TEST_TOKEN, JSON.stringify(asked[0]));
   ok('Live: a typed question shows a loading message first', good.during.state === 'loading' && good.during.text.includes('Looking through the guidelines'), JSON.stringify(good.during));
   ok('Live: posts the question as JSON to {VITE_API_BASE}/api/ask', asked.length === 1 && asked[0].url === `${liveBase}/api/ask` && asked[0].q === 'What is a tier 1 screening assessment?' && (asked[0].type ?? '').includes('application/json'), JSON.stringify(asked));
@@ -946,6 +978,34 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     'Live: a greeting or "how does this work?" shows the fixed reply as two paragraphs, with no heading, sources or checks, and says no AI was used',
     about.after.state === 'live' && about.after.text.startsWith('Hello. Ask a question about assessing contaminated sites') && aboutShape.heading === null && aboutShape.paras === 2 && aboutShape.sources === 0 && aboutShape.more === 0 && aboutShape.note.includes('no AI was used'),
     JSON.stringify({ text: about.after.text.slice(0, 80), ...aboutShape }),
+  );
+  const poem = await ask('write me a poem');
+  const poemShape = await p.$eval('#answer', (a) => ({
+    heading: a.querySelector('.akind')?.textContent ?? null,
+    lead: a.querySelector(':scope > p:not(.akind):not(.src)')?.textContent ?? '',
+    buttons: [...a.querySelectorAll('.chips.suggest button')].map((b) => b.textContent),
+    why: [...a.querySelectorAll('details.more')].map((d) => ({ label: d.querySelector('summary')?.textContent ?? '', open: d.open, text: d.textContent ?? '' })),
+  }));
+  ok(
+    'Live: not covered leads in plain words, offers three questions to try as buttons, and keeps the reason one click away',
+    poem.after.state === 'live' && poemShape.heading === 'Not covered by the guidance it can read' && poemShape.lead.includes('contaminated sites and PFAS') && poemShape.lead.includes('try one of these') &&
+      poemShape.buttons.length === 3 && poemShape.why.length === 1 && poemShape.why[0].label.includes("Why it wasn't found") && !poemShape.why[0].open && poemShape.why[0].text.includes('poem'),
+    JSON.stringify(poemShape),
+  );
+  const askedBefore = asked.length;
+  await p.click('.chips.suggest button');
+  await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live' && document.querySelector('#answer .chips.suggest') === null, { timeout: 5000 }).catch(() => undefined);
+  ok(
+    'Live: a suggested question from an answer goes into the box and is asked',
+    (await p.$eval('#q', (i) => i.value)) === 'What is a tier 1 screening assessment?' && asked.length === askedBefore + 1 && asked.at(-1)?.q === 'What is a tier 1 screening assessment?',
+    JSON.stringify(asked.slice(askedBefore)),
+  );
+  const typo = await ask('waht is a teir 1 screening assesment');
+  const searched = await p.$eval('#answer', (a) => a.querySelector('.searched')?.textContent ?? '');
+  ok(
+    'Live: a corrected spelling is said first, with the question that was searched',
+    typo.after.state === 'live' && searched === 'Nothing matched the words as typed, so it searched for: what is a tier 1 screening assessment',
+    searched,
   );
   const limited = await ask('rate limited question');
   ok('Live: rate-limited gets a friendly message', limited.after.state === 'rate-limited' && limited.after.text.includes('Too many questions') && limited.after.text.includes('try again in a minute'), limited.after.text);
@@ -966,9 +1026,12 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   ok('Live: suggested questions still use the prepared answers (no live call)', asked.length === before && (await p.$eval('#answer', (a) => a.getAttribute('data-state'))) === 'prepared');
   // Connector and code links exist in this build.
   ok('Live: the connector card shows the configured link', (await p.$eval('#mcp', (c) => c.textContent)) === env.VITE_MCP_URL);
+  // The page scrolls smoothly; bring the button into view first so the click lands on it.
+  await p.$eval('#copy', (b) => b.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await p.click('#copy');
-  await sleep(60);
-  ok('Copy button responds', (await p.$eval('#copy', (x) => x.textContent)) === 'Copied');
+  await p.waitForFunction(() => document.getElementById('copy')?.textContent !== 'Copy', { timeout: 2000 }).catch(() => undefined);
+  const copied = await p.$eval('#copy', (x) => x.textContent);
+  ok('Copy button responds', copied === 'Copied', `${copied}; focus ${await p.evaluate(() => document.hasFocus())}`);
   ok('Live: "Code on GitHub" links to the configured repository', (await p.$eval('#github', (a) => a.getAttribute('href')).catch(() => '')) === env.VITE_GITHUB_URL);
   const links = await deadLinks(p, liveBase, landingIds);
   ok('Live: no dead links', links.dead.length === 0, JSON.stringify(links.dead));
@@ -995,6 +1058,8 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   await ph.p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
   const w = await ph.p.evaluate(() => document.documentElement.scrollWidth);
   ok('Live: phone, no sideways scrolling at 390 px with an answer shown', w === 390, `page is ${w} px wide`);
+  await ph.p.evaluate(() => window.__turnstileStub.interact(true));
+  await sleep(80);
   const robotBox = await ph.p.evaluate(() => {
     const r = document.getElementById('robot')?.getBoundingClientRect();
     return r === undefined ? null : { left: Math.round(r.left), right: Math.round(r.right), height: Math.round(r.height) };

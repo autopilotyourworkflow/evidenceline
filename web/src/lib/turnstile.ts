@@ -3,13 +3,17 @@
 // then, and only once the question box is near the screen. The API checks the token (TURNSTILE_SECRET on the service).
 //
 // Which kind of check a visitor sees (managed, non-interactive or invisible) is a setting of the site key in the
-// Cloudflare dashboard, not of this code. Evidenceline's key is a managed one.
+// Cloudflare dashboard, not of this code. Evidenceline's key is a managed one. It is rendered with the appearance
+// 'interaction-only': most visitors never see it; the box shows only when Cloudflare needs a tick, and folds away
+// again shortly after.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Cloudflare's script, with explicit rendering and a ready callback, as its documentation shows. */
 export const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 const READY_CALLBACK = '__evidencelineTurnstileReady';
+/** How long the box stays after a tick, so the visitor sees it worked. */
+const INTERACTIVE_LINGER_MS = 1500;
 
 /** The render options this page uses (a subset of Cloudflare's). */
 type TurnstileOptions = {
@@ -17,7 +21,10 @@ type TurnstileOptions = {
   readonly action: string;
   readonly theme: 'auto' | 'light' | 'dark';
   readonly size: 'normal' | 'flexible' | 'compact';
+  readonly appearance: 'always' | 'execute' | 'interaction-only';
   readonly callback: (token: string) => void;
+  readonly 'before-interactive-callback': () => void;
+  readonly 'after-interactive-callback': () => void;
   readonly 'expired-callback': () => void;
   readonly 'timeout-callback': () => void;
   readonly 'error-callback': (code: string) => void;
@@ -77,6 +84,8 @@ export type RobotCheck = {
   /** Callback ref for the element the widget goes in. */
   readonly attach: (element: HTMLDivElement | null) => void;
   readonly state: RobotCheckState;
+  /** Whether the box is showing because Cloudflare needs the visitor to tick it. */
+  readonly interactive: boolean;
   /** The current token, waiting up to `timeoutMs` for one. Null when none arrives or the check is unavailable. */
   readonly token: (timeoutMs: number) => Promise<string | null>;
   /** Marks the token as used (each one is good for one question) and asks the widget for a fresh one. */
@@ -89,6 +98,7 @@ const NO_CHECK: RobotCheck = {
   enabled: false,
   attach: () => undefined,
   state: 'idle',
+  interactive: false,
   token: () => Promise.resolve(null),
   spend: () => undefined,
   unavailable: () => false,
@@ -101,6 +111,7 @@ const NO_CHECK: RobotCheck = {
 export function useRobotCheck(siteKey: string | null): RobotCheck {
   const [element, attach] = useState<HTMLDivElement | null>(null);
   const [state, setState] = useState<RobotCheckState>('idle');
+  const [interactive, setInteractive] = useState(false);
   const current = useRef<string | null>(null);
   /** True while the check cannot give a token (script blocked or widget error), so nobody waits for one. */
   const broken = useRef(false);
@@ -127,6 +138,14 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
             action: 'ask',
             theme: 'light',
             size: 'flexible',
+            appearance: 'interaction-only',
+            'before-interactive-callback': () => setInteractive(true),
+            // After a tick Cloudflare shows "Success!" for a moment; then the box folds away again.
+            'after-interactive-callback': () => {
+              window.setTimeout(() => {
+                if (!cancelled) setInteractive(false);
+              }, INTERACTIVE_LINGER_MS);
+            },
             callback: (token) => {
               current.current = token;
               broken.current = false;
@@ -214,5 +233,5 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
   const unavailable = useCallback(() => broken.current, []);
 
   if (siteKey === null) return NO_CHECK;
-  return { enabled: true, attach, state, token, spend, unavailable };
+  return { enabled: true, attach, state, interactive, token, spend, unavailable };
 }

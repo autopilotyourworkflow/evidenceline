@@ -133,7 +133,8 @@ def test_about_route(client: TestClient) -> None:
     """A greeting or 'how does this work?' gets the fixed reply about Evidenceline: no search, no model."""
     body = _ask(client, "Hello, how does this work?").json()
     assert body["status"] == "about"
-    assert body["answer"].startswith("Hello. Ask a question about assessing contaminated sites")
+    assert body["answer"].startswith("Hello. This is Evidenceline. Ask it about assessing contaminated sites")
+    assert len(body["suggestions"]) == 3
     assert body["model"] is None
     assert body["citations"] == []
 

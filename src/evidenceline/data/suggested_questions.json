@@ -1,0 +1,20 @@
+{
+  "_about": "Questions the question box offers when it cannot answer ('Try one of these instead'). Each one finds the right section of the indexed guidance (checked by tests/test_answer_suggest.py against the real index). The first three are offered when nothing in the question points to a better one; they are not among the suggested questions shown above the box.",
+  "defaults": 3,
+  "questions": [
+    "What is a tier 1 screening assessment?",
+    "What is a preliminary site investigation?",
+    "What are the classification categories for contaminated sites?",
+    "What is the drinking-water limit for PFOS?",
+    "When do I have to report a suspected contaminated site to DWER?",
+    "What is a conceptual site model?",
+    "What should a detailed site investigation report include?",
+    "What should a site history cover?",
+    "How should groundwater samples be collected?",
+    "What are health investigation levels for soil?",
+    "What are ecological investigation levels?",
+    "What is a sampling and analysis quality plan?",
+    "What quality checks should a lab report include?",
+    "What is a contaminated sites auditor?"
+  ]
+}

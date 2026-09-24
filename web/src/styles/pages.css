@@ -136,8 +136,13 @@ footer a:hover{color:#fff}
 .pending.later p{font-size:15.5px}
 .pending.soon{margin:0 0 14px}
 /* the Turnstile check: space kept for it (65 px, Cloudflare's height) so the page does not jump when it appears */
-.robot{margin-top:12px;min-height:65px;max-width:100%}
-.robot[data-state="unavailable"]{min-height:0;margin-top:0}
+/* The robot check takes no room unless Cloudflare needs a tick ('interaction-only'); then it shows under the field */
+.robot{max-width:100%}
+.robot:not([data-interactive="true"]){height:0;overflow:hidden}
+.robot[data-interactive="true"]{margin-top:12px;min-height:65px}
+.answer .searched{font-size:14px;color:var(--muted);margin:0 0 10px}
+.answer .searched b{font-weight:500;color:var(--ink)}
+.answer .chips.suggest{margin:4px 0 14px}
 
 /* Accuracy notes: the note column holds the wording, so it keeps a readable width beside four verdict columns. */
 @media (min-width:561px){.dtable.notes th[scope="row"]{width:24%;min-width:200px}}
