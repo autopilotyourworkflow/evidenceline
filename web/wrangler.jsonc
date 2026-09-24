@@ -25,7 +25,7 @@
     // The API service's origin on Render, with no trailing slash, such as https://evidenceline-api-xxxx.onrender.com.
     // Empty until the service exists: /api and /mcp then answer 503 "The live service is not connected yet".
     // It is not a secret; set it here when switching on (DEPLOY.md) so that every later deploy keeps it.
-    "API_ORIGIN": ""
+    "API_ORIGIN": "https://evidenceline-api.onrender.com"
   },
   // No usage data is sent to Cloudflare from wrangler runs on this computer.
   "send_metrics": false,

@@ -91,6 +91,9 @@ await buildLaunch(dirs.launch, { logLevel: 'silent' });
 const envAfterLaunch = Object.fromEntries(Object.keys(POLLUTED).map((k) => [k, process.env[k]]));
 for (const k of Object.keys(POLLUTED)) delete process.env[k];
 
+// The full build without the robot check: the real site key in .env.production only works on the published address
+// (the smoke test checks the production build with it). The Turnstile build below uses Cloudflare's test key.
+process.env.VITE_TURNSTILE_SITE_KEY = '';
 await build({ root: webDir, mode: 'production', logLevel: 'silent', build: { outDir: dirs.full, emptyOutDir: true } });
 process.env.VITE_TURNSTILE_SITE_KEY = TEST_SITE_KEY;
 await build({ root: webDir, mode: 'production', logLevel: 'silent', build: { outDir: dirs.turnstile, emptyOutDir: true } });
@@ -227,6 +230,8 @@ function startWrangler(name, port, assetsDir, vars) {
   delete cfg.$schema;
   cfg.main = join(webDir, 'worker', 'index.js');
   cfg.assets.directory = assetsDir;
+  // Never the real service: once switched on, wrangler.jsonc names the Render origin. Only a --var below sets one.
+  cfg.vars = { ...cfg.vars, API_ORIGIN: '' };
   const cfgPath = join(work, `wrangler.${name}.json`);
   writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
   const args = [
@@ -577,7 +582,7 @@ test('W7', 'Worker in the real runtime: headers a caller makes up never reach th
 
 test('W8', 'The deploy dry run on the real wrangler.jsonc contacts no account and ships only the Worker', {
   input: 'wrangler deploy --dry-run --outdir <temp> (the documented pre-deploy check; web/dist as it is now)',
-  expected: 'exit 0; lists env.ASSETS and API_ORIGIN ""; bundled worker has only a default export and no secret value',
+  expected: 'exit 0; lists env.ASSETS and API_ORIGIN ("" at launch, the https Render origin once live); bundled worker has only a default export and no secret value',
 }, async () => {
   const outdir = join(work, 'dry-run');
   rmSync(outdir, { recursive: true, force: true });
@@ -591,7 +596,7 @@ test('W8', 'The deploy dry run on the real wrangler.jsonc contacts no account an
   const files = existsSync(outdir) ? readdirSync(outdir) : [];
   const js = files.filter((f) => f.endsWith('.js')).map((f) => readFileSync(join(outdir, f), 'utf8')).join('\n');
   const exportsOnlyDefault = /export\s*\{\s*[\w$]+\s+as\s+default\s*\}/.test(js) && !/export\s*\{[^}]*,[^}]*\}/.test(js);
-  const pass = r.status === 0 && /env\.ASSETS/.test(log) && /API_ORIGIN[^\n]*""/.test(log) && /--dry-run: exiting now/.test(log) && exportsOnlyDefault && !js.includes(PROXY_SECRET);
+  const pass = r.status === 0 && /env\.ASSETS/.test(log) && /API_ORIGIN[^\n]*("|https:\/\/[\w.-]+\.onrender\.com)"/.test(log) && /--dry-run: exiting now/.test(log) && exportsOnlyDefault && !js.includes(PROXY_SECRET);
   return { pass, actual: `exit ${r.status}; bindings: ${log.split('\n').filter((l) => /ASSETS|API_ORIGIN|dry-run/.test(l)).map((l) => l.trim()).join(' / ')}; files ${files.join(',')}; only default export ${exportsOnlyDefault}` };
 });
 

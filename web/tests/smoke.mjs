@@ -68,6 +68,8 @@ const TURNSTILE_STUB = `(() => {
 const turnstileScript = { status: 200, contentType: 'application/javascript', body: TURNSTILE_STUB };
 /** What web/.env.production must give the published site. */
 const PRODUCTION = { github: 'https://github.com/autopilotyourworkflow/evidenceline', mcp: 'https://evidenceline.autopilotyourworkflow.com/mcp', apiBase: '/' };
+/** The Turnstile site key web/.env.production gives the build: empty until the robot check is switched on. */
+const PRODUCTION_SITE_KEY = (/^VITE_TURNSTILE_SITE_KEY=(.*)$/m.exec(readFileSync(join(webDir, '.env.production'), 'utf8'))?.[1] ?? '').trim();
 const tidyData = JSON.parse(readFileSync(join(webDir, 'public', 'data', 'tidy.json'), 'utf8'));
 const soilData = JSON.parse(readFileSync(join(labDir, 'fds01_site', 'soil_criteria.json'), 'utf8'));
 
@@ -189,10 +191,17 @@ const allText = (p) =>
   const handleSameOrigin = async (r) => {
     if (r.method() !== 'POST' || new URL(r.url()).pathname !== '/api/ask') return false;
     sameOrigin.push(r.url());
+    sameOriginTokens.push(JSON.parse(r.postData() ?? '{}').turnstile_token ?? null);
     await r.respond(json(sameOriginAnswer));
     return true;
   };
-  const { p, errors, failed, requests } = await open({ width: 1440, height: 900 }, '/', { respond: { '/data/answers.json': json({}) }, handle: handleSameOrigin });
+  const sameOriginTokens = [];
+  // With a site key in .env.production the build loads Turnstile; the local stand-in replaces Cloudflare's script,
+  // whose real widget refuses this preview's localhost address.
+  const { p, errors, failed, requests } = await open({ width: 1440, height: 900 }, '/', {
+    respond: { '/data/answers.json': json({}), '/turnstile/v0/api.js': turnstileScript },
+    handle: handleSameOrigin,
+  });
   landingIds = await p.evaluate(() => [...document.querySelectorAll('[id]')].map((e) => e.id));
   await loadAllImages(p);
   const imgs = await p.evaluate(() => [...document.images].map((i) => ({ src: i.getAttribute('src'), w: i.naturalWidth, alt: i.alt })));
@@ -326,10 +335,19 @@ const allText = (p) =>
     JSON.stringify(sameOrigin),
   );
   ok('Production build: the answer from the same-origin service is shown', (await p.$eval('#answer', (a) => a.getAttribute('data-state'))) === 'live');
-  ok(
-    'Production build: no robot check and no Turnstile script while no site key is set, and no "soon" note',
-    !(await p.$('#robot')) && !requests.some((u) => u.includes(TURNSTILE_HOST)) && !(await p.$('#coming-soon')),
-  );
+  if (PRODUCTION_SITE_KEY === '') {
+    ok(
+      'Production build: no robot check and no Turnstile script while no site key is set, and no "soon" note',
+      !(await p.$('#robot')) && !requests.some((u) => u.includes(TURNSTILE_HOST)) && !(await p.$('#coming-soon')),
+    );
+  } else {
+    const stub = await p.evaluate(() => window.__turnstileStub);
+    ok(
+      'Production build: the robot check uses the site key from .env.production, the question carries its token, and no "soon" note',
+      !!(await p.$('#robot')) && stub?.renders.length === 1 && stub.renders[0].sitekey === PRODUCTION_SITE_KEY && sameOriginTokens[0] === TURNSTILE_TEST_TOKEN && !(await p.$('#coming-soon')),
+      JSON.stringify({ renders: stub?.renders, tokens: sameOriginTokens }),
+    );
+  }
   ok('Without answers.json the small print says the examples are hand-written', (await p.$eval('#prepared-note', (e) => e.textContent)).includes('written by hand'));
   // The connector and the code repository come from .env.production in this build.
   ok('Production build: the connector card shows the site\'s own /mcp link', (await p.$eval('#mcp', (c) => c.textContent).catch(() => '')) === PRODUCTION.mcp);

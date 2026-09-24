@@ -5,8 +5,8 @@
 A working concept of an assistant for PFAS groundwater monitoring in Western Australia: it checks report text against lab data and guideline values, and shows where every number came from.
 The site and every lab result are synthetic (a fictional site, FDS-01); the guidance is real and public; this is a personal project, not affiliated with any company.
 
-**Live site:** https://evidenceline.autopilotyourworkflow.com (the website launches first; its live question box
-and the hosted connector say "coming soon" until the small API service behind them is switched on)
+**Live site:** https://evidenceline.autopilotyourworkflow.com (with a live question box and a hosted connector for
+Claude; both are read-only and rate-limited)
 
 ## What it does and who it is for
 
@@ -119,9 +119,8 @@ Or in a Claude Desktop or project `.mcp.json` config:
 
 Then ask Claude, for example: "Use the evidenceline tools to check this paragraph about well MB2: ...".
 
-A read-only hosted copy will also be available as a remote connector (no install, rate-limited, same nine tools).
-Until its service is switched on, the website says "coming soon" and this address answers that it is not connected
-yet:
+A read-only hosted copy is also available as a remote connector (no install, rate-limited, same nine tools). A run
+of it inside Claude Code is saved in [docs/examples/claude-code-live-connector-2026-09-24.md](docs/examples/claude-code-live-connector-2026-09-24.md):
 
 ```sh
 claude mcp add --transport http evidenceline-demo https://evidenceline.autopilotyourworkflow.com/mcp

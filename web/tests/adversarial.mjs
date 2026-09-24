@@ -176,7 +176,13 @@ const siteWorker = {
 
 console.log('adversarial: building the production and offline sites (vite build) ...');
 mkdirSync(tmpDir, { recursive: true });
+// The production build without the robot check: the real site key in .env.production only works on the published
+// address (smoke.mjs checks the production build with it; adversarial_launch.mjs checks Turnstile on the test key).
+const siteKeyBefore = process.env.VITE_TURNSTILE_SITE_KEY;
+process.env.VITE_TURNSTILE_SITE_KEY = '';
 await build({ root: webDir, mode: 'production', logLevel: 'silent', build: { outDir: prodDir, emptyOutDir: true } });
+if (siteKeyBefore === undefined) delete process.env.VITE_TURNSTILE_SITE_KEY;
+else process.env.VITE_TURNSTILE_SITE_KEY = siteKeyBefore;
 await build({ root: webDir, mode: 'offline', logLevel: 'silent', build: { outDir: offlineDir, emptyOutDir: true } });
 
 console.log('adversarial: starting two copies of the API (no model key) ...');
@@ -1108,7 +1114,7 @@ test('D13', 'Copy says "Copied" only when the link was copied', {
 
 test('E1', '/accuracy shows the real numbers from accuracy.json, failures and misses included', {
   input: '/accuracy with the real accuracy.json',
-  expected: 'test total, every area\'s counts, each whole question set\'s hit@1 in the summary, every set\'s missed questions one click away, the notes the re-checks did not confirm as failure rows, "local build"',
+  expected: 'test total, every area\'s counts, each whole question set\'s hit@1 in the summary, every set\'s missed questions one click away, the notes the re-checks did not confirm as failure rows, the build accuracy.json names ("commit abc1234" or "local build")',
 }, async () => {
   const { p } = await open('/accuracy');
   const passed = accuracy.suites.reduce((n, s) => n + s.passed, 0);
@@ -1134,7 +1140,7 @@ test('E1', '/accuracy shows the real numbers from accuracy.json, failures and mi
   const wantMisses = accuracy.search.map((s) => (s.misses ?? []).length).filter((n) => n > 0);
   if (JSON.stringify(missText) !== JSON.stringify(wantMisses) || missesClosed.some((o) => o)) bad.push(`misses ${missText} closed=${missesClosed}`);
   if (noteRows !== accuracy.verification.notes.filter((n) => n.confirmed_now !== true).length) bad.push(`note rows ${noteRows}`);
-  if (!short.includes('local build')) bad.push('build');
+  if (!short.includes(accuracy.build)) bad.push(`build (${accuracy.build})`);
   return { pass: bad.length === 0, actual: bad.length === 0 ? `${passed} of ${passed + failed}; ${rows.length} areas; misses ${missText}; ${noteRows} note failure rows` : bad.join(', ') };
 });
 
