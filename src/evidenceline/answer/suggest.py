@@ -6,7 +6,8 @@ guidance. The question and each pool question are read into the same concepts th
 meets 'health investigation levels' and 'dirt' meets 'soil'. A shared concept counts twice as much as a shared word,
 and either counts more the fewer pool questions hold it (so 'groundwater' outweighs 'site'). Words that say what
 kind of thing is wanted rather than its subject ('limits', 'rules', 'include') count for nothing, so a soil question
-gets the soil question first, not the drinking-water one. When nothing is shared, the file's default questions are
+gets the soil question first, not the drinking-water one. So do 'site' (nearly every pool question is about a site),
+'plan' and 'model' ('a business plan', 'which model is this?'). When nothing is shared, the file's default questions are
 offered. No model is called.
 """
 
@@ -113,6 +114,10 @@ _GENERIC = frozenset(
         "means",
         "tell",
         "know",
+        "plan",
+        "model",
+        "site",
+        "sites",
     ]
 )
 
@@ -139,13 +144,14 @@ def _units(text: str) -> frozenset[str]:
 
 
 def _same(a: str, b: str) -> bool:
-    """The same unit, or two words where one starts the other and both have at least 5 letters ('audit', 'auditor')."""
+    """The same unit, or two words where one starts the other, both have at least 5 letters and the longer adds at
+    most 3 ('audit', 'auditor'). 'Invest' is not 'investigation'."""
     if a == b:
         return True
     if not (a.startswith("w:") and b.startswith("w:")):
         return False
     x, y = a[2:], b[2:]
-    return min(len(x), len(y)) >= 5 and (x.startswith(y) or y.startswith(x))
+    return min(len(x), len(y)) >= 5 and abs(len(x) - len(y)) <= 3 and (x.startswith(y) or y.startswith(x))
 
 
 @cache

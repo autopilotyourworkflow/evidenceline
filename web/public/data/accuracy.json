@@ -4,8 +4,8 @@
   "message": "Results from the automated test run.",
   "method": "Guideline values are checked by two independent automated passes against the source pages, not reviewed by a practitioner.",
   "last_run": "2026-09-24",
-  "build": "commit 2f11565",
-  "commit": "2f11565",
+  "build": "commit 82f888d",
+  "commit": "82f888d",
   "suites": [
     {
       "name": "Tidy lab results",

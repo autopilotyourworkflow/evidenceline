@@ -240,6 +240,25 @@ _COMMON = frozenset(
 )
 """Everyday words: never a correction's target unless the letters only swapped ('waht' to 'what'), and never the
 word that shows a question is on the guidance's subject."""
+FUNCTION_WORD_TYPOS = {
+    "wht": "what",
+    "wat": "what",
+    "whta": "what",
+    "wot": "what",
+    "shuld": "should",
+    "shoud": "should",
+    "shld": "should",
+    "teh": "the",
+    "hte": "the",
+    "whn": "when",
+    "wen": "when",
+    "hw": "how",
+    "hwo": "how",
+    "adn": "and",
+}
+"""Common slips in short everyday words, which the rules above never change (too short, or a common word): without
+them 'wht shuld a DSI reprt include' was offered as 'wht shuld a DSI report include'. Changed only when no indexed
+passage uses the word as typed, and like every other change, only in a question on the guidance's subject."""
 _WORD = re.compile(r"[a-z]+")
 
 
@@ -326,7 +345,10 @@ def corrected(question: str, words: Counter[str]) -> str | None:
         token = match.group(0)
         replacement = token
         lower = token.lower()
-        if _may_change(token, match.start(), question, words):
+        if lower in FUNCTION_WORD_TYPOS and lower not in words:
+            replacement = FUNCTION_WORD_TYPOS[lower].capitalize() if token[0].isupper() else FUNCTION_WORD_TYPOS[lower]
+            changed = True
+        elif _may_change(token, match.start(), question, words):
             found = _closest(lower, groups.get(lower[0], ()), question_words)
             if found is not None:
                 replacement = found.capitalize() if token[0].isupper() else found

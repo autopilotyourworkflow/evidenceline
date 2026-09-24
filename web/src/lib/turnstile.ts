@@ -86,8 +86,12 @@ export type RobotCheck = {
   readonly state: RobotCheckState;
   /** Whether the box is showing because Cloudflare needs the visitor to tick it. */
   readonly interactive: boolean;
-  /** The current token, waiting up to `timeoutMs` for one. Null when none arrives or the check is unavailable. */
-  readonly token: (timeoutMs: number) => Promise<string | null>;
+  /**
+   * The current token, waiting up to `timeoutMs` for one, or up to `tickTimeoutMs` in all when Cloudflare is asking
+   * the visitor to tick the box by then (the token comes with the tick). Null when none arrives or the check is
+   * unavailable.
+   */
+  readonly token: (timeoutMs: number, tickTimeoutMs?: number) => Promise<string | null>;
   /** Marks the token as used (each one is good for one question) and asks the widget for a fresh one. */
   readonly spend: () => void;
   /** Whether the check cannot give a token right now (script blocked, offline, or a widget error). */
@@ -112,6 +116,8 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
   const [element, attach] = useState<HTMLDivElement | null>(null);
   const [state, setState] = useState<RobotCheckState>('idle');
   const [interactive, setInteractive] = useState(false);
+  /** `interactive` for a wait that is already running. */
+  const ticking = useRef(false);
   const current = useRef<string | null>(null);
   /** True while the check cannot give a token (script blocked or widget error), so nobody waits for one. */
   const broken = useRef(false);
@@ -127,6 +133,7 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
   useEffect(() => {
     if (siteKey === null || element === null) return undefined;
     let cancelled = false;
+    let linger: number | undefined;
 
     const start = () => {
       setState('checking');
@@ -139,11 +146,18 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
             theme: 'light',
             size: 'flexible',
             appearance: 'interaction-only',
-            'before-interactive-callback': () => setInteractive(true),
-            // After a tick Cloudflare shows "Success!" for a moment; then the box folds away again.
+            'before-interactive-callback': () => {
+              window.clearTimeout(linger);
+              ticking.current = true;
+              setInteractive(true);
+            },
+            // After a tick Cloudflare shows "Success!" for a moment; then the box folds away again, unless it has
+            // asked for another tick meanwhile.
             'after-interactive-callback': () => {
-              window.setTimeout(() => {
-                if (!cancelled) setInteractive(false);
+              linger = window.setTimeout(() => {
+                if (cancelled) return;
+                ticking.current = false;
+                setInteractive(false);
               }, INTERACTIVE_LINGER_MS);
             },
             callback: (token) => {
@@ -196,22 +210,29 @@ export function useRobotCheck(siteKey: string | null): RobotCheck {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(linger);
       observer?.disconnect();
       if (widget.current !== null) widget.current.api.remove(widget.current.id);
       widget.current = null;
       current.current = null;
+      ticking.current = false;
       settle(null);
     };
   }, [siteKey, element, settle]);
 
   const token = useCallback(
-    (timeoutMs: number) => {
+    (timeoutMs: number, tickTimeoutMs: number = timeoutMs) => {
       if (current.current !== null) return Promise.resolve(current.current);
       if (broken.current) return Promise.resolve(null);
       return new Promise<string | null>((resolve) => {
-        const timer = window.setTimeout(() => {
+        const giveUp = () => {
           waiters.current = waiters.current.filter((w) => w !== done);
           resolve(null);
+        };
+        // A visitor who is being asked to tick the box gets the longer wait: the question goes as soon as they tick.
+        let timer = window.setTimeout(() => {
+          if (ticking.current && tickTimeoutMs > timeoutMs) timer = window.setTimeout(giveUp, tickTimeoutMs - timeoutMs);
+          else giveUp();
         }, timeoutMs);
         const done = (value: string | null) => {
           window.clearTimeout(timer);

@@ -869,8 +869,12 @@ test('C9', 'Each result on /sample-site opens the lab file row it names, and tha
 
 test('D1', 'Prepared answers show the date and model they were made with', {
   input: 'click each suggested question',
-  expected: 'every answer\'s small print has 24 September 2026; model answers name claude-sonnet-5; answers with no model say no model was called',
+  expected: 'every answer\'s small print has the date in answers.json (prepared_on); model answers name claude-sonnet-5; answers with no model say no model was called',
 }, async () => {
+  const [y, m, d] = answers.prepared_on.split('-').map(Number);
+  const when = new Date(Date.UTC(y, m - 1, d));
+  const long = when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const short = `${d} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]} ${y}`;
   const { p } = await open('/');
   const n = await p.$$eval('.chips button', (b) => b.length);
   const top = await text(p, '#prepared-note');
@@ -879,12 +883,12 @@ test('D1', 'Prepared answers show the date and model they were made with', {
     await p.click(`.chips button[data-a="${k}"]`);
     const note = await text(p, '#answer .prepared');
     const entry = answers.answers[k];
-    if (!note.includes('24 September 2026')) bad.push(`${k + 1}: no date`);
+    if (!note.includes(long)) bad.push(`${k + 1}: no date (${long})`);
     if (entry.result.model !== null && !note.includes(entry.result.model)) bad.push(`${k + 1}: no model`);
     if (entry.result.model === null && !/No model was called/.test(note)) bad.push(`${k + 1}: does not say no model was called`);
   }
   await p.close();
-  const pass = n === answers.answers.length && top.includes('24 Sep 2026') && top.includes(answers.model) && bad.length === 0;
+  const pass = n === answers.answers.length && top.includes(short) && top.includes(answers.model) && bad.length === 0;
   return { pass, actual: `${n} answers; top note "${top}"; ${bad.length === 0 ? 'each dated with its model' : bad.join(', ')}` };
 });
 
@@ -917,11 +921,11 @@ async function live(reply, { question = 'How are health investigation levels use
 
 test('D3', 'Service missing: /api/ask answers 404 with an HTML page', {
   input: 'POST /api/ask -> 404 text/html',
-  expected: 'a plain error with the status and a pointer to the prepared examples; Ask enabled again',
+  expected: 'a plain error, without the status code, and a pointer to the prepared examples; Ask enabled again',
 }, async () => {
   const r = await live(() => ({ status: 404, contentType: 'text/html', body: '<!doctype html><title>Not found</title>' }));
   await r.p.close();
-  const pass = r.got.state === 'error' && r.got.text.includes('HTTP 404') && r.got.text.includes('prepared example') && !r.button && r.errors.length === 0;
+  const pass = r.got.state === 'error' && r.got.text.includes('could not be answered') && !r.got.text.includes('HTTP') && r.got.text.includes('prepared example') && !r.button && r.errors.length === 0;
   return { pass, actual: `${r.got.state}: "${r.got.text}"` };
 });
 
@@ -963,14 +967,14 @@ test('D5', 'The loading message matches how long the page actually waits', {
 
 test('D6', 'Rate limited: the wait is worded from Retry-After or retry_after', {
   input: '429 with Retry-After 120; 429 with Retry-After 7200; 429 with only {"retry_after": 3600} (the API\'s shape)',
-  expected: '"in about 2 minutes", "in about 2 hours", "in about 60 minutes", each pointing to the prepared examples',
+  expected: '"in about 2 minutes", "in about 2 hours", "in about an hour", each pointing to the prepared examples',
 }, async () => {
   const out = [];
   let pass = true;
   for (const [reply, want] of [
     [json({ error: 'Too many questions: the limit is 10 questions per hour.' }, 429, { 'Retry-After': '120' }), 'in about 2 minutes'],
     [json({ error: 'Too many questions.' }, 429, { 'Retry-After': '7200' }), 'in about 2 hours'],
-    [json({ error: 'Too many questions.', retry_after: 3600 }, 429), 'in about 60 minutes'],
+    [json({ error: 'Too many questions.', retry_after: 3600 }, 429), 'in about an hour'],
   ]) {
     const r = await live(() => reply);
     await r.p.close();
@@ -1010,12 +1014,12 @@ test('D8', 'A paused or failed result (HTTP 200) must not be labelled "Answered 
 
 test('D9', 'Server errors: long messages are not quoted, dashes never shown', {
   input: '500 with a 300-character detail; 500 with "Upstream \u2014 failed \u2013 retry"; 200 with invalid JSON; connection refused',
-  expected: 'HTTP 500 without the long text; the short one quoted without dashes; "cannot show"; "could not be reached"',
+  expected: 'a plain error without the long text or the status code; the short one quoted without dashes; "cannot show"; "could not be reached"',
 }, async () => {
   const out = [];
   let pass = true;
   const runs = [
-    [() => json({ detail: 'x'.repeat(300) }, 500), (t) => t.includes('HTTP 500') && !t.includes('xxxxxxxxxx')],
+    [() => json({ detail: 'x'.repeat(300) }, 500), (t) => t.includes('could not be answered') && !t.includes('HTTP') && !t.includes('xxxxxxxxxx')],
     [() => json({ detail: 'Upstream \u2014 failed \u2013 retry' }, 500), (t) => t.includes('Upstream, failed, retry') && !DASHES.test(t)],
     [() => ({ status: 200, contentType: 'application/json', body: '{"status": "answ' }), (t) => t.includes('cannot show')],
     [() => 'abort', (t) => t.includes('could not be reached')],

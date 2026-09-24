@@ -131,6 +131,13 @@ footer a:hover{color:#fff}
 .gvals small{display:block;font-size:13px;color:var(--muted)}
 .answer .prepared{margin-top:12px}
 .answer .loading{display:flex;gap:12px;align-items:center;color:var(--muted)}
+/* The dot pulses while a question is on its way (the reduced-motion rule in landing.css stops it) */
+.answer .loading .pending-dot{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35;transform:scale(.8)}}
+/* The page moves focus to the answer after a suggested question; the answer itself is the cue, not a frame round it */
+.answer:focus-visible{outline:none}
+/* The status line for screen readers: .skip only moves it 999px left, so a long question in it would reach the screen */
+.skip[role="status"]{width:1px;height:1px;overflow:hidden;white-space:nowrap}
 .ask button:disabled{opacity:.6;cursor:progress}
 .pending.later{padding:16px 18px;margin-top:4px}
 .pending.later p{font-size:15.5px}
@@ -141,7 +148,7 @@ footer a:hover{color:#fff}
 .robot:not([data-interactive="true"]){height:0;overflow:hidden}
 .robot[data-interactive="true"]{margin-top:12px;min-height:65px}
 .answer .didyoumean{margin:0 0 10px}
-.answer .didyoumean button{font:inherit;font-weight:500;color:var(--brown);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.answer .didyoumean button{font:inherit;font-weight:500;color:var(--brown);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-align:left;min-height:44px}
 .answer .didyoumean button:hover{color:var(--ink)}
 .answer .chips.suggest{margin:4px 0 14px}
 
@@ -170,11 +177,14 @@ footer a:hover{color:#fff}
   .dtable.stack tr{display:block;border-top:1px solid var(--hair);padding:10px 0}
   .dtable.stack th,.dtable.stack td{display:grid;grid-template-columns:130px minmax(0,1fr);gap:10px;border:0;padding:4px 0}
   .dtable.stack th::before,.dtable.stack td::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:400}
+  /* The question box takes the full width so a whole question shows; Ask goes on the line below */
+  .ask{flex-wrap:wrap}
+  .ask input{flex-basis:100%}
 }
 
 /* try it: passages, licence notices, value markers and the checks drawer */
 .answer details.more{margin-top:10px;padding-top:8px}
-.answer details.more summary{font-size:14.5px}
+.answer details.more summary{font-size:14.5px;min-height:44px}
 .cites .lic{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;overflow-wrap:anywhere}
 /* Pipeline text can hold long unbroken runs (contents-page dot leaders, web addresses): wrap them on a phone. */
 .answer p,.answer li,.answer small{overflow-wrap:anywhere}

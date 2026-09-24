@@ -36,7 +36,7 @@ from evidenceline import core
 from evidenceline.answer import FakeClient, answer
 from evidenceline.answer import pipeline as pipeline_module
 from evidenceline.answer.clients import ModelReply
-from evidenceline.answer.pipeline import BORDERLINE_INSTRUCTION, GUARD_RAIL_REPLY
+from evidenceline.answer.pipeline import BORDERLINE_INSTRUCTION, GUARD_RAIL_CORE, GUARD_RAIL_REPLY
 from evidenceline.answer.prompt import NOT_COVERED
 from evidenceline.guidance import evaluate
 from evidenceline.guidance.manifest import load_manifest
@@ -470,7 +470,10 @@ def test_a_borderline_verdict_question_never_reaches_the_model(near_miss: None) 
     client = FakeClient(reply=GOOD_REPLY)
     out = answer("Is the drain below the stockpile contaminated?", client, index_path=NO_INDEX)
     assert client.calls == []
-    assert out.status == "not_covered"
+    # The verdict reply, not the not-covered wording; the near miss is not shown as the guidance on the subject.
+    assert out.status == "guard_rail"
+    assert out.answer == GUARD_RAIL_CORE
+    assert out.citations == []
 
 
 def test_a_withheld_borderline_answer_says_its_passages_are_a_near_miss(near_miss: None) -> None:
@@ -768,25 +771,13 @@ def test_every_number_in_a_written_answer_is_on_a_cited_page_or_a_given_value(in
 
 SOURCE_CLAIMS: tuple[tuple[str, str, int, str], ...] = (
     # (question, words in the answer, passage number cited in that sentence, words that must be on its page)
-    # The reporting answer was prepared again after the length and copying checks were added (the old one broke
-    # both rules), so its five claims are the new answer's, each checked by hand on its cited DWER 2025 page.
+    # The answers were prepared again on 25 Sep 2026, after the system prompt changed, so these are the new answers'
+    # load-bearing claims, each checked by hand on its cited page (DWER 2025 guidelines and the ADWG fact sheet).
     (
         "When do I have to report a suspected contaminated site to DWER?",
         "as soon as reasonably practicable",
         5,
         "a person with a duty to report would be required to report as soon as reasonably practicable",
-    ),
-    (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "the owner, occupier or an auditor",
-        7,
-        "an owner or occupier of the site",
-    ),
-    (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "the owner, occupier or an auditor",
-        7,
-        "an auditor engaged to provide a report that is required",
     ),
     (
         "When do I have to report a suspected contaminated site to DWER?",
@@ -796,9 +787,39 @@ SOURCE_CLAIMS: tuple[tuple[str, str, int, str], ...] = (
     ),
     (
         "When do I have to report a suspected contaminated site to DWER?",
-        "should not wait until the extent or seriousness",
+        "does not expect them to wait until the extent",
         1,
         "does not consider it appropriate for the duty holder to wait until the extent or seriousness",
+    ),
+    (
+        "When do I have to report a suspected contaminated site to DWER?",
+        "Owners, occupiers",
+        7,
+        "an owner or occupier of the site",
+    ),
+    (
+        "When do I have to report a suspected contaminated site to DWER?",
+        "people who caused the contamination",
+        7,
+        "a person who knows, or suspects, that he or she has caused, or contributed to",
+    ),
+    (
+        "When do I have to report a suspected contaminated site to DWER?",
+        "auditors engaged for a required report",
+        7,
+        "an auditor engaged to provide a report that is required",
+    ),
+    (
+        "What should a detailed site investigation report include?",
+        "judge the data against the investigation goals",
+        2,
+        "evaluate the data against the investigation objectives",
+    ),
+    (
+        "What should a detailed site investigation report include?",
+        "how precise and accurate the data are",
+        2,
+        "discuss the data's precision, accuracy or bias",
     ),
     (
         "What should a detailed site investigation report include?",
@@ -806,23 +827,35 @@ SOURCE_CLAIMS: tuple[tuple[str, str, int, str], ...] = (
         1,
         "compile a DSI following Schedule B2 of the ASC NEPM",
     ),
+    ("What should a detailed site investigation report include?", "document control", 3, "Document control"),
     (
         "What should a detailed site investigation report include?",
-        "precision, accuracy or bias",
-        2,
-        "discuss the data's precision, accuracy or bias",
+        "laboratory quality checks",
+        6,
+        "Laboratory QA/QC report",
     ),
-    ("What should a detailed site investigation report include?", "document control", 3, "Document control"),
+    (
+        "What is a conceptual site model?",
+        "where contamination comes from, how it can move",
+        1,
+        "identifies contaminant sources (potential areas of concern and associated contaminants), modes of contaminant "
+        "movement (migration pathways)",
+    ),
     (
         "What is a conceptual site model?",
         "revised as more information",
         1,
         "revised as more detailed information on the site",
     ),
-    ("What is a conceptual site model?", "gaps in information", 1, "critical gaps in information"),
+    (
+        "What is a conceptual site model?",
+        "which risks need further assessment or management",
+        2,
+        "risks that require further assessment or management",
+    ),
     (
         "What is the drinking-water limit for PFOS?",
-        "human health considerations",
+        "health-based level",
         2,
         "Based on human health considerations, the concentration of perfluorooctane sulfonic acid",
     ),

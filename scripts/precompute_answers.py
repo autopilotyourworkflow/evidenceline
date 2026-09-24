@@ -12,17 +12,24 @@ entry holds the full result, including the record of every check run on the answ
 it was prepared in advance by the same pipeline with the model named. An answer that fails a check is not saved:
 the result is the passages only, with the reason, exactly as the live box would show it.
 
+Two lists of entries, each entry in the same shape: ``answers`` holds the questions the website shows as buttons
+(:data:`QUESTIONS`, first and in that order, as before), and ``lookup_only`` holds every other question the question
+box suggests (:data:`LOOKUP_QUESTIONS`, from ``data/suggested_questions.json``). The website shows no button for
+those; it looks up a clicked or typed question in both lists, so a suggestion is answered from the prepared copy with
+no live call. A file without ``lookup_only`` (from before it existed) still reads the same.
+
 The file records the model asked for (``model``), the model names the CLI reported for the answers
 (``models_reported``) and a SHA-256 of the system prompt (``system_prompt_sha256``), so a test can tell when the
 prompt has changed since the answers were prepared.
 
 Needs the local guidance index (scripts/fetch_corpus.py, scripts/build_index.py) and a Claude Code login. About
-four to eight model calls (one per answered question, two when the first answer fails a check); questions that need
-no model (a verdict, a question the guidance does not cover) make none. The script prints how many calls it made.
+16 to 32 model calls (one per answered question, two when the first answer fails a check); questions that need no
+model (a verdict, a question the guidance does not cover) make none. The script prints how many calls it made.
 
-``--only N`` (repeatable, numbered from 1 in the order of :data:`QUESTIONS`) reruns only those questions and keeps
-every other entry exactly as it is in the existing file. It refuses unless that file holds the same questions and was
-written under the same system prompt with the same model, so a kept entry is never mixed with a changed prompt.
+``--only N`` (repeatable, numbered from 1 in the order of :data:`QUESTIONS` and then :data:`LOOKUP_QUESTIONS`)
+reruns only those questions and keeps every other entry exactly as it is in the existing file. It refuses unless that
+file holds the same questions and was written under the same system prompt with the same model, so a kept entry is
+never mixed with a changed prompt.
 """
 
 from __future__ import annotations
@@ -34,6 +41,7 @@ import json
 import re
 import sys
 from collections.abc import Mapping, Sequence
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +67,20 @@ QUESTIONS = (
     "What is a conceptual site model?",
     "What are the NSW rules for PFAS in soil?",
 )
+"""The questions shown as buttons, in this order: the first entries of the file ("answers")."""
+
+
+def lookup_questions() -> tuple[str, ...]:
+    """Every question the question box suggests (``data/suggested_questions.json``) that is not one of
+    :data:`QUESTIONS`, in the file's order: prepared too ("lookup_only"), so a click on a suggestion needs no live
+    call."""
+    raw = json.loads((resources.files("evidenceline") / "data" / "suggested_questions.json").read_text("utf-8"))
+    shown = {q.casefold() for q in QUESTIONS}
+    pool = [str(item["question"]) for item in raw["questions"]]
+    return tuple(dict.fromkeys(q for q in pool if q.casefold() not in shown))
+
+
+LOOKUP_QUESTIONS = lookup_questions()
 
 
 class CountingClient:
@@ -115,26 +137,28 @@ def build(
     questions: Sequence[str],
     day: dt.date,
     keep: Mapping[str, dict[str, Any]] | None = None,
+    lookups: Sequence[str] = (),
 ) -> dict[str, Any]:
-    """Run every question through the pipeline, except those in ``keep`` (question to its existing entry), which
-    are copied unchanged."""
+    """Run every question (the buttons' ``questions``, then ``lookups``) through the pipeline, except those in
+    ``keep`` (question to its existing entry), which are copied unchanged."""
     kept = keep or {}
-    entries: list[dict[str, Any]] = []
-    for question in questions:
+
+    def prepared(question: str) -> dict[str, Any]:
         if question in kept:
-            entries.append(kept[question])
-            continue
+            return kept[question]
         result = answer(question, client)
-        entries.append(
-            {
-                "question": question,
-                "prepared_on": day.isoformat(),
-                "label": entry_label(result, client.model_id, day),
-                "result": result.model_dump(mode="json"),
-            }
-        )
-    reported = {str(e["result"]["model"]) for e in entries if e["result"]["model"] is not None}
-    days = [dt.date.fromisoformat(str(e["prepared_on"])) for e in entries] or [day]
+        return {
+            "question": question,
+            "prepared_on": day.isoformat(),
+            "label": entry_label(result, client.model_id, day),
+            "result": result.model_dump(mode="json"),
+        }
+
+    entries = [prepared(question) for question in questions]
+    lookup = [prepared(question) for question in lookups]
+    every = [*entries, *lookup]
+    reported = {str(e["result"]["model"]) for e in every if e["result"]["model"] is not None}
+    days = [dt.date.fromisoformat(str(e["prepared_on"])) for e in every] or [day]
     return {
         "generated_by": "scripts/precompute_answers.py",
         "prepared_on": max(days).isoformat(),
@@ -149,6 +173,7 @@ def build(
             "would be withheld and only its passages shown."
         ),
         "answers": entries,
+        "lookup_only": lookup,
     }
 
 
@@ -158,17 +183,18 @@ def kept_entries(existing: dict[str, Any], rerun: Sequence[int], model: str) -> 
     Raises ValueError when the existing file cannot be kept from: other questions, another system prompt or
     another model, or a question number out of range.
     """
-    bad = [n for n in rerun if not 1 <= n <= len(QUESTIONS)]
+    every = [*QUESTIONS, *LOOKUP_QUESTIONS]
+    bad = [n for n in rerun if not 1 <= n <= len(every)]
     if bad:
-        raise ValueError(f"--only takes question numbers from 1 to {len(QUESTIONS)}; got {bad}")
-    entries = existing.get("answers", [])
-    if [e.get("question") for e in entries] != list(QUESTIONS):
+        raise ValueError(f"--only takes question numbers from 1 to {len(every)}; got {bad}")
+    entries = [*existing.get("answers", []), *existing.get("lookup_only", [])]
+    if [e.get("question") for e in entries] != every:
         raise ValueError("the existing answers.json holds other questions; run without --only")
     if existing.get("system_prompt_sha256") != prompt_fingerprint():
         raise ValueError("the system prompt changed since answers.json was written; run without --only")
     if existing.get("model") != model:
         raise ValueError(f"answers.json was written with {existing.get('model')!r}, not {model!r}; run without --only")
-    chosen = {QUESTIONS[n - 1] for n in rerun}
+    chosen = {every[n - 1] for n in rerun}
     return {str(e["question"]): e for e in entries if e["question"] not in chosen}
 
 
@@ -180,7 +206,7 @@ def _field_sheet_identifiers() -> list[str]:
 def check(data: dict[str, Any]) -> list[str]:
     """Problems that must stop the file being written: a dash in our own text, a failed answer shown, an identifier."""
     problems: list[str] = []
-    for item in data["answers"]:
+    for item in [*data["answers"], *data.get("lookup_only", [])]:
         result = item["result"]
         own = [item["label"], result["explanation"], result["answer"] or "", *result["notes"]]
         if any(dash in text for text in own for dash in DASHES):
@@ -222,7 +248,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         type=int,
         action="append",
         metavar="N",
-        help="rerun only question N (from 1; repeatable) and keep every other entry of the existing file",
+        help="rerun only question N (from 1, buttons then lookups; repeatable) and keep every other entry",
     )
     return parser.parse_args(list(argv))
 
@@ -244,14 +270,14 @@ def main(argv: Sequence[str]) -> int:
             print(f"precompute_answers: {exc}", file=sys.stderr)
             return 1
     client = CountingClient(ClaudeCliClient(model=args.model))
-    data = build(client, QUESTIONS, dt.date.today(), keep)
+    data = build(client, QUESTIONS, dt.date.today(), keep, LOOKUP_QUESTIONS)
     problems = check(data)
     if problems:
         for line in problems:
             print(f"precompute_answers: {line}", file=sys.stderr)
         return 1
     OUT_PATH.write_bytes(render(data).encode("utf-8"))
-    for item in data["answers"]:
+    for item in [*data["answers"], *data["lookup_only"]]:
         result = item["result"]
         print(f"{result['status']:>13}  {item['question']}  ({result['verification']['summary']})")
     reported = ", ".join(data["models_reported"]) or "none (no model was called)"

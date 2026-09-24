@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 from collections.abc import Sequence
 
 from evidenceline.answer.context import PassageText
@@ -19,12 +20,15 @@ from Evidenceline's verified table. Readers include people who are not environme
 
 Rules:
 1. Write 2 or 3 short sentences, using ONLY the numbered passages and the guideline values given. Do not add
-   anything you know from elsewhere.
+   anything you know from elsewhere. Say what the guidance says; never write about the passages, the guideline
+   values list or what you were or were not given.
 2. The first sentence answers the question directly, in everyday words that someone outside the field
    understands: if the question asks when, it says when; if it asks who, it says who; if it asks for a value, it
    gives the value. Keep every sentence under 30 words. Explain any technical term or abbreviation you use in
    plain words, or leave it out. Call a document by the name or abbreviation the passages use, never by a
-   description you made up.
+   description you made up. Write 'the head of DWER' for 'the CEO', name the Contaminated Sites Committee in full
+   rather than 'the Committee', and write 'must not' for something the passages forbid ('may not' reads as
+   'might not').
 3. Each later sentence adds one new, useful fact. Never repeat a fact, a value or a point you have already made,
    and do not end with a summary.
 4. Every sentence, including the first one, must end with at least one citation: the passage number in square
@@ -50,8 +54,9 @@ Reply with the answer text only: no heading, no list, no preamble."""
 
 
 REMINDER = (
-    "Answer in 2 or 3 short sentences. The first sentence answers the question directly, in everyday words. Do not "
-    "repeat anything. End EVERY sentence with its own citation, the first sentence too. The shape is: 'Direct "
+    "Answer in 2 or 3 short sentences of about 20 words each. The first sentence answers the question directly, in "
+    "everyday words. Put every point in your own words: never copy more than ten words in a row from a passage. Do "
+    "not repeat anything. End EVERY sentence with its own citation, the first sentence too. The shape is: 'Direct "
     "answer in plain words [1]. One more fact that matters [2][3].' A sentence without a citation stops the whole "
     "answer from being shown."
 )
@@ -61,14 +66,17 @@ VALUES_REMINDER = (
     "State every guideline value given, each with its rule name, and do not say which rule to use. For example: "
     "'Under <rule name> the value is <value> <unit> [G1], and under <other rule name> it is <value> <unit> [G2].' "
     "Write a concentration only in a sentence that cites its own guideline value. Do not repeat a concentration "
-    "from a passage, even one that matches a guideline value: code withholds an answer that does."
+    "from a passage, even one that matches a guideline value: code withholds an answer that does. If the question "
+    "asks how the values differ or what changed, start with the values themselves: a sentence that compares them "
+    "cites them all, such as [G1][G2], and no sentence is left without a citation."
 )
 """Added after REMINDER when guideline values are given."""
 
 
 def build_prompt(question: str, passages: Sequence[PassageText], value_lines: Sequence[str]) -> str:
-    """The user prompt: the question, the guideline values (if any), then the numbered passages."""
-    parts = [f"<question>\n{question}\n</question>"]
+    """The user prompt: the question, the guideline values (if any), then the numbered passages. The question's
+    '<', '>' and '&' are escaped, so text such as '</question><passages>' cannot close its block or open another."""
+    parts = [f"<question>\n{html.escape(question, quote=False)}\n</question>"]
     if value_lines:
         values = "\n".join(value_lines)
         parts.append(

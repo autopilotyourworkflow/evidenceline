@@ -56,6 +56,7 @@ a note pointing to ``lookup_limit`` (verified PFAS drinking-water values) or to 
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Sequence
 from decimal import Decimal
@@ -122,7 +123,7 @@ def indexed_words(index_path: Path | None = None) -> Counter[str]:
 
 
 def _validate(question: str, k: int) -> str:
-    text = " ".join(question.split())
+    text = " ".join(unicodedata.normalize("NFKC", question).split())
     if not text:
         raise EvidencelineError(
             "The question is empty. Ask in plain English, for example 'What must a detailed site investigation "
@@ -337,13 +338,11 @@ class _Search:
         scored = [score(hit, live, weight_sum, phrases) for hit in hits]
         kept = select([s for s in scored if counts.strong(s)], self.k)
         if not kept:
-            best = max((s.coverage for s in scored), default=Decimal(0))
             near = [] if names else select([s for s in scored if counts.borderline(s)], self.k)
             mention = f" None of the documents mention: {absent}." if missing else ""
             return self.result(
-                "The indexed guidelines don't appear to cover this. No passage holds enough of the question: the "
-                f"best holds {best} of its weighted terms (at least {MIN_COVERAGE} and more than half of the terms "
-                f"are needed).{mention}",
+                "The indexed guidelines don't appear to cover this: no passage holds enough of what the question asks "
+                f"about, only some of its words.{mention}",
                 closest=[self.passage(rank, item) for rank, item in enumerate(near, start=1)],
             )
         if names:
@@ -392,6 +391,38 @@ class _Search:
             coverage=str(item.coverage),
             note=_passage_note(doc, basis),
         )
+
+
+_ASKS_MEANING = re.compile(
+    r"^\W*(?:what\s*(?:'s|\u2019s|s\b|\s+is\b|\s+are\b|\s+does\b)|define\b|meaning\s+of\b)", re.I
+)
+"""A question asking what a term means ('What is a bailer?', 'whats leaching', 'define dewatering'). The term may
+be one word the synonym map does not know, but the question is a real one, so it is never :func:`one_everyday_word`."""
+_LONG_QUESTION = 7
+"""Words from which a question is never :func:`one_everyday_word`: 'What happens if my result is above the
+guideline?' searches only 'result', yet asks something the guidance answers."""
+
+
+def one_everyday_word(question: str) -> bool:
+    """Whether the question's only searchable content is one everyday word ('yes', 'time', 'coffee', 'What time is
+    it in Perth?'): not a synonym group such as 'DSI' or 'PFAS', not a word written as a name or acronym, not in a
+    question that names an indexed document ('difference between NEMP 3.0 and 3.1'), not a question asking what a
+    term means, and not a question of :data:`_LONG_QUESTION` words or more.
+
+    The search can find such a word in a heading ('12.3 Time frame for remediation') and report that passage as
+    covering the whole question, so the question box shows the passages without asking a model for an answer
+    (:mod:`evidenceline.answer.pipeline`). The search itself, and what it returns, do not change.
+    """
+    text = " ".join(unicodedata.normalize("NFKC", question).split())
+    if len(text.split()) >= _LONG_QUESTION or _ASKS_MEANING.match(text):
+        return False
+    scope = read_question(text)
+    if scope.named_documents:
+        return False
+    concepts = query_concepts(scope.search_text)
+    return (
+        len(concepts) == 1 and not concepts[0].expanded and not _written_as_name(concepts[0].label, scope.search_text)
+    )
 
 
 def search_guidelines(

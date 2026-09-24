@@ -206,7 +206,8 @@ def test_triggers_map_question_words_to_searchable_phrases() -> None:
 def test_question_phrases_are_neighbouring_meaningful_words() -> None:
     assert question_phrases("What triggers a site assessment?") == ["site assessment"]
     assert question_phrases("PFOS in potable water") == []
-    assert question_phrases("conceptual site model") == ["conceptual site", "site model"]
+    assert question_phrases("ambient background concentration") == ["ambient background", "background concentration"]
+    assert question_phrases("conceptual site model") == []  # one synonym phrase, searched whole
 
 
 # --- ranking ----------------------------------------------------------------------------------------------------
@@ -287,7 +288,7 @@ def test_two_rare_words_cannot_carry_a_passage(index_path: Path) -> None:
         "Which treatment contractors operate on weekends?", 3, index_path=index_path, manifest=[_doc("syn-a")]
     )
     assert out.status == "not covered"
-    assert "more than half of the terms" in out.explanation
+    assert "no passage holds enough of what the question asks about" in out.explanation
 
 
 def test_an_index_in_the_old_format_asks_for_a_rebuild(tmp_path: Path) -> None:

@@ -362,7 +362,10 @@ async function ask(p, question, timeout = 20_000) {
   await p.type('#q', question);
   await p.keyboard.press('Enter');
   await p.waitForFunction(() => !['loading', null].includes(document.querySelector('#answer')?.getAttribute('data-state') ?? null), { timeout });
-  return p.$eval('#answer', (a) => ({ state: a.getAttribute('data-state'), text: a.textContent ?? '', live: a.getAttribute('aria-live') }));
+  return p.evaluate(() => {
+    const a = document.querySelector('#answer');
+    return { state: a?.getAttribute('data-state') ?? null, text: a?.textContent ?? '', live: document.querySelector('#answer-status[role="status"]')?.textContent ?? '' };
+  });
 }
 /** Opens every prepared answer in turn and returns their texts (drawers open). */
 async function preparedTexts(p) {
@@ -663,9 +666,9 @@ test('L3', 'Launch: every prepared question shows its prepared answer, and nothi
   await p.close();
   const pass =
     n === answersFile.answers.length && bad.length === 0 && typed.state === 'prepared' &&
-    fresh.state === 'offline' && /switching on soon/.test(fresh.text) && /prepared questions/.test(fresh.text) && fresh.live === 'polite' &&
+    fresh.state === 'offline' && /switching on soon/.test(fresh.text) && /prepared questions/.test(fresh.text) && /switching on soon/.test(fresh.live) &&
     afterBlank === 'offline' && service.length === 0;
-  return { pass, actual: `${n} prepared (file has ${answersFile.answers.length}); problems ${bad.length === 0 ? 'none' : bad.join(' | ')}; typed prepared -> ${typed.state}; new question -> ${fresh.state} "${fresh.text.slice(0, 90)}" (aria-live ${fresh.live}); blank -> ${afterBlank}; service requests ${service.length}` };
+  return { pass, actual: `${n} prepared (file has ${answersFile.answers.length}); problems ${bad.length === 0 ? 'none' : bad.join(' | ')}; typed prepared -> ${typed.state}; new question -> ${fresh.state} "${fresh.text.slice(0, 90)}" (status line "${fresh.live.slice(0, 40)}"); blank -> ${afterBlank}; service requests ${service.length}` };
 });
 
 /** Collects the whole text of every route, with every drawer open and, on the landing page, every prepared answer. */
@@ -982,7 +985,7 @@ if (EXTERNAL) {
 
 test('F9', 'Full build, keyboard only: the connector Copy button and the result it reports', {
   input: 'WU: Tab from the question field until the Copy button, press Enter',
-  expected: 'Copy is reachable with a visible ring; after Enter it says "Copied" or "Not copied" with the note, never both, never a silent no-op',
+  expected: 'Copy is reachable with a visible ring; after Enter it says "Copied" (at most with "Link copied.") or "Not copied" with its note, never both, never a silent no-op',
 }, async () => {
   const { p } = await open(WU.origin, '/');
   await p.$eval('#q', (i) => i.scrollIntoView({ block: 'center' }));
@@ -992,7 +995,7 @@ test('F9', 'Full build, keyboard only: the connector Copy button and the result 
   await sleep(300);
   const after = await p.evaluate(() => ({ label: document.querySelector('#copy')?.textContent ?? '', note: document.querySelector('.copynote')?.textContent ?? '' }));
   await p.close();
-  const truthful = (after.label === 'Copied' && after.note === '') || (after.label === 'Not copied' && after.note.length > 10);
+  const truthful = (after.label === 'Copied' && (after.note === '' || after.note === 'Link copied.')) || (after.label === 'Not copied' && after.note.length > 10);
   return { pass: f !== null && f.ring && truthful, actual: `reached ${f === null ? 'never' : `#copy ring=${f.ring}`}; after Enter ${JSON.stringify(after)}` };
 });
 

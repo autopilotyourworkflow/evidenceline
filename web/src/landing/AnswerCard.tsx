@@ -119,8 +119,6 @@ function Suggestions({ items, label, onAsk }: { readonly items: readonly string[
 }
 
 export function AnswerBody({ view, note, onAsk }: { readonly view: AnswerView; readonly note: string; readonly onAsk?: (question: string) => void }) {
-  // A checked answer and the fixed reply about Evidenceline itself need no heading.
-  const title = view.kind === 'answered' || view.kind === 'about' ? null : TRY.titles[view.kind];
   const notCovered = view.kind === 'not-covered';
   const suggestions = onAsk === undefined ? [] : view.suggestions;
   // The main text: the answer when there is one; otherwise the pipeline's own explanation of what happened. A
@@ -135,6 +133,9 @@ export function AnswerBody({ view, note, onAsk }: { readonly view: AnswerView; r
           ? TRY.guardRailDefault
           : '';
   const explanationShownAsMain = !notCovered && view.answer === '' && view.explanation !== '';
+  // A checked answer and the fixed reply about Evidenceline itself need no heading, nor does a paused result whose own
+  // text already starts by saying so.
+  const title = view.kind === 'answered' || view.kind === 'about' || (view.kind === 'paused' && /^live answers are paused/i.test(main)) ? null : TRY.titles[view.kind];
   return (
     <>
       {title !== null && <p className="akind">{title}</p>}

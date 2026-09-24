@@ -40,7 +40,7 @@ def labels(question: str) -> list[str]:
 @pytest.mark.parametrize(
     ("question", "expected"),
     [
-        ("Can you tell me what a conceptual site model is?", ["conceptual", "site", "model"]),
+        ("Can you tell me what a conceptual site model is?", ["conceptual site model"]),
         ("What's the deal with purging?", ["purging"]),
         ("I need to know the sampling density", ["number of samples"]),
         ("The foreman wants to know about purging", ["foreman", "purging"]),
@@ -151,7 +151,7 @@ def test_a_word_no_document_contains_adds_no_weight(index_path: Path) -> None:
 def test_words_no_document_contains_still_count_in_the_more_than_half_rule(index_path: Path) -> None:
     out = ask(index_path, "Are mixing zones fine for trout?")
     assert out.status == "not covered"
-    assert "more than half of the terms" in out.explanation
+    assert "no passage holds enough of what the question asks about" in out.explanation
     assert out.closest_passages == ()
 
 
@@ -283,7 +283,7 @@ def test_a_plain_not_covered_never_calls_the_model(tmp_path: Path, near_miss: li
 def test_a_borderline_verdict_question_never_calls_the_model(tmp_path: Path, near_miss: list[str]) -> None:
     client = FakeClient(reply=ANSWER)
     out = answer("Is the creek below the discharge contaminated?", client, index_path=tmp_path / "none.sqlite")
-    assert out.status == "not_covered"
+    assert out.status == "guard_rail"
     assert client.calls == []
 
 

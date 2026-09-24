@@ -35,6 +35,7 @@ import re
 import tomllib
 import urllib.parse
 from collections.abc import Callable, Iterator
+from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -748,7 +749,9 @@ BAD_TOKENS_UNLIMITED = (
 
 
 def test_a_flood_of_bad_tokens_from_one_address_is_limited(siteverify: Siteverify) -> None:
-    settings = from_env({"TURNSTILE_SECRET": LIVE_TURNSTILE_KEY, "EVIDENCELINE_ASK_PER_HOUR": "3"})
+    # Every question, a failed robot check included, counts against the generous limit on questions answered
+    # without the model; it is fixed in code, so the test sets it low to reach it.
+    settings = replace(from_env({"TURNSTILE_SECRET": LIVE_TURNSTILE_KEY}), no_model_per_hour=3)
     with TestClient(_app(settings)) as client:
         codes = [_ask(client, turnstile_token=f"bad-{n}").status_code for n in range(20)]
     assert 429 in codes

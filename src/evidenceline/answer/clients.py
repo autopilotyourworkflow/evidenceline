@@ -31,6 +31,11 @@ DEFAULT_MODEL = "claude-sonnet-5"
 MAX_TOKENS = 4000
 """Room for the model's thinking and a 2 or 3 sentence answer."""
 EFFORT = "medium"
+TIMEOUT = 25.0
+"""Seconds one API call may take. The website gives up on a question after 60 s and a question may call the model
+twice, so the SDK does not retry by itself: its retry, and the Retry-After of a rate limit (which it waits out
+however long it is), could keep a question running and paid for long after the visitor has gone."""
+UNREADABLE = "The model service sent a reply that could not be read."
 
 CLI_ENV = "EVIDENCELINE_CLAUDE_CLI"
 VSCODE_CLI_DIR = "anthropic.claude-code-*/resources/native-binary"
@@ -104,7 +109,7 @@ class AnthropicClient:
         api_key: str,
         model: str = DEFAULT_MODEL,
         *,
-        timeout: float = 45.0,
+        timeout: float = TIMEOUT,
         transport: httpx2.BaseTransport | None = None,
     ) -> None:
         """``transport`` replaces the network, for tests (``httpx2.MockTransport``)."""
@@ -112,7 +117,7 @@ class AnthropicClient:
 
         self._model = model
         http = httpx2.Client(transport=transport, timeout=timeout) if transport is not None else None
-        self._client = anthropic.Anthropic(api_key=api_key, timeout=timeout, max_retries=1, http_client=http)
+        self._client = anthropic.Anthropic(api_key=api_key, timeout=timeout, max_retries=0, http_client=http)
 
     @classmethod
     def from_env(cls) -> AnthropicClient | None:
@@ -146,10 +151,17 @@ class AnthropicClient:
             raise ModelFailedError(f"The model service returned an error (HTTP {exc.status_code}).") from exc
         except anthropic.APIConnectionError as exc:
             raise ModelFailedError("The model service could not be reached.") from exc
-        if response.stop_reason == "refusal":
+        except (anthropic.APIError, ValueError) as exc:  # a reply that is not JSON, or not a message
+            raise ModelFailedError(UNREADABLE) from exc
+        try:
+            refused = response.stop_reason == "refusal"
+            text = "".join(block.text for block in response.content if isinstance(block, anthropic.types.TextBlock))
+            model = response.model or self._model
+        except (AttributeError, TypeError) as exc:  # a 200 whose body is not a message ('<html>', [1, 2], {})
+            raise ModelFailedError(UNREADABLE) from exc
+        if refused:
             raise ModelFailedError("The model declined to answer this question.")
-        text = "".join(block.text for block in response.content if isinstance(block, anthropic.types.TextBlock))
-        return ModelReply(text=text.strip(), model=response.model or self._model)
+        return ModelReply(text=text.strip(), model=model)
 
 
 # --- Claude Code CLI (offline precompute only) ---------------------------------------------------------------------

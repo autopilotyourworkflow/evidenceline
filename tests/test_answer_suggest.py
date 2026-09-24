@@ -73,6 +73,22 @@ def test_misspelt_words_become_the_word_clearly_meant(typed: str, expected: str)
 
 
 @pytest.mark.parametrize(
+    ("typed", "expected"),
+    [
+        ("wht shuld a detialed site report include", "what should a detailed site report include"),
+        ("whta is teh pfos limt", "what is the pfos limit"),
+        ("Wat is the pfos limit", "What is the pfos limit"),
+    ],
+)
+def test_common_slips_in_short_words_are_corrected_too(typed: str, expected: str) -> None:
+    assert corrected(typed, WORDS) == expected
+
+
+def test_a_slip_in_a_short_word_alone_does_not_show_a_question_is_on_topic() -> None:
+    assert corrected("wat is the weather like", WORDS) is None
+
+
+@pytest.mark.parametrize(
     "typed",
     [
         "what is the pfos limit",  # nothing misspelt
@@ -222,6 +238,19 @@ def test_no_proposal_is_even_tried_for_another_state(monkeypatch: pytest.MonkeyP
 
 
 # --- suggestions ---------------------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("asked", "not_first"),
+    [
+        ("How do I invest in Bitcoin?", "What is a preliminary site investigation?"),  # 'invest' is not 'investigation'
+        ("Plan a trip to Rottnest Island", "What is a sampling and analysis quality plan?"),
+        ("Write a business plan for a coffee shop", "What is a sampling and analysis quality plan?"),
+        ("Which model is this?", "What is a conceptual site model?"),
+    ],
+)
+def test_a_shared_prefix_or_a_generic_word_is_not_a_match(asked: str, not_first: str) -> None:
+    assert suggestions(asked)[0] != not_first
 
 
 def test_nothing_in_common_gives_the_default_questions() -> None:

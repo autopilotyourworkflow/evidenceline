@@ -8,12 +8,19 @@ Endpoints:
 - ``/mcp``: the same nine MCP tools as the stdio server, over Streamable HTTP, stateless, built from
   ``server.build_tools()`` so the guard rails (read-only, strict arguments, redaction) are the same code.
 
-Protection: CORS limited to the configured origins; per-IP limits on questions and on MCP requests; a global
+Protection: CORS limited to the configured origins; per-IP limits on MCP requests and on questions; a global
 daily brake on model calls; optional Cloudflare Turnstile; a 500-character question limit; a 64 KB cap on request
 bodies, checked before a body is parsed (:mod:`evidenceline.api.gate`); and, when ``EVIDENCELINE_PROXY_SECRET`` is
 set, only requests that carry it in ``x-evidenceline-proxy-secret`` (from the website's proxy) are served on /api/ask
 and /mcp, so the client IP header the proxy sets can be trusted. Question text is never logged: the log has counts
 only.
+
+The per-IP question limits (``EVIDENCELINE_ASK_PER_HOUR`` and ``_PER_DAY``) count only questions that reach the AI
+model, once each: a second attempt within one question is not counted again. Everything answered without the model
+(a greeting, thanks, the verdict reply, "not covered", a spelling offer, passages only) uses none of them, and
+counts instead against a generous fixed limit (:data:`~evidenceline.api.settings.NO_MODEL_PER_HOUR`) that only stops
+a flood of searches. A greeting or a question about Evidenceline itself needs no robot check: it gets a fixed reply
+with no search.
 
 Redaction: the identifier file named by ``EVIDENCELINE_REDACT`` (on the hosted demo, ``builtin:fds01-demo``, the
 fictional FDS-01 client name and site address) is applied to the MCP tools by the tools themselves, and to each
@@ -42,7 +49,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from mcp.server.streamable_http_manager import StreamableHTTPASGIApp
 from mcp.server.transport_security import TransportSecuritySettings
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -50,6 +57,7 @@ from evidenceline import redact
 from evidenceline import server as stdio_server
 from evidenceline.answer import AnswerResult, AnthropicClient, ModelClient, ModelPausedError, ModelReply, answer
 from evidenceline.answer.names import find_names
+from evidenceline.answer.pipeline import about_reply
 from evidenceline.api import limits
 from evidenceline.api.gate import NOT_THROUGH_PROXY, Gate, through_proxy
 from evidenceline.api.settings import Settings, from_env
@@ -129,6 +137,13 @@ class AskRequest(BaseModel):
 
     question: str
     turnstile_token: str | None = None
+
+    @field_validator("question")
+    @classmethod
+    def _readable(cls, value: str) -> str:
+        """A lone surrogate (half an emoji, sent by a fuzzer or a broken client) becomes '?'. It cannot be written
+        back out as JSON, so left in, it turned the whole reply into a server error after the question had run."""
+        return value.encode("utf-8", "replace").decode("utf-8")
 
 
 def build_mcp_server(identifiers: RedactionConfig | None) -> GuardedServer:
@@ -213,6 +228,38 @@ class _BudgetedClient:
         return self.inner.complete(system, prompt)
 
 
+class _OverLimitError(Exception):
+    """A question was about to reach the model, but its caller is over the limit on such questions. Raised through
+    the pipeline (it is not a ModelUnavailableError, so no result is made of it) for the endpoint to answer 429."""
+
+    def __init__(self, refusal: limits.Refusal) -> None:
+        super().__init__(refusal.window.name)
+        self.refusal = refusal
+
+
+@dataclass(slots=True)
+class _VisitorClient:
+    """One question's model client: its first model call counts once against the caller's limit on questions that
+    reach the model, and a second attempt within the same question is not counted again."""
+
+    inner: ModelClient
+    limiter: limits.RateLimiter
+    ip: str
+    counted: bool = False
+
+    @property
+    def model_id(self) -> str:
+        return self.inner.model_id
+
+    def complete(self, system: str, prompt: str) -> ModelReply:
+        if not self.counted:
+            refusal = self.limiter.check(self.ip)
+            if refusal is not None:
+                raise _OverLimitError(refusal)
+            self.counted = True
+        return self.inner.complete(system, prompt)
+
+
 class _LimitedMcp:
     """The MCP endpoint behind a per-IP request limit."""
 
@@ -253,12 +300,21 @@ def create_app(
     inner = client_factory()
     budget = limits.RateLimiter([limits.Window(config.answers_per_day, limits.DAY, "answers per day")], tick)
     model = _BudgetedClient(inner, budget, config.answers_per_day) if inner is not None else None
+    # Questions that reach the model, counted once each (see _VisitorClient).
     asks = limits.RateLimiter(
         [
-            limits.Window(config.ask_per_hour, limits.HOUR, f"{config.ask_per_hour} questions per hour"),
-            limits.Window(config.ask_per_day, limits.DAY, f"{config.ask_per_day} questions per day"),
+            limits.Window(
+                config.ask_per_hour, limits.HOUR, f"{config.ask_per_hour} questions per hour sent to the AI model"
+            ),
+            limits.Window(
+                config.ask_per_day, limits.DAY, f"{config.ask_per_day} questions per day sent to the AI model"
+            ),
         ],
         tick,
+    )
+    # Every other question: counted as it arrives, and given back when it turns out to reach the model.
+    no_model = limits.RateLimiter(
+        [limits.Window(config.no_model_per_hour, limits.HOUR, f"{config.no_model_per_hour} questions per hour")], tick
     )
     mcp_limit = limits.RateLimiter(
         [limits.Window(config.mcp_per_hour, limits.HOUR, f"{config.mcp_per_hour} requests per hour")], tick
@@ -323,6 +379,7 @@ def create_app(
             "limits": {
                 "questions_per_hour": config.ask_per_hour,
                 "questions_per_day": config.ask_per_day,
+                "questions_without_model_per_hour": config.no_model_per_hour,
                 "answers_per_day": config.answers_per_day,
                 "question_characters": config.max_question_chars,
                 "request_bytes": config.max_body_bytes,
@@ -348,21 +405,36 @@ def create_app(
             )
         peer = request.client.host if request.client else None
         ip = client_ip(headers, peer, ip_header)
-        # The limit comes before Turnstile, so a flood of bad tokens from one address is refused without a call to
-        # Cloudflare for each one. A failed check therefore uses one of that address's questions.
-        refusal = asks.check(ip)
+        # Every question is counted as it arrives against the generous limit, before Turnstile, so a flood from one
+        # address is refused without a search, or a call to Cloudflare, for each one. A failed check therefore uses
+        # one of those.
+        refusal = no_model.check(ip)
         if refusal is not None:
             return _error(429, f"Too many questions: the limit is {refusal.window.name}.", refusal.retry_after)
-        if verifier is not None and not (body.turnstile_token and await verifier.verify(body.turnstile_token, ip)):
-            return _error(403, "The check that you are not a robot did not pass. Reload the page and try again.")
         earlier = 0
         if identifiers.identities:
             question, earlier = redact_question(question, identifiers)
-        result = await anyio.to_thread.run_sync(partial(answer, question, model, index_path=index_path))
-        result = count_redactions(result, earlier)
-        response.headers["Cache-Control"] = "no-store"
-        statuses[result.status] += 1
-        logger.info("ask status=%s totals=%s", result.status, dict(statuses))
-        return result
+
+        def finish(result: AnswerResult) -> AnswerResult:
+            result = count_redactions(result, earlier)
+            response.headers["Cache-Control"] = "no-store"
+            statuses[result.status] += 1
+            logger.info("ask status=%s totals=%s", result.status, dict(statuses))
+            return result
+
+        fixed = about_reply(question)
+        if fixed is not None:  # a greeting or a question about Evidenceline: no robot check, no search, no model
+            return finish(fixed)
+        if verifier is not None and not (body.turnstile_token and await verifier.verify(body.turnstile_token, ip)):
+            return _error(403, "The check that you are not a robot did not pass. Reload the page and try again.")
+        visitor = _VisitorClient(model, asks, ip) if model is not None else None
+        try:
+            result = await anyio.to_thread.run_sync(partial(answer, question, visitor, index_path=index_path))
+        except _OverLimitError as over:
+            refused = over.refusal
+            return _error(429, f"Too many questions: the limit is {refused.window.name}.", refused.retry_after)
+        if visitor is not None and visitor.counted:
+            no_model.forget(ip)  # it reached the model, so it counts against that limit instead
+        return finish(result)
 
     return app

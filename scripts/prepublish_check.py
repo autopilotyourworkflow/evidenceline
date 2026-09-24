@@ -182,6 +182,13 @@ ALLOWED = (
         '"excerpt":',
         "excerpts are quoted verbatim from the public guidance (site history interviews are an investigation step)",
     ),
+    Allowed(
+        "web/public/data/answers.json",
+        "job-search",
+        '"answer":',
+        "prepared answers paraphrase the same guidance (a preliminary site investigation includes interviews with "
+        "owners and neighbours)",
+    ),
 )
 
 

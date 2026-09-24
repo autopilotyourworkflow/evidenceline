@@ -18,12 +18,13 @@ from __future__ import annotations
 import datetime as dt
 import re
 import sqlite3
+import threading
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from evidenceline.errors import EvidencelineError
 from evidenceline.guidance.chunking import Chunk
@@ -135,7 +136,9 @@ def build_index(path: Path, documents: Sequence[IndexedDocument], chunks: Iterab
 
 
 class GuidanceIndex:
-    """Read-only access to a built index."""
+    """Read-only access to a built index. Safe to share between threads: the web API answers questions and MCP tool
+    calls in worker threads, and one cached index serves them all, so every query and every read of its rows holds
+    one lock (a query takes a few milliseconds)."""
 
     def __init__(self, path: Path) -> None:
         if not path.exists():
@@ -145,23 +148,31 @@ class GuidanceIndex:
             )
         self.path = path
         self._words: Counter[str] | None = None
+        self._lock = threading.Lock()
         self._db = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False)
         version = self.meta().get("format_version")
         if version != FORMAT_VERSION:
-            self._db.close()
+            self.close()
             raise EvidencelineError(
                 f"The guidance index at {path} is in an older format (version {version}; this code reads version "
                 f"{FORMAT_VERSION}). Rebuild it with 'python scripts/build_index.py'."
             )
 
     def close(self) -> None:
-        self._db.close()
+        with self._lock:
+            self._db.close()
+
+    def _rows(self, sql: str, parameters: Sequence[object] = ()) -> list[Any]:
+        """Every row of one query, fetched while holding the lock: one connection is never used by two threads at
+        once (that returned wrong rows, and raised IndexError and TypeError, when two questions came at once)."""
+        with self._lock:
+            return self._db.execute(sql, tuple(parameters)).fetchall()
 
     def meta(self) -> dict[str, str]:
-        return {str(k): str(v) for k, v in self._db.execute("SELECT key, value FROM meta")}
+        return {str(k): str(v) for k, v in self._rows("SELECT key, value FROM meta")}
 
     def documents(self) -> dict[str, IndexedDocument]:
-        rows = self._db.execute("SELECT id, sha256, pages, empty_pages, chunks FROM documents").fetchall()
+        rows = self._rows("SELECT id, sha256, pages, empty_pages, chunks FROM documents")
         return {
             str(r[0]): IndexedDocument(
                 id=str(r[0]),
@@ -174,7 +185,7 @@ class GuidanceIndex:
         }
 
     def chunk_count(self) -> int:
-        return int(self._db.execute("SELECT count(*) FROM chunks").fetchone()[0])
+        return int(self._rows("SELECT count(*) FROM chunks")[0][0])
 
     def document_frequency(self, expression: str) -> int:
         """How many passages match an FTS5 expression."""
@@ -182,19 +193,19 @@ class GuidanceIndex:
 
     def matching_rowids(self, expression: str) -> frozenset[int]:
         """Every passage matching an FTS5 expression."""
-        rows = self._db.execute("SELECT rowid FROM chunks_fts WHERE chunks_fts MATCH ?", (expression,)).fetchall()
+        rows = self._rows("SELECT rowid FROM chunks_fts WHERE chunks_fts MATCH ?", (expression,))
         return frozenset(int(r[0]) for r in rows)
 
     def search(self, expression: str, limit: int, doc_ids: Sequence[str] = ()) -> list[Hit]:
         """Passages matching ``expression``, best BM25 first; only from ``doc_ids`` when any are given."""
         where_doc = f" AND c.doc_id IN ({', '.join('?' for _ in doc_ids)})" if doc_ids else ""
-        rows = self._db.execute(
+        rows = self._rows(
             "SELECT c.id, c.doc_id, c.pdf_page, c.printed_page, c.label_basis, c.section, c.section_path, "
             f"bm25(chunks_fts, {HEADING_WEIGHT}, {CAPTION_WEIGHT}, {TEXT_WEIGHT}) AS score "
             "FROM chunks_fts JOIN chunks c ON c.id = chunks_fts.rowid "
             f"WHERE chunks_fts MATCH ?{where_doc} ORDER BY score LIMIT ?",
             (expression, *doc_ids, limit),
-        ).fetchall()
+        )
         return [
             Hit(
                 rowid=int(r[0]),
@@ -211,29 +222,26 @@ class GuidanceIndex:
 
     def matches(self, rowid: int, expression: str) -> bool:
         """Whether one passage matches an FTS5 expression."""
-        row = self._db.execute(
-            "SELECT 1 FROM chunks_fts WHERE rowid = ? AND chunks_fts MATCH ?", (rowid, expression)
-        ).fetchone()
-        return row is not None
+        return bool(self._rows("SELECT 1 FROM chunks_fts WHERE rowid = ? AND chunks_fts MATCH ?", (rowid, expression)))
 
     def snippet(self, rowid: int, expression: str, max_tokens: int) -> str:
         """The best fragment of the passage text for ``expression``, at most ``max_tokens`` tokens (FTS5 snippet)."""
-        row = self._db.execute(
+        rows = self._rows(
             "SELECT snippet(chunks_fts, ?, '', '', '...', ?) FROM chunks_fts WHERE rowid = ? AND chunks_fts MATCH ?",
             (_TEXT_COLUMN, max_tokens, rowid, expression),
-        ).fetchone()
-        return "" if row is None else str(row[0])
+        )
+        return str(rows[0][0]) if rows else ""
 
     def text(self, rowid: int) -> str:
-        row = self._db.execute("SELECT text FROM chunks WHERE id = ?", (rowid,)).fetchone()
-        return "" if row is None else str(row[0])
+        rows = self._rows("SELECT text FROM chunks WHERE id = ?", (rowid,))
+        return str(rows[0][0]) if rows else ""
 
     def word_counts(self) -> Counter[str]:
         """How often each word (lower case, letters only) appears in the passages, headings and captions. Read once
         per index and kept: it is what a misspelt word is corrected to (:mod:`evidenceline.guidance.spelling`)."""
         if self._words is None:
             words: Counter[str] = Counter()
-            for row in self._db.execute("SELECT headings, captions, text FROM chunks"):
+            for row in self._rows("SELECT headings, captions, text FROM chunks"):
                 for column in row:
                     words.update(_WORD.findall(str(column or "").lower()))
             self._words = words

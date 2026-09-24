@@ -61,6 +61,13 @@ class RateLimiter:
             self._sweep(now)
             return None
 
+    def forget(self, key: str) -> None:
+        """Remove the latest request recorded for ``key``: it turned out to be counted by another limit."""
+        with self._lock:
+            hits = self._hits.get(key)
+            if hits:
+                hits.pop()
+
     def count(self, key: str) -> int:
         """Requests recorded for ``key`` within the longest window."""
         with self._lock:

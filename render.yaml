@@ -62,8 +62,10 @@ services:
       # accept the client IP header only from the proxy. The owner's assistant generates it (DEPLOY.md step 3).
       - key: EVIDENCELINE_PROXY_SECRET
         sync: false
-      # Limits. Questions per address per hour and per day; model calls across everyone per day (the spending
-      # brake); MCP requests per address per hour.
+      # Limits. Questions per address per hour and per day that reach the AI model (each question counts once, even
+      # with a second answer; greetings, fixed replies, "not covered" and passages only do not count, and have a
+      # fixed limit of 120 an hour in the code); model calls across everyone per day (the spending brake, every call
+      # counted); MCP requests per address per hour.
       - key: EVIDENCELINE_ASK_PER_HOUR
         value: "10"
       - key: EVIDENCELINE_ASK_PER_DAY

@@ -43,12 +43,15 @@ const TURNSTILE_HOST = 'challenges.cloudflare.com';
  * documented explicit-render API: calls the onload function named in its URL, renders a 65 px box, gives the test
  * token shortly after render and after each reset, and counts calls in window.__turnstileStub. Its interact(true)
  * and interact(false) call the widget's before- and after-interactive callbacks, as Cloudflare does around a tick.
+ * With hold set, no token comes by itself: release() gives one (Cloudflare's check finishing), and tick() is the
+ * visitor ticking the box (the after-interactive callback, then the token).
  */
 const TURNSTILE_STUB = `(() => {
   const onload = new URL(document.currentScript.src).searchParams.get('onload');
-  const stub = (window.__turnstileStub = { renders: [], resets: 0, removes: 0 });
+  const stub = (window.__turnstileStub = { renders: [], resets: 0, removes: 0, hold: false });
   const widgets = new Map();
-  const give = (id) => setTimeout(() => widgets.get(id)?.callback(${JSON.stringify(TURNSTILE_TEST_TOKEN)}), 80);
+  const token = ${JSON.stringify(TURNSTILE_TEST_TOKEN)};
+  const give = (id) => setTimeout(() => stub.hold || widgets.get(id)?.callback(token), 80);
   window.turnstile = {
     render(el, options) {
       const id = 'w' + (widgets.size + 1);
@@ -66,6 +69,13 @@ const TURNSTILE_STUB = `(() => {
   };
   stub.interact = (on) => {
     for (const options of widgets.values()) options[on ? 'before-interactive-callback' : 'after-interactive-callback']?.();
+  };
+  stub.release = () => {
+    for (const options of widgets.values()) options.callback(token);
+  };
+  stub.tick = () => {
+    stub.interact(false);
+    stub.release();
   };
   window[onload]();
 })();`;
@@ -94,8 +104,9 @@ const b = await puppeteer.launch({ executablePath: chromePath, headless: true })
 /**
  * Opens a page. `respond` maps a path such as "/data/answers.json" to a canned response; `handle(request)` may answer
  * any other request itself and return true (used to mock the live API). Everything else goes to the preview server.
+ * `beforeLoad(page)` runs before the page loads. `waitUntil` is when the page counts as loaded (Puppeteer's option).
  */
-async function open(vp, path = '/', { origin = base, respond: extra = {}, handle = null } = {}) {
+async function open(vp, path = '/', { origin = base, respond: extra = {}, handle = null, beforeLoad = null, waitUntil = 'networkidle0' } = {}) {
   // Cloudflare's Turnstile script is always the local stand-in: nothing here reaches the internet, and the real
   // widget (refused on this preview's address) would open and close its box at random times.
   const respond = { '/turnstile/v0/api.js': turnstileScript, ...extra };
@@ -119,11 +130,37 @@ async function open(vp, path = '/', { origin = base, respond: extra = {}, handle
       return r.continue();
     });
   }
+  if (beforeLoad !== null) await beforeLoad(p);
   await p.setViewport(vp);
-  await p.goto(origin + path, { waitUntil: 'networkidle0' });
+  await p.goto(origin + path, { waitUntil });
   await p.evaluate(() => document.fonts.ready);
   return { p, errors, failed, requests };
 }
+
+/** Waits until the page stops scrolling (the "Try it" box scrolls smoothly): scrollY unchanged for 250 ms. */
+async function scrollSettled(p, max = 3000) {
+  const start = Date.now();
+  let last = await p.evaluate(() => window.scrollY);
+  let since = Date.now();
+  while (Date.now() - start < max) {
+    await sleep(50);
+    const y = await p.evaluate(() => window.scrollY);
+    if (y !== last) {
+      last = y;
+      since = Date.now();
+    } else if (Date.now() - since >= 250) return;
+  }
+}
+
+/** Where an element is on screen, and whether all of it is visible below the sticky bar. */
+const onScreen = (p, selector) =>
+  p.evaluate((sel) => {
+    const e = document.querySelector(sel);
+    if (e === null) return null;
+    const r = e.getBoundingClientRect();
+    const bar = document.querySelector('.bar')?.getBoundingClientRect().bottom ?? 0;
+    return { top: Math.round(r.top), bottom: Math.round(r.bottom), height: Math.round(r.height), visible: r.height > 0 && r.top >= bar - 1 && r.bottom <= window.innerHeight + 1 };
+  }, selector);
 
 const json = (body, status = 200, headers = {}) => ({ status, contentType: 'application/json', headers, body: typeof body === 'string' ? body : JSON.stringify(body) });
 
@@ -702,7 +739,7 @@ for (const route of ROUTES) {
 
 // ---------- the real answers.json, when the pipeline has written one ----------
 if (existsSync(join(distDir, 'data', 'answers.json'))) {
-  const { p, errors } = await open({ width: 1440, height: 900 });
+  const { p, errors, requests } = await open({ width: 1440, height: 900 });
   const chips = await p.$$eval('.chips button', (bs) => bs.length);
   const states = [];
   for (let k = 0; k < chips; k++) {
@@ -711,6 +748,25 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     states.push(await p.$eval('#answer', (a) => ({ state: a.getAttribute('data-state'), len: a.textContent.length })));
   }
   ok('answers.json: every suggested question renders a prepared answer', chips > 0 && states.every((x) => x.state === 'prepared' && x.len > 40), JSON.stringify(states));
+  const realFile = JSON.parse(readFileSync(join(distDir, 'data', 'answers.json'), 'utf8'));
+  if (Array.isArray(realFile.lookup_only)) {
+    // Each question a prepared answer offers ("Try one of these", "Did you mean") is answered from the file, not live.
+    const went = [];
+    for (let k = 0; k < chips; k++) {
+      await p.click(`.chips button[data-a="${k}"]`);
+      const offers = await p.$$eval('#answer .chips.suggest button, #answer .didyoumean button', (bs) => bs.length);
+      for (let j = 0; j < offers; j++) {
+        await p.click(`.chips button[data-a="${k}"]`);
+        const offer = (await p.$$('#answer .chips.suggest button, #answer .didyoumean button'))[j];
+        await offer.evaluate((x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        const question = await offer.evaluate((x) => x.textContent);
+        await offer.click();
+        await sleep(60);
+        went.push({ question, state: await p.$eval('#answer', (a) => a.getAttribute('data-state')) });
+      }
+    }
+    ok('answers.json: every question a prepared answer offers is answered from the prepared copy (lookup_only), with no live call', went.every((w) => w.state === 'prepared') && !requests.some((u) => u.includes('/api/ask')), JSON.stringify(went.filter((w) => w.state !== 'prepared')));
+  }
   const text = await allText(p);
   ok('answers.json: no em or en dashes in any prepared answer', !DASHES.test(text), (text.match(/.{0,30}[\u2013\u2014].{0,30}/g) ?? []).join(' | '));
   const links = await deadLinks(p, base, landingIds);
@@ -917,7 +973,7 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     const posted = JSON.parse(r.postData() ?? '{}');
     const q = posted.question ?? '';
     asked.push({ url: r.url(), q, type: r.headers()['content-type'], token: posted.turnstile_token ?? null });
-    await sleep(500);
+    await sleep(q.includes('slow') ? 2000 : 500);
     if (q.includes('rate')) await r.respond(json({ detail: 'Too many requests' }, 429, { 'Retry-After': '60' }));
     else if (q.includes('pause')) await r.respond(json({ status: 'paused' }, 503));
     else if (q.includes('broken')) await r.respond(json({ detail: 'Internal error' }, 500));
@@ -927,6 +983,13 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     else if (q.includes('poem')) await r.respond(json({ question: q, result: notCoveredResult }));
     else if (q.includes('waht')) await r.respond(json({ question: q, result: { ...notCoveredResult, did_you_mean: 'what is a tier 1 screening assessment' } }));
     else if (q.includes('budget')) await r.respond(json({ status: 'paused', explanation: "Live answers are paused: today's limit has been reached.", answer: null, citations: answer.citations, guideline_values: [], notes: [] }));
+    // The API's and the Worker's own bodies (src/evidenceline/api/app.py, functions/_lib/proxy.js).
+    else if (q.includes('robotfail')) await r.respond(json({ error: 'The check that you are not a robot did not pass. Reload the page and try again.' }, 403));
+    else if (q.includes('gateway')) await r.respond(json({ detail: 'The live service could not be reached. Please try again later.' }, 502));
+    else if (q.includes('daily')) await r.respond(json({ error: 'Too many questions: the limit is 30 questions per day.', retry_after: 50000 }, 429, { 'Retry-After': '50000' }));
+    else if (q.includes('hourly')) await r.respond(json({ error: 'Too many questions: the limit is 10 questions per hour.', retry_after: 3600 }, 429, { 'Retry-After': '3600' }));
+    else if (q.includes('rolling')) await r.respond(json({ error: 'Too many questions: the limit is 30 questions per day sent to the AI model.', retry_after: 1200 }, 429, { 'Retry-After': '1200' }));
+    else if (q.includes('redaction')) await r.respond(json({ error: "Questions are paused: this server's redaction settings could not be loaded, and it does not run without them." }, 503));
     else await r.respond(json({ question: q, result: answer }));
     return true;
   };
@@ -964,7 +1027,7 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     JSON.stringify({ appearance: stub?.renders[0]?.appearance, quiet, ticking, justTicked, folded }),
   );
   ok('Turnstile: the question is sent with turnstile_token', asked[0]?.token === TURNSTILE_TEST_TOKEN, JSON.stringify(asked[0]));
-  ok('Live: a typed question shows a loading message first', good.during.state === 'loading' && good.during.text.includes('Looking through the guidelines'), JSON.stringify(good.during));
+  ok('Live: a typed question shows a loading message first', good.during.state === 'loading' && /Looking through the guidelines|Checking that you are not a robot/.test(good.during.text ?? ''), JSON.stringify(good.during));
   ok('Live: posts the question as JSON to {VITE_API_BASE}/api/ask', asked.length === 1 && asked[0].url === `${liveBase}/api/ask` && asked[0].q === 'What is a tier 1 screening assessment?' && (asked[0].type ?? '').includes('application/json'), JSON.stringify(asked));
   ok('Live: the answer shows with numbered sources and page links', good.after.state === 'live' && good.after.text.includes('Schedule B1') && good.after.text.includes('Open page 5 (PDF page 11)') && good.after.link.endsWith('#page=11'), JSON.stringify(good.after));
   const bare = await ask('A bare result without a wrapper?');
@@ -1003,8 +1066,14 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     (await p.$eval('#q', (i) => i.value)) === 'What is a tier 1 screening assessment?' && asked.length === askedBefore + 1 && asked.at(-1)?.q === 'What is a tier 1 screening assessment?',
     JSON.stringify(asked.slice(askedBefore)),
   );
+  ok('Live: after a suggested question, focus is on the answer (its button is gone), not lost to the page', (await p.evaluate(() => document.activeElement?.id)) === 'answer');
   const typo = await ask('waht is a teir 1 screening assesment');
   const offered = await p.$eval('#answer', (a) => ({ text: a.querySelector('.didyoumean')?.textContent ?? '', asked: 0 }));
+  const tapSizes = await p.evaluate(() => ({
+    didYouMean: Math.round(document.querySelector('.didyoumean button')?.getBoundingClientRect().height ?? 0),
+    toggles: [...document.querySelectorAll('#answer details.more summary')].map((x) => Math.round(x.getBoundingClientRect().height)),
+  }));
+  ok('Live: the "Did you mean" button and the answer\'s fold-out toggles are at least 44 px tall', tapSizes.didYouMean >= 44 && tapSizes.toggles.length > 0 && tapSizes.toggles.every((h) => h >= 44), JSON.stringify(tapSizes));
   const askedBeforeTypo = asked.length;
   await p.click('.didyoumean button');
   await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live' && document.querySelector('.didyoumean') === null, { timeout: 5000 }).catch(() => undefined);
@@ -1014,14 +1083,72 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
       asked.at(-1)?.q === 'what is a tier 1 screening assessment' && (await p.$eval('#q', (i) => i.value)) === 'what is a tier 1 screening assessment',
     JSON.stringify({ offered: offered.text, asked: asked.slice(askedBeforeTypo) }),
   );
+  ok('Live: after "Did you mean", focus is on the answer', (await p.evaluate(() => document.activeElement?.id)) === 'answer');
   const limited = await ask('rate limited question');
   ok('Live: rate-limited gets a friendly message', limited.after.state === 'rate-limited' && limited.after.text.includes('Too many questions') && limited.after.text.includes('try again in a minute'), limited.after.text);
   const paused = await ask('pause question');
   ok('Live: paused gets a friendly message', paused.after.state === 'paused' && paused.after.text.includes('paused'), paused.after.text);
   const budget = await ask('budget question');
   ok('Live: a paused result shows the reason and the passages', budget.after.state === 'live' && budget.after.text.includes('Live answers are paused') && budget.after.text.includes("today's limit") && budget.after.text.includes('Schedule B1'), budget.after.text);
+  ok('Live: a paused result says "Live answers are paused" once, not as a heading and again as its text', (budget.after.text.match(/Live answers are paused/g) ?? []).length === 1, budget.after.text);
   const broken = await ask('broken question');
-  ok('Live: a server error gets a friendly message', broken.after.state === 'error' && broken.after.text.includes('HTTP 500') && broken.after.text.includes('try again later'), broken.after.text);
+  ok('Live: a server error gets a friendly message', broken.after.state === 'error' && broken.after.text.includes('could not be answered') && !broken.after.text.includes('HTTP') && broken.after.text.includes('try again later'), broken.after.text);
+  // Error and limit messages: no status codes, and no advice that contradicts or repeats the service's own words.
+  const robotFail = await ask('robotfail question');
+  ok('Live: a failed robot check says to reload, with no status code and no "try again later"', robotFail.after.state === 'error' && robotFail.after.text === 'The check that you are not a robot did not pass. Reload the page and try again. The prepared examples above still work.', robotFail.after.text);
+  const gateway = await ask('gateway question');
+  ok('Live: the Worker\'s "could not be reached" says "try again later" once, with no status code', gateway.after.state === 'error' && gateway.after.text === 'The live service could not be reached. Please try again later. The prepared examples above still work.', gateway.after.text);
+  const daily = await ask('daily question');
+  ok('Live: the daily limit is called that, with the wait in hours', daily.after.state === 'rate-limited' && daily.after.text.startsWith("You have reached today's limit of questions") && daily.after.text.includes('try again in about 14 hours'), daily.after.text);
+  const rolling = await ask('rolling day question');
+  ok('Live: a daily limit that frees a place within the hour is still called the daily limit', rolling.after.state === 'rate-limited' && rolling.after.text.startsWith("You have reached today's limit of questions") && rolling.after.text.includes('try again in about 20 minutes'), rolling.after.text);
+  const hourly = await ask('hourly question');
+  ok('Live: an hour\'s wait reads "in about an hour"', hourly.after.state === 'rate-limited' && hourly.after.text.startsWith('Too many questions in a short time') && hourly.after.text.includes('try again in about an hour'), hourly.after.text);
+  const redaction = await ask('redaction question');
+  ok('Live: a paused service\'s own reason is not followed by a second "paused"', redaction.after.state === 'paused' && redaction.after.text.startsWith('Questions are paused') && !redaction.after.text.includes('Live answers are paused') && redaction.after.text.endsWith('The prepared examples above still work.'), redaction.after.text);
+  // Keyboard: Enter on a suggested question keeps focus in the answer; screen readers hear a short status line.
+  await ask('write me a poem');
+  await p.focus('#answer .chips.suggest button');
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live' && document.querySelector('#answer .chips.suggest') === null, { timeout: 5000 }).catch(() => undefined);
+  const heard = await p.evaluate(() => ({
+    focus: document.activeElement?.id ?? '',
+    status: document.getElementById('answer-status')?.textContent ?? '',
+    role: document.getElementById('answer-status')?.getAttribute('role') ?? '',
+    live: document.getElementById('answer')?.getAttribute('aria-live') ?? null,
+  }));
+  ok(
+    'Keyboard: Enter on a suggested question leaves focus on the answer, and screen readers hear "Answer ready", not the whole answer',
+    heard.focus === 'answer' && heard.role === 'status' && heard.status === 'Answer ready: What is a tier 1 screening assessment?' && heard.live === null,
+    JSON.stringify(heard),
+  );
+  // A pasted question longer than the box takes, an empty Ask, and prepared questions typed a little differently.
+  await p.$eval('#q', (i) => i.select());
+  await p.keyboard.sendCharacter('x'.repeat(600));
+  const cut = await p.evaluate(() => ({ length: document.getElementById('q')?.value.length, note: document.getElementById('qlimit')?.textContent ?? '', describedBy: document.getElementById('q')?.getAttribute('aria-describedby') }));
+  ok('Live: a question cut at 500 characters says so, and the box points to the note', cut.length === 500 && cut.note.startsWith('Questions can be up to 500 characters') && cut.describedBy === 'qlimit', JSON.stringify(cut));
+  await p.$eval('#q', (i) => i.select());
+  await p.keyboard.press('Backspace');
+  const askedBeforeEmpty = asked.length;
+  await p.$eval('#askf button[type=submit]', (x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await p.click('#askf button[type=submit]');
+  await sleep(60);
+  const empty = await p.evaluate(() => ({ focus: document.activeElement?.id, note: !!document.getElementById('qlimit') }));
+  ok('Live: Ask with an empty box sends nothing and puts the cursor in the box', asked.length === askedBeforeEmpty && empty.focus === 'q' && !empty.note, JSON.stringify(empty));
+  await p.type('#q', 'A question asked with the Ask button');
+  await p.click('#askf button[type=submit]');
+  await sleep(80);
+  const byButton = await p.evaluate(() => ({ focus: document.activeElement?.id, state: document.querySelector('#answer')?.getAttribute('data-state') }));
+  await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') !== 'loading', { timeout: 5000 }).catch(() => undefined);
+  ok('Live: after Ask is clicked (it is disabled while loading), focus moves to the answer instead of being lost', byButton.state === 'loading' && byButton.focus === 'answer', JSON.stringify(byButton));
+  const askedBeforeVariants = asked.length;
+  const variants = [];
+  for (const q of ['what is the drinking water value for PFOS', 'WHAT MUST A DETAILED SITE-INVESTIGATION REPORT INCLUDE ?', 'Is this site contaminated']) variants.push((await ask(q)).after.state);
+  ok('Live: a prepared question typed without its punctuation, hyphen or capitals gets the prepared answer (no live call)', variants.every((v) => v === 'prepared') && asked.length === askedBeforeVariants, JSON.stringify(variants));
+  // The status line is only moved off to the left (.skip): a long question in it must not reach the screen.
+  await ask('Groundwater at the site shows PFOS above the screening level, and we would like to know which guideline applies to it. '.repeat(4).trim());
+  const statusBox = await p.$eval('#answer-status', (x) => ({ text: x.textContent.slice(0, 40), right: Math.round(x.getBoundingClientRect().right) }));
+  ok('Live: a long question in the screen-reader status line stays off screen', statusBox.text.startsWith('Answer ready: Groundwater') && statusBox.right <= 0, JSON.stringify(statusBox));
   const offline = await ask('offline question');
   ok('Live: an unreachable service gets a friendly message', offline.after.state === 'error' && offline.after.text.includes('could not be reached'), offline.after.text);
   ok('Turnstile: every live question carried a token', asked.length > 1 && asked.every((a) => a.token === TURNSTILE_TEST_TOKEN), JSON.stringify(asked.map((a) => a.token)));
@@ -1031,6 +1158,7 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   await p.click('.chips button[data-a="0"]');
   await sleep(60);
   ok('Live: suggested questions still use the prepared answers (no live call)', asked.length === before && (await p.$eval('#answer', (a) => a.getAttribute('data-state'))) === 'prepared');
+  ok('Live: after a suggested question, screen readers hear "Answer ready" with the question', (await p.$eval('#answer-status', (x) => x.textContent)) === `Answer ready: ${JSON.parse(fixture('answers.sample.json')).answers[0].question}`);
   // Connector and code links exist in this build.
   ok('Live: the connector card shows the configured link', (await p.$eval('#mcp', (c) => c.textContent)) === env.VITE_MCP_URL);
   // The page scrolls smoothly; bring the button into view first so the click lands on it.
@@ -1039,6 +1167,10 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   await p.waitForFunction(() => document.getElementById('copy')?.textContent !== 'Copy', { timeout: 2000 }).catch(() => undefined);
   const copied = await p.$eval('#copy', (x) => x.textContent);
   ok('Copy button responds', copied === 'Copied', `${copied}; focus ${await p.evaluate(() => document.hasFocus())}`);
+  const copiedNote = await p.$eval('#connect .copynote', (x) => x.textContent);
+  await sleep(2800);
+  const copyLater = await p.evaluate(() => ({ label: document.getElementById('copy')?.textContent, note: document.querySelector('#connect .copynote')?.textContent }));
+  ok('Copy: success is announced ("Link copied."), and the button reads "Copy" again after a moment', copiedNote === 'Link copied.' && copyLater.label === 'Copy' && copyLater.note === '', JSON.stringify({ copiedNote, copyLater }));
   ok('Live: "Code on GitHub" links to the configured repository', (await p.$eval('#github', (a) => a.getAttribute('href')).catch(() => '')) === env.VITE_GITHUB_URL);
   const links = await deadLinks(p, liveBase, landingIds);
   ok('Live: no dead links', links.dead.length === 0, JSON.stringify(links.dead));
@@ -1075,6 +1207,244 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
   await ph.p.evaluate(() => (document.documentElement.style.scrollBehavior = 'auto'));
   await (await ph.p.$('#try')).screenshot({ path: join(screensDir, 'try-live-phone.png') });
   await ph.p.close();
+  // A laptop screen (1280 x 610, a 1920 x 1080 screen at 150%), arriving from the menu's "Try it" link: what comes into
+  // view after a question, and the robot check when Cloudflare wants a tick. Timers of 10 s and more run 20 times
+  // faster here, so the 15 s wait for a token takes 0.75 s and the 2 minute wait for a tick 6 s.
+  {
+    const faster = (pg) =>
+      pg.evaluateOnNewDocument(() => {
+        const real = window.setTimeout.bind(window);
+        window.setTimeout = (fn, ms, ...rest) => real(fn, typeof ms === 'number' && ms >= 10_000 ? ms / 20 : ms, ...rest);
+      });
+    const { p, errors } = await open({ width: 1280, height: 610 }, '/#try', { origin: liveBase, respond: liveRespond, handle, beforeLoad: faster });
+    await p.waitForSelector('#robot[data-state="ready"]', { timeout: 5000 }).catch(() => undefined);
+    const state = () => p.$eval('#answer', (a) => ({ state: a.getAttribute('data-state'), phase: a.getAttribute('data-phase'), text: a.textContent ?? '' }));
+    await p.click('.chips button[data-a="0"]');
+    await scrollSettled(p);
+    const chipAnswer = await onScreen(p, '#answer > p:not(.akind)');
+    ok('Laptop 1280 x 610: after a suggested question, the start of its answer comes into view below the menu bar', chipAnswer?.visible === true, JSON.stringify(chipAnswer));
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'A slow question about tier 1 screening');
+    await p.keyboard.press('Enter');
+    await sleep(100);
+    await scrollSettled(p);
+    const loadingLine = await onScreen(p, '#answer .loading');
+    const box = await onScreen(p, '#q');
+    const dot = await p.$eval('#answer .loading .pending-dot', (d) => getComputedStyle(d).animationName).catch(() => '');
+    ok('Laptop 1280 x 610: after Ask, the loading line is in view, and so is the question box', loadingLine?.visible === true && box?.visible === true, JSON.stringify({ loadingLine, box }));
+    ok('Live: the loading dot pulses while a question is on its way', dot === 'pulse', dot);
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
+    await scrollSettled(p);
+    const arrived = await onScreen(p, '#answer > p:not(.akind)');
+    ok('Laptop 1280 x 610: when the answer arrives, its start is in view', arrived?.visible === true, JSON.stringify(arrived));
+
+    // R1: after a question the used token is replaced; this time Cloudflare wants a tick, while the box is off screen.
+    await p.evaluate(() => (window.__turnstileStub.hold = true));
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'write me a poem');
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
+    await sleep(100);
+    await p.evaluate(() => window.__turnstileStub.interact(true));
+    await p.$eval('#answer .chips.suggest button:last-child', (x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    const offScreen = await onScreen(p, '#robot');
+    const askedBeforeTick = asked.length;
+    await p.click('#answer .chips.suggest button:last-child');
+    await sleep(100);
+    await scrollSettled(p);
+    const waiting = await state();
+    const robotShown = await onScreen(p, '#robot');
+    const tickLine = await onScreen(p, '#answer .loading');
+    ok(
+      'Robot check: a question waiting for a tick brings the box into view and says ticking it sends the question',
+      offScreen?.visible === false && robotShown?.visible === true && robotShown.height >= 65 && tickLine?.visible === true && waiting.state === 'loading' && waiting.phase === 'tick' &&
+        waiting.text === 'Please tick the box above to show you are not a robot. Your question is sent as soon as you do.' && asked.length === askedBeforeTick,
+      JSON.stringify({ offScreen, robotShown, tickLine, waiting }),
+    );
+    await sleep(1500);
+    const stillWaiting = await state();
+    ok('Robot check: it keeps waiting for the tick well past the 15 s wait for a token', stillWaiting.phase === 'tick' && asked.length === askedBeforeTick, JSON.stringify(stillWaiting));
+    await p.evaluate(() => window.__turnstileStub.tick());
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
+    const sent = asked.slice(askedBeforeTick);
+    ok('Robot check: the tick sends the waiting question by itself, with its token', sent.length === 1 && sent[0].q === 'What are the classification categories for contaminated sites?' && sent[0].token === TURNSTILE_TEST_TOKEN && (await state()).state === 'live', JSON.stringify(sent));
+    // No tick at all: after about 2 minutes the question gives up and says what to do.
+    await sleep(1700);
+    await p.evaluate(() => window.__turnstileStub.interact(true));
+    const askedBeforeNoTick = asked.length;
+    const noTickStart = Date.now();
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'a question nobody ticks for');
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'robot-waiting', { timeout: 12_000 }).catch(() => undefined);
+    const noTick = { waitedMs: Date.now() - noTickStart, ...(await state()) };
+    ok('Robot check: with no tick it gives up after about 2 minutes, sends nothing and says what to do', noTick.state === 'robot-waiting' && noTick.waitedMs >= 4500 && asked.length === askedBeforeNoTick, JSON.stringify(noTick));
+    // No tick needed, but no token either: the box stays hidden, the line says the check is running, and it gives up
+    // after 15 s as before.
+    await p.evaluate(() => window.__turnstileStub.interact(false));
+    await sleep(1700);
+    const noTokenStart = Date.now();
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'a question with no token');
+    await p.keyboard.press('Enter');
+    await sleep(100);
+    const checking = await state();
+    const hidden = await p.$eval('#robot', (r) => Math.round(r.getBoundingClientRect().height));
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'robot-waiting', { timeout: 5000 }).catch(() => undefined);
+    const gaveUp = { waitedMs: Date.now() - noTokenStart, ...(await state()) };
+    ok(
+      'Robot check: while it runs with no tick needed, the box stays hidden (0 px) and the loading line says the check is running, not the search',
+      checking.phase === 'check' && checking.text === 'Checking that you are not a robot before your question is sent.' && hidden === 0 && gaveUp.state === 'robot-waiting' && gaveUp.waitedMs < 3000 && asked.length === askedBeforeNoTick,
+      JSON.stringify({ checking, hidden, gaveUp }),
+    );
+    // Cloudflare asks for the tick while the question waits and the visitor has scrolled away: the box comes back.
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'a question ticked later');
+    await p.keyboard.press('Enter');
+    await sleep(100);
+    await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await p.evaluate(() => window.__turnstileStub.interact(true));
+    await sleep(100);
+    await scrollSettled(p);
+    const cameBack = await onScreen(p, '#robot');
+    await p.evaluate(() => window.__turnstileStub.tick());
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
+    ok('Robot check: when a tick is asked for mid-wait, the box scrolls back into view and the tick sends the question', cameBack?.visible === true && asked.at(-1)?.q === 'a question ticked later', JSON.stringify({ cameBack, last: asked.at(-1)?.q }));
+    ok('Laptop 1280 x 610: no script errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+  }
+
+  // A phone (360 x 780) that asks for less motion: the box and Ask button, what comes into view, and focus.
+  {
+    const small = { width: 360, height: 780, deviceScaleFactor: 1, isMobile: true, hasTouch: true };
+    const { p, errors } = await open(small, '/#try', { origin: liveBase, respond: liveRespond, handle, beforeLoad: (pg) => pg.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]) });
+    await p.waitForSelector('#robot[data-state="ready"]', { timeout: 5000 }).catch(() => undefined);
+    const tap = async (selector) => {
+      await p.$eval(selector, (x) => x.scrollIntoView({ block: 'center' }));
+      const b = await (await p.$(selector)).boundingBox();
+      await p.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+    };
+    const layout = await p.evaluate(() => {
+      const form = document.getElementById('askf').getBoundingClientRect();
+      const input = document.getElementById('q').getBoundingClientRect();
+      const ask = document.querySelector('#askf button').getBoundingClientRect();
+      return { form: Math.round(form.width), input: Math.round(input.width), inputBottom: Math.round(input.bottom), askTop: Math.round(ask.top) };
+    });
+    ok('Phone 360 px: the question box takes the full width and Ask goes below it', layout.input === layout.form && layout.askTop >= layout.inputBottom, JSON.stringify(layout));
+    await tap('.chips button[data-a="3"]');
+    await sleep(100);
+    const chipAnswer = await onScreen(p, '#answer > p:not(.akind)');
+    ok('Phone 360 px: after tapping a suggested question, its answer is on screen at once (less motion: no smooth scroll)', chipAnswer?.visible === true, JSON.stringify(chipAnswer));
+    await tap('#q');
+    await p.$eval('#q', (i) => i.select());
+    await p.keyboard.type('A slow question about tier 1 screening');
+    await tap('#askf button');
+    await sleep(100);
+    const loadingLine = await onScreen(p, '#answer .loading');
+    const phoneFocus = await p.evaluate(() => document.activeElement?.id);
+    const still = await p.$eval('#answer .loading .pending-dot', (d) => getComputedStyle(d).animationName).catch(() => '');
+    ok('Phone 360 px: after Ask, the loading line is on screen and focus leaves the box (the keyboard closes)', loadingLine?.visible === true && phoneFocus === 'answer', JSON.stringify({ loadingLine, phoneFocus }));
+    ok('Live: with less motion the loading dot does not pulse', still === 'none', still);
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live', { timeout: 5000 }).catch(() => undefined);
+    await sleep(100);
+    const arrived = await onScreen(p, '#answer > p:not(.akind)');
+    ok('Phone 360 px: when the answer arrives, its start is on screen', arrived?.visible === true, JSON.stringify(arrived));
+    await tap('#q');
+    await p.$eval('#q', (i) => i.select());
+    await p.keyboard.type('waht is a teir 1 screening assesment');
+    await tap('#askf button');
+    await p.waitForFunction(() => document.querySelector('#answer .didyoumean button') !== null, { timeout: 5000 }).catch(() => undefined);
+    const didYouMean = await onScreen(p, '#answer .didyoumean button');
+    await tap('#answer .didyoumean button');
+    await sleep(100);
+    const afterPick = await p.evaluate(() => ({ focus: document.activeElement?.id, state: document.querySelector('#answer')?.getAttribute('data-state') }));
+    const boxInView = await onScreen(p, '#q');
+    ok(
+      'Phone 360 px: "Did you mean" is at least 44 px tall; picking it brings the question box into view and moves focus to the answer, not the box',
+      (didYouMean?.height ?? 0) >= 44 && afterPick.focus === 'answer' && afterPick.state === 'loading' && boxInView?.visible === true,
+      JSON.stringify({ didYouMean, afterPick, boxInView }),
+    );
+    ok('Phone 360 px: no sideways scrolling', (await p.evaluate(() => document.documentElement.scrollWidth)) === 360);
+    ok('Phone 360 px: no script errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+  }
+
+  // answers.json with a lookup_only list (scripts/precompute_answers.py): prepared answers for the questions the
+  // answers suggest. They answer those questions from the file, and are never offered as suggested questions.
+  {
+    const lookup = JSON.parse(fixture('answers.sample.json'));
+    const chipCount = lookup.answers.length;
+    const model = lookup.answers[0];
+    lookup.answers[2].result.suggestions = ['What is a tier 1 screening assessment?', 'What is PFAS?'];
+    lookup.lookup_only = [
+      ['What is a tier 1 screening assessment?', 'Lookup-only fixture answer about tier 1 screening [1].'],
+      ['What is PFAS?', 'Lookup-only fixture answer about PFAS [1].'],
+    ].map(([question, answerText]) => ({ ...model, question, label: `Lookup-only fixture answer for "${question}".`, result: { ...model.result, question, answer: answerText } }));
+    const { p, errors } = await open({ width: 1440, height: 900 }, '/', { origin: liveBase, respond: { ...liveRespond, '/data/answers.json': json(lookup) }, handle });
+    const chips = await p.$$eval('.box > .chips button', (bs) => bs.map((x) => x.textContent));
+    ok('Lookup-only answers: only the suggested questions are offered as chips', chips.length === chipCount && !chips.includes('What is PFAS?') && !chips.includes('What is a tier 1 screening assessment?'), JSON.stringify(chips));
+    const askedBeforeLookup = asked.length;
+    await p.click('.chips button[data-a="2"]');
+    await p.waitForSelector('#answer .chips.suggest button', { timeout: 3000 }).catch(() => undefined);
+    await p.$eval('#answer .chips.suggest button', (x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await p.click('#answer .chips.suggest button');
+    await sleep(100);
+    const picked = await p.evaluate(() => ({ state: document.querySelector('#answer')?.getAttribute('data-state'), text: document.querySelector('#answer')?.textContent ?? '', q: document.getElementById('q')?.value }));
+    ok(
+      'Lookup-only answers: a question suggested by a prepared answer is answered from the prepared copy, with no live call',
+      picked.state === 'prepared' && picked.text.includes('Lookup-only fixture answer about tier 1 screening') && picked.q === 'What is a tier 1 screening assessment?' && asked.length === askedBeforeLookup,
+      JSON.stringify({ ...picked, text: picked.text.slice(0, 80), asked: asked.slice(askedBeforeLookup) }),
+    );
+    await p.$eval('#q', (i) => i.select());
+    await p.type('#q', 'what is pfas');
+    await p.keyboard.press('Enter');
+    await sleep(100);
+    const typed = await p.$eval('#answer', (a) => ({ state: a.getAttribute('data-state'), text: a.textContent ?? '' }));
+    ok('Lookup-only answers: typed in other words (case, no question mark), still the prepared copy, no live call', typed.state === 'prepared' && typed.text.includes('Lookup-only fixture answer about PFAS') && asked.length === askedBeforeLookup, JSON.stringify({ ...typed, text: typed.text.slice(0, 80) }));
+    ok('Lookup-only answers: no script errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+    // A short screen (a small phone on its side): after a suggestion, the start of its prepared answer comes into view,
+    // although the question box cannot be shown with it.
+    const side = await open({ width: 667, height: 375, deviceScaleFactor: 1, isMobile: true, hasTouch: true }, '/#try', { origin: liveBase, respond: { ...liveRespond, '/data/answers.json': json(lookup) }, handle });
+    await side.p.$eval('.chips button[data-a="2"]', (x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await side.p.click('.chips button[data-a="2"]');
+    await side.p.waitForSelector('#answer .chips.suggest button', { timeout: 3000 }).catch(() => undefined);
+    await scrollSettled(side.p);
+    await side.p.$eval('#answer .chips.suggest button', (x) => x.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await side.p.click('#answer .chips.suggest button');
+    await sleep(100);
+    await scrollSettled(side.p);
+    const sideAnswer = await onScreen(side.p, '#answer > p:not(.akind)');
+    const sideState = await side.p.$eval('#answer', (a) => a.getAttribute('data-state'));
+    ok('Phone on its side (667 x 375): after a suggestion, the start of its prepared answer is in view', sideState === 'prepared' && sideAnswer?.visible === true && asked.length === askedBeforeLookup, JSON.stringify({ sideState, sideAnswer }));
+    ok('Phone on its side: no script errors', side.errors.length === 0, side.errors.join(' | '));
+    await side.p.close();
+  }
+
+  // A prepared question asked before answers.json has arrived waits for the file, then is answered from it.
+  {
+    let release = () => undefined;
+    const gate = new Promise((r) => (release = r));
+    const slowFile = async (r) => {
+      if (new URL(r.url()).pathname !== '/data/answers.json') return handle(r);
+      await gate;
+      await r.respond(json(fixture('answers.sample.json')));
+      return true;
+    };
+    const { p, errors } = await open({ width: 1440, height: 900 }, '/#try', { origin: liveBase, handle: slowFile, waitUntil: 'domcontentloaded' });
+    await p.waitForSelector('#q');
+    const askedBeforeEarly = asked.length;
+    await p.type('#q', JSON.parse(fixture('answers.sample.json')).answers[1].question.toUpperCase());
+    await p.keyboard.press('Enter');
+    await sleep(300);
+    const waiting = await p.$eval('#answer', (a) => a.getAttribute('data-state'));
+    release();
+    await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'prepared', { timeout: 5000 }).catch(() => undefined);
+    const after = await p.$eval('#answer', (a) => a.getAttribute('data-state'));
+    ok('Early question: a prepared question asked before answers.json arrives waits for it and gets the prepared answer, with no live call', waiting === 'loading' && after === 'prepared' && asked.length === askedBeforeEarly, JSON.stringify({ waiting, after, asked: asked.slice(askedBeforeEarly) }));
+    ok('Early question: no script errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+  }
   await live.close();
 }
 

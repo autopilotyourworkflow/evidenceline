@@ -1,25 +1,25 @@
 {
   "generated_by": "scripts/precompute_answers.py",
-  "prepared_on": "2026-09-24",
+  "prepared_on": "2026-09-25",
   "model": "claude-sonnet-5",
   "models_reported": [
     "claude-sonnet-5"
   ],
-  "system_prompt_sha256": "d8605baaeab9cd3a0c3a9074af2e158888642cb1857333c9785f5d91b69f800a",
+  "system_prompt_sha256": "acc45a82194bc7c736ba61b8de8d06cdce840ab6679411c23c7d74ccbdd61158",
   "prepared_with": "Claude Code CLI, headless, with every tool switched off",
   "pipeline": "evidenceline.answer.answer, the same code as the live question box (POST /api/ask)",
-  "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. Every answer was checked in code before it was saved; one that failed a check would be withheld and only its passages shown.",
+  "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. Every answer was checked in code before it was saved; one that failed a check would be withheld and only its passages shown.",
   "answers": [
     {
       "question": "What is the drinking-water limit for PFOS?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
       "result": {
         "question": "What is the drinking-water limit for PFOS?",
         "question_redactions": 0,
         "status": "answered",
-        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
-        "answer": "Under PFAS NEMP 3.0 drinking-water values, the level for PFOS on its own is 0.07 ug/L [G1]. Under the current ADWG drinking-water values, PFOS on its own is compared with 0.008 ug/L [G2]. The ADWG fact sheet bases its PFOS figure on human health considerations [2].",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "Under the PFAS NEMP 3.0 drinking-water values, PFOS on its own is 0.07 ug/L, and this matches the value for PFOS and PFHxS added together [G1]. Under the current ADWG drinking-water values, PFOS is 0.008 ug/L, and PFOS and PFHxS are checked separately rather than as a sum [G2]. The ADWG fact sheet says PFOS in drinking water should not go above this health-based level [2].",
         "citations": [
           {
             "number": 1,
@@ -238,17 +238,24 @@
               "name": "no long quotes",
               "passed": true,
               "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
             }
           ],
-          "summary": "All 9 checks passed."
+          "summary": "All 10 checks passed."
         },
-        "model": "claude-sonnet-5"
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
       }
     },
     {
       "question": "Is this site contaminated?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box. No model was called: questions like this get a fixed reply.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box. No model was called: questions like this get a fixed reply.",
       "result": {
         "question": "Is this site contaminated?",
         "question_redactions": 0,
@@ -396,19 +403,21 @@
           "checks": [],
           "summary": "No model answer was written, so there was nothing to check."
         },
-        "model": null
+        "model": null,
+        "did_you_mean": null,
+        "suggestions": []
       }
     },
     {
       "question": "What should a detailed site investigation report include?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
       "result": {
         "question": "What should a detailed site investigation report include?",
         "question_redactions": 0,
         "status": "answered",
-        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
-        "answer": "A detailed site investigation (DSI) report should follow Schedule B2 of the ASC NEPM and include the relevant items from the Appendix A checklist for your site [1]. It should also evaluate the data against the investigation objectives and discuss the data's precision, accuracy or bias [2]. The checklist covers items such as document control, an executive summary, objectives, and laboratory quality checks [3][6].",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "A detailed site investigation (DSI) report should judge the data against the investigation goals and discuss how precise and accurate the data are [2]. It should also follow Schedule B2 of the ASC NEPM and cover the sampling plan, the refined site model, and risks and uncertainties [1]. The Appendix A checklist lists items such as document control, an executive summary, objectives and laboratory quality checks, which you mark N/A if they do not apply [3][6].",
         "citations": [
           {
             "number": 1,
@@ -571,23 +580,40 @@
               "name": "no dashes",
               "passed": true,
               "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
             }
           ],
-          "summary": "All 5 checks passed."
+          "summary": "All 8 checks passed."
         },
-        "model": "claude-sonnet-5"
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
       }
     },
     {
       "question": "When do I have to report a suspected contaminated site to DWER?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
       "result": {
         "question": "When do I have to report a suspected contaminated site to DWER?",
         "question_redactions": 0,
         "status": "answered",
-        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
-        "answer": "A person with a duty to report, such as the owner, occupier or an auditor, must report a suspected contaminated site as soon as reasonably practicable [5][7]. The department suggests reporting once you have enough information to suspect contamination [1]. You should not wait until the extent or seriousness of the problem has been mapped out [1].",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A person with a duty to report must report a suspected contaminated site as soon as reasonably practicable [5]. They should consider reporting once they have enough information to suspect contamination, and the department does not expect them to wait until the extent of it is mapped [1]. Owners, occupiers, people who caused the contamination, and auditors engaged for a required report have this duty [7].",
         "citations": [
           {
             "number": 1,
@@ -729,7 +755,7 @@
             {
               "name": "citations exist",
               "passed": true,
-              "detail": "4 citation(s), each naming one of the 8 passage(s)."
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
             },
             {
               "name": "every sentence cited",
@@ -760,23 +786,30 @@
               "name": "no long quotes",
               "passed": true,
               "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
             }
           ],
-          "summary": "All 7 checks passed."
+          "summary": "All 8 checks passed."
         },
-        "model": "claude-sonnet-5"
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
       }
     },
     {
       "question": "What is a conceptual site model?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
       "result": {
         "question": "What is a conceptual site model?",
         "question_redactions": 0,
         "status": "answered",
         "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
-        "answer": "A conceptual site model (CSM) is a description of a site's setting, where contamination may come from, how it could move, and who or what it could affect [1]. It is built up in stages: the first version comes early in site assessment and is revised as more information about the site arrives [1]. The CSM is used to identify risks and to spot gaps in information that need to be addressed later [1].",
+        "answer": "A conceptual site model (CSM) is a description of a site's setting, where contamination comes from, how it can move, and who or what it could affect [1]. It is built up in steps: the first version comes early in site assessment and is revised as more information arrives [1]. A table, and optionally a graphic, should show the links between source, pathway and receptor, and which risks need further assessment or management [2].",
         "citations": [
           {
             "number": 1,
@@ -796,22 +829,38 @@
           },
           {
             "number": 2,
-            "cited": false,
+            "cited": true,
             "document_id": "dwer-amcs",
             "document": "Guideline: Assessment and management of contaminated sites",
             "edition": "November 2021",
             "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
             "printed_page": "23",
             "pdf_page": 28,
-            "location": "p. 23 (PDF p. 28), 7.2 Aesthetics",
-            "section": "7.2 Aesthetics",
-            "excerpt": "...These materials do not pose an unacceptable risk to human health, the environment or environmental values from a contamination point of view; however, they may be undesirable in the context of the site-specific land use or the surrounding land...",
+            "location": "p. 23 (PDF p. 28), 7.1 Overview",
+            "section": "7.1 Overview",
+            "excerpt": "...See section 4 of Schedule B2 of the ASC NEPM for further guidance on developing CSMs. Figure 2: An example of a simple CSM illustrating potential source-pathway-receptor linkages",
             "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
             "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
             "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=28"
           },
           {
             "number": 3,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "157",
+            "pdf_page": 166,
+            "location": "p. 157 (PDF p. 166), 18.1 Sampling and analysis quality plans",
+            "section": "18.1 Sampling and analysis quality plans",
+            "excerpt": "...Consistent with the guidance in the ASC NEPM, the SAQP should be informed by a robust conceptual site model (CSM). For example, the SAQP should investigate whether precursors and their transformation products have migrated along identified pathways and to receptor sites. Section 9 provides further guidance relevant to CSM development. As data is collected and analysed, understanding of the site...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=166"
+          },
+          {
+            "number": 4,
             "cited": false,
             "document_id": "dwer-amcs",
             "document": "Guideline: Assessment and management of contaminated sites",
@@ -821,45 +870,13 @@
             "pdf_page": 29,
             "location": "p. 24 (PDF p. 29), 7.2 Aesthetics",
             "section": "7.2 Aesthetics",
-            "excerpt": "...If a site is only affected by aesthetic issues, and this is the only factor or issue of concern, then you do not need to report the site to us as a known or suspected contaminated site (see DER 2017...",
+            "excerpt": "depending on their sensitivity (e.g. community expectations are generally higher for residential land use compared with industrial land uses). You should use caution in concluding that some materials have aesthetic effects only; rather, you should consider the risk of...",
             "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
             "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
             "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=29"
           },
           {
-            "number": 4,
-            "cited": false,
-            "document_id": "nemp-3.0",
-            "document": "PFAS National Environmental Management Plan Version 3.0",
-            "edition": "Version 3.0 (HEPA 2025)",
-            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
-            "printed_page": "132",
-            "pdf_page": 141,
-            "location": "p. 132 (PDF p. 141), 13.6 Demonstrating remediation success",
-            "section": "13.6 Demonstrating remediation success",
-            "excerpt": "...address data gaps that were identified when setting the remediation objectives validate any assumptions made in the site investigations, risk assessments, conceptual site model, and/or remediation action plan confirm engineering controls are functioning as intended have trigger/intervention targets agreed observe other long-term trends to inform the management strategy success. Evidence provided to environmental regulators should demonstrate that...",
-            "licence": "CC BY 4.0",
-            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
-            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=141"
-          },
-          {
             "number": 5,
-            "cited": false,
-            "document_id": "nemp-3.0",
-            "document": "PFAS National Environmental Management Plan Version 3.0",
-            "edition": "Version 3.0 (HEPA 2025)",
-            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
-            "printed_page": "31",
-            "pdf_page": 40,
-            "location": "p. 31 (PDF p. 40), 5.3 Site-specific monitoring programs",
-            "section": "5.3 Site-specific monitoring programs",
-            "excerpt": "...Some types of monitoring (for example, food items grown or eaten by ecological receptors and livestock testing) would be for the purpose of informing the conceptual site model and assessing risk to environmental values and receptors. Well-designed site monitoring allows decision-makers to differentiate between ambient (diffuse) contamination and point source contamination originating from the site, and the extent...",
-            "licence": "CC BY 4.0",
-            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
-            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=40"
-          },
-          {
-            "number": 6,
             "cited": false,
             "document_id": "dwer-amcs",
             "document": "Guideline: Assessment and management of contaminated sites",
@@ -875,7 +892,39 @@
             "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=123"
           },
           {
+            "number": 6,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "3",
+            "pdf_page": 11,
+            "location": "p. 3 (PDF p. 11), 2.1 Introduction",
+            "section": "2.1 Introduction",
+            "excerpt": "...The selection and use of investigation and screening levels should be considered in the context of the iterative development of a conceptual site model (CSM) (refer Schedule B2 Section 4) to ensure appropriate evaluation of human health and ecosystem risks. Site assessment should include consideration of all relevant human exposure pathways, ecological risks and risk to groundwater resources.",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=11"
+          },
+          {
             "number": 7,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "42",
+            "pdf_page": 51,
+            "location": "p. 42 (PDF p. 51), 8.1 Considerations for using guideline values",
+            "section": "8.1 Considerations for using guideline values",
+            "excerpt": "the selection of the appropriate guideline values at a site should consider current and potential (or future) uses of the site, and any catchment or groundwater management requirements, with reference to the conceptual site model (CSM). The selection of guideline values should have regard to the specific environmental values and characteristics of the site, drawing on relevant guidance and in...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=51"
+          },
+          {
+            "number": 8,
             "cited": false,
             "document_id": "dwer-amcs",
             "document": "Guideline: Assessment and management of contaminated sites",
@@ -889,22 +938,6 @@
             "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
             "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
             "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=21"
-          },
-          {
-            "number": 8,
-            "cited": false,
-            "document_id": "nepm-b1",
-            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
-            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
-            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
-            "printed_page": "3",
-            "pdf_page": 11,
-            "location": "p. 3 (PDF p. 11), 2.1 Introduction",
-            "section": "2.1 Introduction",
-            "excerpt": "...Investigation levels and screening levels are applicable to the first stage of site assessment. The selection and use of investigation and screening levels should be considered in the context of the iterative development of a conceptual site model (CSM) (refer Schedule B2 Section 4) to ensure appropriate evaluation of human health and ecosystem risks. Site assessment should include consideration of...",
-            "licence": "CC BY 4.0",
-            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
-            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=11"
           }
         ],
         "guideline_values": [],
@@ -939,17 +972,34 @@
               "name": "no dashes",
               "passed": true,
               "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
             }
           ],
-          "summary": "All 5 checks passed."
+          "summary": "All 8 checks passed."
         },
-        "model": "claude-sonnet-5"
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
       }
     },
     {
       "question": "What are the NSW rules for PFAS in soil?",
-      "prepared_on": "2026-09-24",
-      "label": "Prepared in advance on 24 September 2026 by the same pipeline as the live question box. No model was called: the indexed guidance does not cover this question.",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box. No model was called: the indexed guidance does not cover this question.",
       "result": {
         "question": "What are the NSW rules for PFAS in soil?",
         "question_redactions": 0,
@@ -972,6 +1022,2288 @@
           "What is PFAS?",
           "What are PFAS limits for groundwater?"
         ]
+      }
+    }
+  ],
+  "lookup_only": [
+    {
+      "question": "What is PFAS?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What is PFAS?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "PFAS stands for per- and polyfluoroalkyl substances, a group of human-made chemicals that have been in use for over 50 years [6]. They make products resist sticking, oil, water, fire, weather and stains, and appear in carpets, clothes, food packaging and firefighting foams [6]. The best-known ones are PFOS, PFOA and PFHxS, which break down very slowly and so last a long time in the environment [6].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "adwg-pfas",
+            "document": "Australian Drinking Water Guidelines 6 2011, fact sheet: Per- and poly-fluoroalkyl substances (PFAS)",
+            "edition": "Version 4.0, updated June 2025 (fact sheet endorsed 2025)",
+            "wa_status": "National drinking-water guidelines (web edition). PFAS NEMP 3.1 incorporates these values.",
+            "printed_page": null,
+            "pdf_page": null,
+            "location": "section 'Per- and poly-fluoroalkyl substances (PFAS)' (web page, no page numbers)",
+            "section": "Per- and poly-fluoroalkyl substances (PFAS)",
+            "excerpt": "CAS NUMBERS 335-67-1 (PFOA), 1763-23-1 (PFOS), 355-46-4 (PFHxS), 375-73-5 (PFBS), 62037-80-3 and 13252-13-6...",
+            "licence": "Copyright Commonwealth of Australia (NHMRC): personal or internal, non-commercial use, unaltered",
+            "notice": "© Commonwealth of Australia (NHMRC). One short excerpt only; read the full fact sheet at the official link.",
+            "link": "https://guidelines.nhmrc.gov.au/australian-drinking-water-guidelines/part-5/physical-chemical-characteristics/cas-numbers-1763-23-1-pfos-335-67-1-pfoa-355-46-4-pfhxs"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "40",
+            "pdf_page": 45,
+            "location": "p. 40 (PDF p. 45), 9.9 Assessment of perfluoroalkyl and polyfluoroalkyl substances (PFAS)",
+            "section": "9.9 Assessment of perfluoroalkyl and polyfluoroalkyl substances (PFAS)",
+            "excerpt": "9.9 Assessment of perfluoroalkyl and polyfluoroalkyl substances (PFAS) Refer to the PFAS national environmental management plan (PFAS NEMP) (HEPA, 2020) for detailed guidance on the environmental management of per- and polyfluoroalkyl substances (PFAS). The PFAS NEMP was developed to...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=45"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "244",
+            "pdf_page": 253,
+            "location": "p. 244 (PDF p. 253), G.1 Introduction",
+            "section": "G.1 Introduction",
+            "excerpt": "G.1 Introduction Example Water (EW) acknowledges that the sound environmental management of per- and polyfluoroalkyl substances (PFAS) in wastewater is an important responsibility. This responsibility arises from the risks and uncertainties that science has identified regarding the mobility, persistence and effects that PFAS have on environmental values, also known as beneficial uses (this term is separate from beneficial reuse...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=253"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "103",
+            "pdf_page": 112,
+            "location": "p. 103 (PDF p. 112), 11.1 Waste code for PFAS-contaminated material",
+            "section": "11.1 Waste code for PFAS-contaminated material",
+            "excerpt": "...Per- and polyfluoroalkyl substances (PFAS)-contaminated materials, including waste PFAS-containing products and contaminated containers Waste Code: M270 The associated waste descriptions must include a reference to the PFAS present, in sufficient detail to accurately reflect the nature of the waste. Where multiple waste codes apply, the waste must be reported using the description ‘Per- and polyfluoroalkyl substances (PFAS)-contaminated...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=112"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "208",
+            "pdf_page": 217,
+            "location": "p. 208 (PDF p. 217), B.1 Objectives",
+            "section": "B.1 Objectives",
+            "excerpt": "Appendix B PFAS ambient sampling guideline B.1 Objectives This Appendix presents a guideline to undertake sampling for per- and polyfluoroalkyl substances (PFAS) in locations that are defined as ‘ambient’ or not directly impacted by point sources (see Section 5.1). It provides guidance which can form part of jurisdictional programs or one-time sampling projects that aim to determine...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=217"
+          },
+          {
+            "number": 6,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "6",
+            "pdf_page": 15,
+            "location": "p. 6 (PDF p. 15), 1.2 An introduction to PFAS",
+            "section": "1.2 An introduction to PFAS",
+            "excerpt": "1.2 An introduction to PFAS PFAS is an abbreviation for per- and polyfluoroalkyl substances. PFAS are manufactured chemicals that have been used for more than 50 years. PFAS make products non-stick, oil- and water-repellent, and fire, weather- and stain-resistant. PFAS have been used in a range of consumer products, such as carpets, clothes, food packaging and...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=15"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "4",
+            "pdf_page": 13,
+            "location": "p. 4 (PDF p. 13), 1.1 What the PFAS NEMP does",
+            "section": "1.1 What the PFAS NEMP does",
+            "excerpt": "1 Scope 1.1 What the PFAS NEMP does The PFAS National Environmental Management Plan (PFAS NEMP): provides guidance about the environmental management of per- and polyfluoroalkyl substances (PFAS), with a focus on preventing and managing PFAS contamination recognises that different PFAS production methods and subsequent transformation processes can create complex mixtures of many different intentionally produced and unintentionally generated...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=13"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "68",
+            "pdf_page": 77,
+            "location": "p. 68 (PDF p. 77), 8.8.6 Total PFAS",
+            "section": "8.8.6 Total PFAS",
+            "excerpt": "8.8.6 Total PFAS A more recent overseas approach proposed is a drinking water guidance value for total PFAS (EU 2020), where ‘PFAS Total’ means the totality of per- and polyfluoroalkyl substances and is defined as substances that contain a perfluoroalkyl moiety with three or more carbons (that is, -CnF2n-, n ≥ 3) or a perfluoroalkylether moiety with two or...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=77"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "Every number (50) was found in a cited passage or value."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What should a site history include?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What should a site history include?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A site history should include a log of the information sources you used, with details of every document you reviewed [1]. It should also include a timeline of the relevant events to help interpret the site's past [1]. The reporting checklist adds a historical site layout plan showing key past infrastructure, storage areas and waste disposal areas [2].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "26",
+            "pdf_page": 31,
+            "location": "p. 26 (PDF p. 31), 8.3 Site history",
+            "section": "8.3 Site history",
+            "excerpt": "...Site history You should be able to find valuable information on the nature and extent of potential contamination and pathways for contaminant migration using the site’s history. Keep a log of your information sources and in your report include...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=31"
+          },
+          {
+            "number": 2,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "115",
+            "pdf_page": 120,
+            "location": "p. 115 (PDF p. 120) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "...Site investigation history PSI DSI Document all existing environmental reports (environmental investigations, risk assessments, remediation) including: report title, author, date of report a brief summary of each report List of previous site contamination audit reports (if contaminated sites auditor engaged...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=120"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "44",
+            "pdf_page": 52,
+            "location": "p. 44 (PDF p. 52), 5 Case Studies",
+            "section": "5 Case Studies",
+            "excerpt": "...Prior to industrial use, the whole site was filled from 0 to 1 m with imported clay/soil fill of uniform characteristics. Response The site was assessed by a detailed sampling program based on a well -documented site history and no contamination of concern was foun d below 2 m. Based on site history, CrVI was included in the sampling...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=52"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "43",
+            "pdf_page": 48,
+            "location": "p. 43 (PDF p. 48), 7.9 Submission of new information after the site has been reported and/or classified",
+            "section": "7.9 Submission of new information after the site has been reported and/or classified",
+            "excerpt": "...New information includes but is not limited to: clarification of certain details such as the site history and location of site infrastructure submission of additional monitoring data",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=48"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "82",
+            "pdf_page": 87,
+            "location": "p. 82 (PDF p. 87), 12.9 Re-use of excavated soil",
+            "section": "12.9 Re-use of excavated soil",
+            "excerpt": "...Soil imported to a site that has been excavated from an offsite location with no history of potentially contaminating activity may meet the definition of clean fill. ‘Uncontaminated fill’ originates from sites where the history indicates contamination may be present...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=87"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "86",
+            "pdf_page": 91,
+            "location": "p. 86 (PDF p. 91), 13.1 Site management during assessment and remediation",
+            "section": "13.1 Site management during assessment and remediation",
+            "excerpt": "...You should only apply the terminology ‘unexpected find’ to those finds that arise due to knowledge gaps in the site history. When you identify substances as contaminants of potential concern during the PSI stage of investigations, these are not considered...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=91"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "37",
+            "pdf_page": 45,
+            "location": "p. 37 (PDF p. 45), 5 Case Studies",
+            "section": "5 Case Studies",
+            "excerpt": "...the site history or direct observation during the init ial site walkover that other fibrous asbestos materials (such as insulation or woven materials) are present on the site. Other non-asbestos soil contaminants may be present. Response In this redevelopment scenario, there are two potential options: Option A - excavate all the affected fill (and validate the work undertaken including that...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=45"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "112",
+            "pdf_page": 117,
+            "location": "p. 112 (PDF p. 117) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "...including the date taken, location and direction photo was taken from CURRENT SITE LAYOUT PLAN1 - showing current site features, buildings, infrastructure (labelled), location accompanying site photographs were taken from (if relevant) 8. Site history PSI DSI1",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=117"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What does a contaminated sites auditor do?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What does a contaminated sites auditor do?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A contaminated sites auditor is an expert accredited under the CS Act who independently reviews the investigations, assessments, monitoring and clean-up work done by environmental consultants [1]. The auditor records their findings in an audit report [1]. Auditors also prepare the mandatory auditor's report that must accompany a request for a certificate of contamination audit [8].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "6",
+            "pdf_page": 11,
+            "location": "p. 6 (PDF p. 11), 4.2 Accredited co ntaminated site auditors",
+            "section": "4.2 Accredited co ntaminated site auditors",
+            "excerpt": "...The auditor’s findings are documented in an audit report. For detailed guidance on the operation of the contaminated sites auditor scheme, refer to The Western Australian contaminated sites auditor scheme (DER 2016a) and Requirements for mandatory auditors’ reports (DER...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=11"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "7",
+            "pdf_page": 12,
+            "location": "p. 7 (PDF p. 12), 4.2 Accredited co ntaminated site auditors",
+            "section": "4.2 Accredited co ntaminated site auditors",
+            "excerpt": "CS Regulations r.31 when mandatory auditor’s reports are required (1) A mandatory auditor’s report is to be provided to the CEO - (a) in accordance with regulation 29(2)(d), when a request for a certificate of contamination...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=12"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "107",
+            "pdf_page": 112,
+            "location": "p. 107 (PDF p. 112) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "Reasons for commissioning the report Classification status of the site under the Contaminated Sites Act (list land parcels) Contaminated site auditor details (if a mandatory auditor’s report is required) Objectives of investigation and/or remediation Summary of work undertaken...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=112"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "3",
+            "pdf_page": 8,
+            "location": "p. 3 (PDF p. 8), 2 Introduction",
+            "section": "2 Introduction",
+            "excerpt": "...monitored natural attenuation for groundwater remediation (2004) The Western Australian contaminated sites auditor scheme (2016) Requirements for mandatory auditors’ reports (2016) Accreditation of contaminated sites auditors (2016) Contaminated sites auditors - guidelines for accreditation, conduct and reporting (2009) Guidelines for ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=8"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "72",
+            "pdf_page": 77,
+            "location": "p. 72 (PDF p. 77), 13.3 Transferring responsibility to the state",
+            "section": "13.3 Transferring responsibility to the state",
+            "excerpt": "...Assessment and management of contaminated sites, November 2021 DWER The Western Australia Contaminated Sites Auditor Scheme DWER Requirements for Mandatory Auditor’s Reports DWER Accreditation of contaminated sites auditors",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=77"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "128",
+            "pdf_page": 133,
+            "location": "p. 128 (PDF p. 133) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "...site) Current land use Name of party commissioning the report Reasons for commissioning the report Classification status of the site under the Contaminated Sites Act (list land parcels) Contaminated site auditor details (if a mandatory auditor’s report is required)",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=133"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "129",
+            "pdf_page": 134,
+            "location": "p. 129 (PDF p. 134) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "...department as a known or suspected contaminated site and the current classification under the CS Act Contaminated site auditor details if a mandatory auditor’s report was required Summary of previous work, the CSM and risks to human health, the...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=134"
+          },
+          {
+            "number": 8,
+            "cited": true,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "68",
+            "pdf_page": 73,
+            "location": "p. 68 (PDF p. 73), 12.2 Request for a certificate of contamination audit",
+            "section": "12.2 Request for a certificate of contamination audit",
+            "excerpt": "...the land, including any reports or documents on that remediation and validation a mandatory auditor’s report on the land prepared by an accredited contaminated sites auditor a recommendation as to classification and, where relevant, any recommended restrictions on land...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=73"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What is a tier 1 screening assessment?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What is a tier 1 screening assessment?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A Tier 1 screening assessment is a first check where you compare your site's data with generic levels set to protect human health and the environment [3]. It gives an early indication of whether more assessment is needed [3]. If it shows unacceptable risks or significant uncertainties, a Tier 2 or 3 assessment must follow, or an appropriate management strategy may be used instead [1].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "44",
+            "pdf_page": 49,
+            "location": "p. 44 (PDF p. 49), 10.4 Tier 1 screening risk assessment",
+            "section": "10.4 Tier 1 screening risk assessment",
+            "excerpt": "10.4 Tier 1 screening risk assessment Schedule B1 of the ASC NEPM is the primary guidance for carrying out a Tier 1 screening assessment. At this level, you compare site data with generic assessment levels. You may also need...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=49"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "45",
+            "pdf_page": 50,
+            "location": "p. 45 (PDF p. 50), 10.4 Tier 1 screening risk assessment",
+            "section": "10.4 Tier 1 screening risk assessment",
+            "excerpt": "...Decision-making framework for risk assessment A Tier 1 screening risk assessment also needs to consider if other factors may be relevant to the nature and extent of contamination which require further assessment: Example of a Tier 1 screening risk...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=50"
+          },
+          {
+            "number": 3,
+            "cited": true,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "19",
+            "pdf_page": 27,
+            "location": "p. 19 (PDF p. 27), 3.2 Tier 1 assessment",
+            "section": "3.2 Tier 1 assessment",
+            "excerpt": "3.2 Tier 1 assessment A Tier 1 (or screening level) assessment comprises a comparison of representative site data with generic investigation levels and/or screening levels for protection of human health and the environment, together with an assessment of any limitations on their use in relation to site-specific conditions. A Tier 1 assessment provides an initial screening of...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=27"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "20",
+            "pdf_page": 28,
+            "location": "p. 20 (PDF p. 28), 3.2.2 Exceedence of Tier 1 investigation and screening levels",
+            "section": "3.2.2 Exceedence of Tier 1 investigation and screening levels",
+            "excerpt": "3.2.2 Exceedence of Tier 1 investigation and screening levels The magnitude of the exceedence should be considered in the context of the CSM (that is, whether the exposure pathways are plausible and whether exposure will result in harm). In cases of minor exceedence of investigation or screening levels, a qualitative risk assessment may be sufficient to evaluate the...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=28"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "47",
+            "pdf_page": 52,
+            "location": "p. 47 (PDF p. 52), 10.5 Tier 2 risk assessment",
+            "section": "10.5 Tier 2 risk assessment",
+            "excerpt": "Example of a simple Tier 2 risk assessment A site proposed for high-density residential development is found to have metals (e.g. lead and copper) in soil at concentrations that exceed health-based assessment levels for residential development with...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=52"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "22",
+            "pdf_page": 30,
+            "location": "p. 22 (PDF p. 30), 3.3 Specific considerations for petroleum hydrocarbons",
+            "section": "3.3 Specific considerations for petroleum hydrocarbons",
+            "excerpt": "...Flowchart for Tier 1 human and ecological risk assessment of petroleum hydrocarbon contamination-Application of HSLs and ESLs and consideration of management limits Notes 1. The CSM should inform the selection and application of human health and ecological screening levels an d management limits. Relevant HSLs, GILs, HILs and EILs (e.g. PAHs and lead) should be considered for site...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=30"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "65",
+            "pdf_page": 70,
+            "location": "p. 65 (PDF p. 70), 11.5 Interim screening levels for MTBE",
+            "section": "11.5 Interim screening levels for MTBE",
+            "excerpt": "...You should identify and discuss any exceedences of the screening levels in the assessment report. DoH should be consulted (through the department) where the interim screening level is exceeded - preparation of a detailed human health risk assessment may only ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=70"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "71",
+            "pdf_page": 76,
+            "location": "p. 71 (PDF p. 76), 11.7 Assessment levels for surface water and groundwater",
+            "section": "11.7 Assessment levels for surface water and groundwater",
+            "excerpt": "...Consistent with NHMRC (2008), DoH (2014) has specified that the NPUG applies for the screening assessment of chemical substances in recreational waters, or groundwater that discharges to recreational waters. The recreational water guidelines are under review - when complete they ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=76"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "Every number (1, 2, 3) was found in a cited passage or value."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What is a preliminary site investigation?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What is a preliminary site investigation?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A preliminary site investigation (PSI) is an early study that identifies possible sources of contamination, the contaminants of concern, who or what could be exposed, and how [2]. It usually combines a desktop study of records, a detailed site inspection and interviews with people such as owners and neighbours [8]. The results give an initial picture of the site and help decide whether a detailed site investigation is warranted [2].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "26",
+            "pdf_page": 31,
+            "location": "p. 26 (PDF p. 31), 8.1 Introduction",
+            "section": "8.1 Introduction",
+            "excerpt": "You should conduct your PSI following the guidance in section 3 of Schedule B2 of the ASC NEPM. See below for a discussion of the elements of a PSI and Appendix A for a checklist of information you should include...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=31"
+          },
+          {
+            "number": 2,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "25",
+            "pdf_page": 30,
+            "location": "p. 25 (PDF p. 30), 8.1 Introduction",
+            "section": "8.1 Introduction",
+            "excerpt": "...Preliminary site investigation 8.1 Introduction The purpose of a preliminary site investigation (PSI) is to identify the potential sources of contamination and contaminants of concern, the receptors that may be exposed to contamination and the relevant exposure pathways. In...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=30"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "27",
+            "pdf_page": 32,
+            "location": "p. 27 (PDF p. 32), 8.6 Information sources",
+            "section": "8.6 Information sources",
+            "excerpt": "8.6 Information sources Section 3.3 of Schedule B2 of the ASC NEPM has a list of information sources you should consider when compiling a PSI. Other sources of information relevant to assessments in WA include: the department: - our...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=32"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "28",
+            "pdf_page": 33,
+            "location": "p. 28 (PDF p. 33), 8.6 Information sources",
+            "section": "8.6 Information sources",
+            "excerpt": "...3 For the purpose of informing a PSI, we recommend that your application under the Freedom of Information Act 1992 (FOI Act) should only include the documents that may be relevant to the site’s potential contamination, such as old...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=33"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "106",
+            "pdf_page": 111,
+            "location": "p. 106 (PDF p. 111) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "Appendices Appendix A - Reporting checklists Table A1 - Reporting checklist for preliminary site investigation reports and detailed site investigation reports Table A1 has a comprehensive checklist of items that may be included in PSI and DSI reports. Use this ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=111"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "53",
+            "pdf_page": 58,
+            "location": "p. 53 (PDF p. 58), 8.3.2 Standard priority sites",
+            "section": "8.3.2 Standard priority sites",
+            "excerpt": "...the department submit preliminary site investigation (PSI) report to auditor or the department as appropriate for the site Within six months finalise sampling and analysis quality plan (SAQP) finalise community engagement plan (as part of PSI or SAQP) carry out...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=58"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "52",
+            "pdf_page": 57,
+            "location": "p. 52 (PDF p. 57), 8.3.1 High priority sites",
+            "section": "8.3.1 High priority sites",
+            "excerpt": "...department submit preliminary site investigation (PSI) and/or data gap analysis report to the auditor and the department Within three months finalise SAQP and submit to the auditor (if relevant) finalise community engagement plan (as part of PSI or SAQP...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=57"
+          },
+          {
+            "number": 8,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "18",
+            "pdf_page": 23,
+            "location": "p. 18 (PDF p. 23), 6.4 Reporting framework",
+            "section": "6.4 Reporting framework",
+            "excerpt": "...Site contamination reporting framework Preliminary site investigation (PSI) consists of a desktop study, a detailed site inspection and interviews with relevant personnel. A PSI may also include limited sampling and analysis. The information is used to develop an initial CSM...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=23"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What are the classification categories for contaminated sites?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What are the classification categories for contaminated sites?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "There are seven categories: report not substantiated, possibly contaminated (investigation required), not contaminated (unrestricted use), contaminated (restricted use), remediated for restricted use, contaminated (remediation required), and decontaminated [1].\n\nA site is put in the report not substantiated category when a report gives no real grounds to suspect contamination [1][8].\n\nSome categories lead to a memorial on the certificate of title, which alerts owners and planning authorities to known or suspected contamination [4][5].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "29",
+            "pdf_page": 34,
+            "location": "p. 29 (PDF p. 34), 7.1 Classification categories",
+            "section": "7.1 Classification categories",
+            "excerpt": "...Classification of reported sites 7.1 Classification categories The department classifies sites, in consultation with DoH, in accordance with the site classification scheme (Table 9). Table 9 CS Act classification of sites Category of classification* Criterion Report not substantiated A...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=34"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "35",
+            "pdf_page": 40,
+            "location": "p. 35 (PDF p. 40), 7.5.1 Overview",
+            "section": "7.5.1 Overview",
+            "excerpt": "...a statement that the site has been classified under the CS Act the site classification category a description of the location and extent of the site sufficient to identify it the reasons for the classification of the site with reference...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=40"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "36",
+            "pdf_page": 41,
+            "location": "p. 36 (PDF p. 41), 7.5.3 Reasons for classification",
+            "section": "7.5.3 Reasons for classification",
+            "excerpt": "...The ‘reasons for classification’ are intended to inform the reader of the events that have occurred at the site, the contamination that has been identified and how this relates to the classification category for the site. The information provided generally...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=41"
+          },
+          {
+            "number": 4,
+            "cited": true,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "11",
+            "pdf_page": 16,
+            "location": "p. 11 (PDF p. 16), 4 Legislati ve framework",
+            "section": "4 Legislati ve framework",
+            "excerpt": "...The CS Act allows the transfer of information on contaminated sites by providing for public access to information on the Contaminated Sites Register. Some of the classification categories include the registration of a memorial on the certificate of title for...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=16"
+          },
+          {
+            "number": 5,
+            "cited": true,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "41",
+            "pdf_page": 46,
+            "location": "p. 41 (PDF p. 46), 7.7.1 Registration of memorials",
+            "section": "7.7.1 Registration of memorials",
+            "excerpt": "...Table 15 Registration of memorials on certificates of title Categories of classification and other circumstances where a memorial is registered on the certificate of title Sites classified as: o possibly contaminated - investigation required o contaminated - remediation required o ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=46"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "39",
+            "pdf_page": 44,
+            "location": "p. 39 (PDF p. 44), 7.6.1 Persons who can appeal a site classification",
+            "section": "7.6.1 Persons who can appeal a site classification",
+            "excerpt": "...Table 14 Category of classification and appeal rights Category of site classification Persons who can appeal* report not substantiated Person who reported the site possibly contaminated - investigation required Owner Occupier given notice of the site’s classification not contaminated - ...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=44"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "58",
+            "pdf_page": 63,
+            "location": "p. 58 (PDF p. 63), 9.1.1 Summary of records",
+            "section": "9.1.1 Summary of records",
+            "excerpt": "...A BSR includes the following information, as relevant for the site: site identification details category of classification the nature and extent of known contamination any restrictions on use of the site the reasons for classification, with reference to any guidelines...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=63"
+          },
+          {
+            "number": 8,
+            "cited": true,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "31",
+            "pdf_page": 36,
+            "location": "p. 31 (PDF p. 36), 7.2.2 Threshold to classify a reported site as possibly contaminated - investigation required",
+            "section": "7.2.2 Threshold to classify a reported site as possibly contaminated - investigation required",
+            "excerpt": "...undertake an inspection of the site as part of the process of determining an appropriate site classification. Sites are classified RNS when: there is insufficient information available to suspect that a site is contaminated site investigations have not been undertaken...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=36"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Evidenceline does not decide whether a site is contaminated or water is safe. A guideline value is an investigation level, not a finding that water is unsafe or a site is contaminated.",
+          "Evidenceline does not classify sites; classification under the Contaminated Sites Act 2003 is made by DWER on the evidence.",
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "5 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What are PFAS limits for groundwater?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The model's answer did not pass the checks, so it was withheld and only the passages are shown.",
+      "result": {
+        "question": "What are PFAS limits for groundwater?",
+        "question_redactions": 0,
+        "status": "passages_only",
+        "explanation": "Two answers were written but both were withheld, because the second one did not pass 1 of the 8 checks in code (short sentences: sentence 1 of 3 has 30 words, and every sentence must be under 30 words: split or shorten each long one). No answer text is shown. The passages it was given are shown instead.",
+        "answer": null,
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "70",
+            "pdf_page": 75,
+            "location": "p. 70 (PDF p. 75), 11.7 Assessment levels for surface water and groundwater",
+            "section": "11.7 Assessment levels for surface water and groundwater",
+            "excerpt": "...The department has published maps of areas considered suitable and unsuitable for the development of groundwater bores within the Perth superficial aquifer (see the Perth groundwater map for details. We may consider areas unsuitable for domestic garden bores due to...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=75"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "263",
+            "pdf_page": 272,
+            "location": "p. 263 (PDF p. 272), Appendix H Overview of PFAS leaching methods",
+            "section": "Appendix H Overview of PFAS leaching methods",
+            "excerpt": "...precipitation, wet-dry cycles, size of contaminated area vs underlying groundwater aquifer) Limitations Generally, LEAF assessments are more costly and time-consuming (hindering quick turnaround times) LEAF 1313: assumes that pH is a key factor controlling leaching of the contaminant from the solid media. While pH has influence on PFAS leaching, more work is needed to determine if it is...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=272"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "36",
+            "pdf_page": 41,
+            "location": "p. 36 (PDF p. 41), 9.6 Groundwater assessment",
+            "section": "9.6 Groundwater assessment",
+            "excerpt": "...you must consider the inherent value and potential uses of groundwater). Groundwater sampling methods When you develop an SAQP that includes groundwater sampling, you should consider what sampling methods are suitable for the aquifer conditions and contaminants of concern. Section...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=41"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "93",
+            "pdf_page": 102,
+            "location": "p. 93 (PDF p. 102), 10.3.3 Containment",
+            "section": "10.3.3 Containment",
+            "excerpt": "...soils, surface water, groundwater and biota there is capacity at the site for the proposed storage and any ancillary requirements the required environment and planning approvals have been obtained appropriate setback distances or buffer zones are available. Methods for on-site containment may include, but are not limited to: engineered stockpiles for the containment of PFAS-contaminated material (for example...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=102"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "118",
+            "pdf_page": 127,
+            "location": "p. 118 (PDF p. 127), 12.5 Reuse of PFAS-contaminated water",
+            "section": "12.5 Reuse of PFAS-contaminated water",
+            "excerpt": "...Where reuse involves the discharge of PFAS-contaminated water to land, the risk assessment should consider both the potential for PFAS transport to off-site sensitive receptors, and the potential for long-term build-up of the total PFAS mass in the receiving soils, groundwater, and plants. Where water is to be used for managed aquifer recharge and recovery, water...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=127"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "119",
+            "pdf_page": 128,
+            "location": "p. 119 (PDF p. 128), 12.5.1 Management of PFAS-contaminated construction water for site dewatering",
+            "section": "12.5.1 Management of PFAS-contaminated construction water for site dewatering",
+            "excerpt": "...In this context, construction water means stormwater, surface and/or ground water intercepted, collected, or extracted during construction work. Construction work may intercept PFAS-contaminated surface water or groundwater. This can result in the collection of, or generation of PFAS-contaminated water. Construction work can also result in an alteration of PFAS migration (or chemical transport) pathways through changes to...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=128"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "124",
+            "pdf_page": 129,
+            "location": "p. 124 (PDF p. 129) (printed page inferred), Appendix A Reporting checklists",
+            "section": "Appendix A Reporting checklists",
+            "excerpt": "...any imported fill Visual or olfactory observations of contamination Depth to groundwater, seasonal water table fluctuations and seasonal flow direction changes (hydraulic gradient), presence of any perched aquifers 21. Analytical results PSI4 DSI Tabulation of field and laboratory results including...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=129"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "75",
+            "pdf_page": 84,
+            "location": "p. 75 (PDF p. 84), 9.2 Risk assessment",
+            "section": "9.2 Risk assessment",
+            "excerpt": "...Considerations for both human health and ecological risk assessment include, but are not limited to: nature of the source and potential contribution from precursors to risk (qualitative assessment) mass load and flux of PFAS to, within and from the site leaching from soil to groundwater and surface water adsorption onto, and leaching from, sediments groundwater discharge to surface water bioaccumulation...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=84"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "This question asks for a value. Evidenceline never reads guideline values from passage text, because tables extract badly. PFAS drinking-water values come from its verified table; for any other value, read it on the cited page of the official document.",
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": false,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": false,
+              "detail": "sentence 1 of 3 has 30 words, and every sentence must be under 30 words: split or shorten each long one."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "1 of 8 checks failed: short sentences."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "How should groundwater samples be collected?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "How should groundwater samples be collected?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "Groundwater wells should be purged before sampling, and the sample taken once all standing water is removed and water quality readings are stable [1]. The guidance recommends low-flow purging, where water is pumped out slowly and steadily, so the sample represents groundwater conditions consistently [4]. For PFAS testing, recommended equipment includes low-flow peristaltic pumps with silicone or HDPE tubing, and consumable sampling equipment must not be reused [5].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "219",
+            "pdf_page": 228,
+            "location": "p. 219 (PDF p. 228), B.3.6 Collecting samples",
+            "section": "B.3.6 Collecting samples",
+            "excerpt": "For every 10 samples collected, one rinsate blank sample is to be collected by collecting rinsate water that has been used to complete an additional rinse of the equipment after completion of the rinsing process described above. Groundwater wells should be purged before sampling commences. The groundwater sample for lab analysis is to be collected once purging has removed all...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=228"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "41",
+            "pdf_page": 46,
+            "location": "p. 41 (PDF p. 46), 9.10 Collection and disposal of contaminated materials",
+            "section": "9.10 Collection and disposal of contaminated materials",
+            "excerpt": "...You should not return contaminated materials, such as excavated spoil and unused samples, to a pit or bore to prevent the contamination of unaffected strata or groundwater. Backfill sample pits and boreholes as soon as possible after sampling Guidance in...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=46"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "163",
+            "pdf_page": 172,
+            "location": "p. 163 (PDF p. 172), 18.2.1 Considerations for sampling different environmental media",
+            "section": "18.2.1 Considerations for sampling different environmental media",
+            "excerpt": "...Rinsate samples can be collected if there is any doubt about whether or not sampling consumables and field supplies or personal equipment and personal protective equipment (PPE) are PFAS-free other quality assurance samples include transport blanks and field blanks larger water sample volumes and/or additional sampling bottles may be required if the required LOR are ultra-trace and...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=172"
+          },
+          {
+            "number": 4,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "218",
+            "pdf_page": 227,
+            "location": "p. 218 (PDF p. 227), B.3.6 Collecting samples",
+            "section": "B.3.6 Collecting samples",
+            "excerpt": "...If equipment is used it should be thoroughly rinsed (three times) using PFAS-free water before and after sampling. Rinsate blank samples should be collected for one in every 10 samples to check this process. Record sample location, date and time on sample jar labels. Check all information on the sample jar and mandatory documentation has been completed and is...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=227"
+          },
+          {
+            "number": 5,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "164",
+            "pdf_page": 173,
+            "location": "p. 164 (PDF p. 173), 18.2.1 Considerations for sampling different environmental media",
+            "section": "18.2.1 Considerations for sampling different environmental media",
+            "excerpt": "...groundwater samples includes low-flow peristaltic pumps using silicone or HDPE tubing (or similar products). Consumable sampling equipment must not be reused rinsate samples should be collected if there is any doubt about whether or not sampling consumables and field supplies or personal equipment and PPE are PFAS-free, including when detergents and secondary containers are being used larger sample...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=173"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "32",
+            "pdf_page": 37,
+            "location": "p. 32 (PDF p. 37), 9.2 Sampling and analysis quality plans",
+            "section": "9.2 Sampling and analysis quality plans",
+            "excerpt": "...Your SAQP should demonstrate your rationale for sample locations and data to be collected by linking the areas of concern in your CSM with the sampling program. Show your areas of concern on a site plan that also shows the...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=37"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "166",
+            "pdf_page": 175,
+            "location": "p. 166 (PDF p. 175), 18.2.3 Sample handling and processing",
+            "section": "18.2.3 Sample handling and processing",
+            "excerpt": "18.2.3 Sample handling and processing Conventional sample handling and processing practices can generally be applied to groundwater, surface water, soil, and sediment samples for analysis of PFAS. Exceptions to this statement include the following, particularly where PFAS concentrations are expected to be low: prior to sampling, the sampling personnel must wash their hands with plain soap and rinse...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=175"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "119",
+            "pdf_page": 128,
+            "location": "p. 119 (PDF p. 128), 12.5.1 Management of PFAS-contaminated construction water for site dewatering",
+            "section": "12.5.1 Management of PFAS-contaminated construction water for site dewatering",
+            "excerpt": "...In this context, construction water means stormwater, surface and/or ground water intercepted, collected, or extracted during construction work. Construction work may intercept PFAS-contaminated surface water or groundwater. This can result in the collection of, or generation of PFAS-contaminated water. Construction work can also result in an alteration of PFAS migration (or chemical transport) pathways through changes to...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=128"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What are health investigation levels for soil?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What are health investigation levels for soil?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "Health investigation levels (HILs) are general screening levels for soil, used in the first stage of checking possible risks to human health from long-term exposure to contaminants [3]. They cover four land uses: homes with gardens, homes with little soil access, public open space, and commercial or industrial sites [3]. Going above a HIL means more investigation is needed, and it does not mean a clean-up is required [5].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "49",
+            "pdf_page": 58,
+            "location": "p. 49 (PDF p. 58), 8.6.2 Human health investigation levels for soil",
+            "section": "8.6.2 Human health investigation levels for soil",
+            "excerpt": "8.6.2 Human health investigation levels for soil The following HILs for soil were derived using the methodology consistent with the ASC NEPM for the HILs. Note that these values have not been derived under the ASC NEPM framework, nor published in the ASC NEPM. The PFAS HILs (Table 5) are to be used to assess potential human soil...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=58"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "51",
+            "pdf_page": 60,
+            "location": "p. 51 (PDF p. 60), 8.6.3 Comparison of PFOS and PFHxS concentrations",
+            "section": "8.6.3 Comparison of PFOS and PFHxS concentrations",
+            "excerpt": "Land use Sum of PFOS and PFHxS a (mg/kg) PFOA (mg/ kg) Comments and source Residential with minimal opportunities for soil access (HIL B) b 2 20 The HIL B values assume soil is not used to grow and consume home-grown produce. Includes dwellings with minimal opportunities for soil access. These values were derived using the methodology consistent...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=60"
+          },
+          {
+            "number": 3,
+            "cited": true,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "4",
+            "pdf_page": 12,
+            "location": "p. 4 (PDF p. 12), 2.2 Health investigation levels",
+            "section": "2.2 Health investigation levels",
+            "excerpt": "2.2 Health investigation levels The health risk assessment methodology that forms the basis for calculation of HILs is provided in Schedule B4. The derivation of the HILs is presented in Schedule B7 (and appendices) and uses the Australian exposure factor guidance (enHealth 2012). The derivation of the HILs is illustrated by two worked examples for cadmium and benzo(a...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=12"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "50",
+            "pdf_page": 59,
+            "location": "p. 50 (PDF p. 59), 8.6.3 Comparison of PFOS and PFHxS concentrations",
+            "section": "8.6.3 Comparison of PFOS and PFHxS concentrations",
+            "excerpt": "...For any additional calculations, the methodology is described in detail in OEH (2019) and the updated soil to plant transfer factors in Supporting Document 4. Table 5 Human health investigation levels for soil Land use Sum of PFOS and PFHxS a (mg/kg) PFOA (mg/ kg) Comments and source Residential with garden/ accessible soil (HIL A) 0.003 0.06...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=59"
+          },
+          {
+            "number": 5,
+            "cited": true,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "5",
+            "pdf_page": 13,
+            "location": "p. 5 (PDF p. 13), 2.2 Health investigation levels",
+            "section": "2.2 Health investigation levels",
+            "excerpt": "...Exceeding a HIL means further investigation is required and not ‘risk is present, clean-up required’. The HILs are referred to by regulators, auditors and consultants in the process of assessing soil contamination. HILs apply generally to the top 3 m of soil for residential use. Site-specific conditions should determine the depth to which HILs apply for other land...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=13"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "3",
+            "pdf_page": 11,
+            "location": "p. 3 (PDF p. 11), 2.1.1 Definitions",
+            "section": "2.1.1 Definitions",
+            "excerpt": "...The HILs are generic to all soil types and apply generally to a depth of 3 m below the surface for residential use. Site-specific conditions should determine the depth to which HILs apply for other land uses. Further detail is provided in Section 2.2 and Schedules B4 and B7. Interim soil vapour health investigation levels (interim HILs) have...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=11"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "55",
+            "pdf_page": 60,
+            "location": "p. 55 (PDF p. 60), 11.2 Sources of assessment levels",
+            "section": "11.2 Sources of assessment levels",
+            "excerpt": "...Human health assessment levels for soil vapour Exposure pathway Contaminant(s) Assessment level Reference Application in WA Inhalation (longterm/chronic risk) Selected VOCCs Interim soil vapour health investigation levels (interim HILs) ASC NEPM B1 s. 2.3 ASC NEPM B4...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=60"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "51",
+            "pdf_page": 59,
+            "location": "p. 51 (PDF p. 59), 6 Compare site data with EILs",
+            "section": "6 Compare site data with EILs",
+            "excerpt": "Table 1A(2) Interim soil vapour health investigation levels for volatile organic chlorinated compounds Chemical Interim soil vapour HIL (mg/m3) Residential1 A Residential1 B Recreational1 C Commercial / Industrial1 D TCE 0.02 0.02 0.4 0.08 1,1,1-TCA 60 60 1200 230 PCE 2 2 40 8 cis-1,2- dichloroethene 0.08 0.08...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=59"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Only PFAS drinking-water values are loaded, so no soil, sediment, recreational or ecological values are given.",
+          "This question asks for a value. Evidenceline never reads guideline values from passage text, because tables extract badly. PFAS drinking-water values come from its verified table; for any other value, read it on the cited page of the official document.",
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What are ecological investigation levels?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What are ecological investigation levels?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "Ecological investigation levels (EILs) are soil concentrations, worked out for common contaminants, that are used to protect land-based ecosystems [3]. They exist for As, Cu, CrIII, DDT, naphthalene, Ni, Pb and Zn [3].\n\nA site-specific EIL is found by adding the added contaminant limit to the natural background level of the contaminant [8].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "54",
+            "pdf_page": 63,
+            "location": "p. 54 (PDF p. 63), 8.7.1 Ecological soil guideline values",
+            "section": "8.7.1 Ecological soil guideline values",
+            "excerpt": "8.7.1 Ecological soil guideline values The following interim ecological soil guideline values consider both direct exposure and indirect exposure to ecological receptors. It is acknowledged that these guideline values are interim and may be refined by future work as additional relevant research becomes available. Soil ecological direct exposure guidance The direct exposure ecological soil guideline applies specifically to...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=63"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "56",
+            "pdf_page": 65,
+            "location": "p. 56 (PDF p. 65), 8.7.1 Ecological soil guideline values",
+            "section": "8.7.1 Ecological soil guideline values",
+            "excerpt": "...Table 6 Ecological guideline values for soil Exposure scenario PFOS (mg/kg) PFOA (mg/kg) Comments and source Ecological direct exposure - all land uses 1 10 0.005 as an interim screening value if reptiles may be exposed a Future work may be undertaken to review available soil guideline values proposed by Australian research and industry organisations. Interim ecological indirect...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=65"
+          },
+          {
+            "number": 3,
+            "cited": true,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "13",
+            "pdf_page": 21,
+            "location": "p. 13 (PDF p. 21), 2.5.1 Introduction",
+            "section": "2.5.1 Introduction",
+            "excerpt": "2.5 Ecological investigation levels 2.5.1 Introduction Ecological investigation levels (EILs) for the protection of terrestrial ecosystems have been derived for common contaminants in soil based on a species sensitivity distribution (SSD) model developed for Australian conditions. EILs have been derived for As, Cu, CrIII, DDT, naphthalene, Ni, Pb and Zn. Schedule B5a provides detailed guidance on the...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=21"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "55",
+            "pdf_page": 64,
+            "location": "p. 55 (PDF p. 64), 8.7.1 Ecological soil guideline values",
+            "section": "8.7.1 Ecological soil guideline values",
+            "excerpt": "The interim PFOA soil guideline value for reptiles is based on limited reptilian research (Zhang et al. 2020); see Supporting Document 3 for details on the methods considered for the PFAS NEMP 3.0. Soil ecological indirect exposure guidance The indirect exposure ecological soil guideline ( Table 6) accounts for the various pathways through which organisms can be exposed whether or...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=64"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "57",
+            "pdf_page": 66,
+            "location": "p. 57 (PDF p. 66), 8.7.1 Ecological soil guideline values",
+            "section": "8.7.1 Ecological soil guideline values",
+            "excerpt": "PFHxS in food consumed by mammals or birds. This has been adapted to allow for uncertainties and potential similar properties and toxicities of PFHxS with PFOS. b The guidelines for the sum of PFOS and PFHxS, and the guideline for PFOA, are based on the ECCC (2018) approach using representative local species. For the relevant TDIs and approach adopted, see...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=66"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "15",
+            "pdf_page": 23,
+            "location": "p. 15 (PDF p. 23), 2.5.10 Determining site-specific EILs",
+            "section": "2.5.10 Determining site-specific EILs",
+            "excerpt": "2.5.10 Determining site-specific EILs Detailed information on the derivation of the EILs is provided in Schedule B5c. The following section describes the steps that are taken to derive site-specific EILs. A spreadsheet is included in the ASC NEPM Toolbox which can also be used for calculating site-specific EILs. A. EILs for Ni, Cr III, Cu...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=23"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "16",
+            "pdf_page": 24,
+            "location": "p. 16 (PDF p. 24), 2.5.10 Determining site-specific EILs",
+            "section": "2.5.10 Determining site-specific EILs",
+            "excerpt": "...Calculate the EIL by summing the ACL and ABC: EIL = ABC + ACL B. EILs for As, DDT and naphthalene EILs for aged contamination for DDT and naphthalene are not available and the adopted EIL is based on fresh contamination taken directly from Table 1B(5). The EILs for As, DDT and naphthalene are generic i.e. they are not dependent...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=24"
+          },
+          {
+            "number": 8,
+            "cited": true,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "14",
+            "pdf_page": 22,
+            "location": "p. 14 (PDF p. 22), 2.5.8 Added contaminant limits",
+            "section": "2.5.8 Added contaminant limits",
+            "excerpt": "...In this approach different soils will have different contaminant EILs rather than a single generic EIL for each contaminant.",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=22"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Only PFAS drinking-water values are loaded, so no soil, sediment, recreational or ecological values are given.",
+          "This question asks for a value. Evidenceline never reads guideline values from passage text, because tables extract badly. PFAS drinking-water values come from its verified table; for any other value, read it on the cited page of the official document.",
+          "Evidenceline does not screen results against ecological investigation or screening levels; these passages are for reading the source only.",
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What is a sampling and analysis quality plan?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What is a sampling and analysis quality plan?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. Open a citation to read the source.",
+        "answer": "A sampling and analysis quality plan (SAQP) is a plan that makes sure the data collected is representative, giving a solid basis for decisions [1]. In Western Australia, it should be prepared before any samples are taken, and it should fill critical gaps in the conceptual site model (CSM) [2]. It should link each area of concern to the sampling planned there and be included in the site assessment report [2][3].",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "157",
+            "pdf_page": 166,
+            "location": "p. 157 (PDF p. 166), 18.1 Sampling and analysis quality plans",
+            "section": "18.1 Sampling and analysis quality plans",
+            "excerpt": "18.1 Sampling and analysis quality plans The purpose of a sampling and analysis quality plan (SAQP) is to ensure representative data is collected to provide a robust basis for decision-making. This minimises the likelihood of inconclusive or ambiguous results. Drawing on expert advice, including analytical testing service providers and environmental regulators where relevant, is helpful to ensure the...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=166"
+          },
+          {
+            "number": 2,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "31",
+            "pdf_page": 36,
+            "location": "p. 31 (PDF p. 36), 9.2 Sampling and analysis quality plans",
+            "section": "9.2 Sampling and analysis quality plans",
+            "excerpt": "...You should prepare a sampling and analysis quality plan (SAQP) to ensure that the data you collect are representative and sufficient to address critical gaps and uncertainties in your CSM. This will help ensure the information you obtain provides a...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=36"
+          },
+          {
+            "number": 3,
+            "cited": true,
+            "document_id": "dwer-amcs",
+            "document": "Guideline: Assessment and management of contaminated sites",
+            "edition": "November 2021",
+            "wa_status": "WA guideline (DWER). The web page says first published 1 November 2021, last updated 16 June 2023.",
+            "printed_page": "32",
+            "pdf_page": 37,
+            "location": "p. 32 (PDF p. 37), 9.2 Sampling and analysis quality plans",
+            "section": "9.2 Sampling and analysis quality plans",
+            "excerpt": "...Your SAQP should demonstrate your rationale for sample locations and data to be collected by linking the areas of concern in your CSM with the sampling program. Show your areas of concern on a site plan that also shows the...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2023-05/guideline-assessment-and-management-of-contaminated-sites.pdf#page=37"
+          },
+          {
+            "number": 4,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "158",
+            "pdf_page": 167,
+            "location": "p. 158 (PDF p. 167), 18.1 Sampling and analysis quality plans",
+            "section": "18.1 Sampling and analysis quality plans",
+            "excerpt": "The SAQP needs to consider the environmental media and material to be sampled, how a representative sample is to be collected, and how many samples are required. As a guide, refer to Table 13 below for a summary of relevant PFAS National Environmental Management Plan (PFAS NEMP) sections for specific environmental media. The guidance in this section should be read...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=167"
+          },
+          {
+            "number": 5,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "53",
+            "pdf_page": 58,
+            "location": "p. 53 (PDF p. 58), 8.3.2 Standard priority sites",
+            "section": "8.3.2 Standard priority sites",
+            "excerpt": "...or the department as appropriate for the site Within six months finalise sampling and analysis quality plan (SAQP) finalise community engagement plan (as part of PSI or SAQP) carry out community engagement (before site works or any decision that may...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=58"
+          },
+          {
+            "number": 6,
+            "cited": false,
+            "document_id": "nepm-b1",
+            "document": "National Environment Protection (Assessment of Site Contamination) Measure 1999, as amended: Schedule B1, Guideline on Investigation Levels for Soil and Groundwater",
+            "edition": "Compilation F2013C00288 (Measure as amended 2013)",
+            "wa_status": "National measure. DWER guidance refers to the ASC NEPM for assessment levels.",
+            "printed_page": "37",
+            "pdf_page": 45,
+            "location": "p. 37 (PDF p. 45), 5 Case Studies",
+            "section": "5 Case Studies",
+            "excerpt": "...1 Preliminary site investigation - desktop study and detailed site inspection collect information on the location, condition and amount of bonded ACM present on the site surface to inform the SAQP for the DSI. 2 Preparation of the Sampling and Analysis Quality Plan ( SAQP) - A conceptual site model (CSM) and data quality objectives (DQOs) should be developed which ...",
+            "licence": "CC BY 4.0",
+            "notice": "Sourced from the Federal Register of Legislation. For the latest information on Australian Government law please go to https://www.legislation.gov.au. CC BY 4.0.",
+            "link": "https://www.legislation.gov.au/F2008B00713/2013-05-16/2013-05-16/text/original/pdf/2#page=45"
+          },
+          {
+            "number": 7,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "64",
+            "pdf_page": 73,
+            "location": "p. 64 (PDF p. 73), 8.7.7 Considerations for bioaccumulation",
+            "section": "8.7.7 Considerations for bioaccumulation",
+            "excerpt": "...Accurately characterising both sediment properties and any PFAS contamination is important in developing a robust CSM and sampling and analysis quality plan (SAQP) (see Section 5.1 on planning and designing PFAS monitoring programs; Section 5.3 on site-specific monitoring programs; Section 8.1 on considerations for using guideline values; Section 9 on PFAS-contaminated site assessment; Section 9...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=73"
+          },
+          {
+            "number": 8,
+            "cited": false,
+            "document_id": "dwer-irc",
+            "document": "Guideline: Identification, reporting and classification of contaminated sites in Western Australia",
+            "edition": "February 2025",
+            "wa_status": "WA guideline (DWER). Replaces the 2017 edition.",
+            "printed_page": "51",
+            "pdf_page": 56,
+            "location": "p. 51 (PDF p. 56), 8.3 Timeframes for action",
+            "section": "8.3 Timeframes for action",
+            "excerpt": "...Copies of Sampling and Analysis Quality Plans (SAQP), community engagement plans and technical reports should be submitted to the auditor in the first instance unless otherwise advised by the department. 8.3.1 High priority sites Due to the significant...",
+            "licence": "Copyright Government of Western Australia (personal, non-commercial or internal use, unaltered)",
+            "notice": "© Government of Western Australia. Quoted in part; read the full document at the official link.",
+            "link": "https://www.wa.gov.au/system/files/2025-02/guideline-identification-reporting-and-classification-contaminated-sites.pdf#page=56"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "4 citation(s), each naming one of the 8 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "The answer contains no numbers."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
+      }
+    },
+    {
+      "question": "What quality checks should a lab report include?",
+      "prepared_on": "2026-09-25",
+      "label": "Prepared in advance on 25 September 2026 by the same pipeline as the live question box, with the model claude-sonnet-5. The answer passed every check before it was saved.",
+      "result": {
+        "question": "What quality checks should a lab report include?",
+        "question_redactions": 0,
+        "status": "answered",
+        "explanation": "Written by claude-sonnet-5 from the numbered passages only, then checked in code: every citation exists, every sentence is cited and every number was found in a cited passage or in the verified guideline values. The first answer failed a check and was not shown; this is the second. Open a citation to read the source.",
+        "answer": "A lab report should show whether the requested quality targets were met, with flags in its quality assurance and quality control results. [1] QSM 5.4 is one example of a set of quality criteria for this. [1]\n\nIt should also give details of the method, the PFAS tested for, and any accreditation or validation. [1]",
+        "citations": [
+          {
+            "number": 1,
+            "cited": true,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "182",
+            "pdf_page": 191,
+            "location": "p. 182 (PDF p. 191), 19.2.3 Laboratory requirements",
+            "section": "19.2.3 Laboratory requirements",
+            "excerpt": "...details on the method being used and the target PFAS analytes details on whether the requested quality criteria were met or not, including flagging within the lab’s analytical and quality assurance/ quality control (QA/QC) reporting - for example, as specified in QSM 5.4 (USDoD and USDoE 2021). Importantly, QSM 5.4 is not an analytical method; it provides...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=191"
+          },
+          {
+            "number": 2,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "173",
+            "pdf_page": 182,
+            "location": "p. 173 (PDF p. 182), 18.3.3 Using information gained from leaching assessments",
+            "section": "18.3.3 Using information gained from leaching assessments",
+            "excerpt": "...Some applications for the leaching test may require specific data processing to account for aspects of the method and/ or calculation of key reporting parameters (for example, leaching rate calculations or calculation of total mass leached from a sample). For lab-based leaching methods, such as those outlined in Table 14, several sampling and sample preparation aspects may have an...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=182"
+          },
+          {
+            "number": 3,
+            "cited": false,
+            "document_id": "nemp-3.0",
+            "document": "PFAS National Environmental Management Plan Version 3.0",
+            "edition": "Version 3.0 (HEPA 2025)",
+            "wa_status": "The WA government PFAS page (Environment WAtch) names Version 3.0 as adopted for implementation in Western Australia. Nationally, Version 3.1 (HEPA 2026) has since been published.",
+            "printed_page": "163",
+            "pdf_page": 172,
+            "location": "p. 163 (PDF p. 172), 18.2.1 Considerations for sampling different environmental media",
+            "section": "18.2.1 Considerations for sampling different environmental media",
+            "excerpt": "treated with waterproofing coatings check the cross-contamination checklist above for any other further issues. Rinsate samples can be collected if there is any doubt about whether or not sampling consumables and field supplies or personal equipment and personal protective equipment (PPE) are PFAS-free other quality assurance samples include transport blanks and field blanks larger water sample volumes and...",
+            "licence": "CC BY 4.0",
+            "notice": "HEPA 2025, PFAS National Environmental Management Plan Version 3.0, Heads of EPA Australia and New Zealand. CC BY 4.0. Fetched from a Wayback Machine capture (15 March 2025) of the DCCEEW file.",
+            "link": "https://www.dcceew.gov.au/sites/default/files/documents/pfas-nemp-3.pdf#page=172"
+          }
+        ],
+        "guideline_values": [],
+        "notes": [
+          "Each passage shows its document's edition and WA status. Evidenceline does not decide which document or edition applies to a site; that is the scientist's call."
+        ],
+        "verification": {
+          "ran": true,
+          "passed": true,
+          "checks": [
+            {
+              "name": "citations exist",
+              "passed": true,
+              "detail": "3 citation(s), each naming one of the 3 passage(s)."
+            },
+            {
+              "name": "every sentence cited",
+              "passed": true,
+              "detail": "All 3 sentence(s) carry a citation."
+            },
+            {
+              "name": "numbers traced",
+              "passed": true,
+              "detail": "Every number (5.4) was found in a cited passage or value."
+            },
+            {
+              "name": "no verdict wording",
+              "passed": true,
+              "detail": "No wording that says water is safe or unsafe, or that a site is or is not contaminated."
+            },
+            {
+              "name": "no dashes",
+              "passed": true,
+              "detail": "No dashes."
+            },
+            {
+              "name": "short sentences",
+              "passed": true,
+              "detail": "All 3 sentence(s) are under 30 words."
+            },
+            {
+              "name": "no long quotes",
+              "passed": true,
+              "detail": "No run of more than 10 words is copied from a passage."
+            },
+            {
+              "name": "about the guidance",
+              "passed": true,
+              "detail": "Every sentence speaks about the guidance, not about what the answer was given."
+            }
+          ],
+          "summary": "All 8 checks passed."
+        },
+        "model": "claude-sonnet-5",
+        "did_you_mean": null,
+        "suggestions": []
       }
     }
   ]

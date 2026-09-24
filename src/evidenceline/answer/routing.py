@@ -13,8 +13,9 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Literal
 
+from evidenceline.answer.numbers import read_numbers
 from evidenceline.dataset import SUM_KEY
-from evidenceline.guidance.scope import NUMERIC_QUESTION
+from evidenceline.guidance.scope import NAMED_ANALYTE, NUMERIC_QUESTION
 
 DRINKING_WATER_ANALYTES: tuple[str, ...] = ("PFOS", "PFHxS", "PFOA", "PFBS")
 """Analytes with a drinking-water value in ``guidelines.json`` under at least one rule."""
@@ -28,6 +29,15 @@ _OTHER_MEDIUM = re.compile(
 )
 """A medium other than drinking water. Only drinking-water values are loaded, so such a question gets none."""
 _WATER_WORD = re.compile(r"\b(?:drinking[\s-]*water|potable|tap water|ADWG|water)\b", re.IGNORECASE)
+_COMPARES = re.compile(
+    r"\b(?:differen(?:ce|ces|t)|differ|compar(?:e|es|ed|ison)|chang(?:e|es|ed)|versus|vs|lower(?:ed)?|raised)\b",
+    re.IGNORECASE,
+)
+_THE_UPDATE = re.compile(r"\b(?:2025|updates?|updated|ADWG|NHMRC)\b", re.IGNORECASE)
+"""With :data:`_COMPARES`: a question about how the 2025 drinking-water values differ from PFAS NEMP 3.0 ('What did
+the 2025 update change for PFOS?'), which needs both rules' values although it does not say 'value' or 'limit'.
+'NEMP' alone is not enough: 'How has PFOS sampling changed in the new NEMP?' asks about sampling."""
+_DRINKING_WATER = re.compile(r"\b(?:drinking[\s-]*water|potable|tap water|ADWG)\b", re.IGNORECASE)
 
 _VERDICT_WORD = (
     r"(?:contaminated|polluted|safe|unsafe|dangerous|harmful|toxic|hazardous|drinkable|potable|fit to drink|clean)"
@@ -79,21 +89,96 @@ _ABOUT_SITE = re.compile(
     r"concentrations?|PFAS|PFOS|PFHxS|PFOA|PFBS|it)\b",
     re.IGNORECASE,
 )
+_CLAUSE = re.compile(r"(?<=[.?!;,:])\s+")
+"""Where a question splits into clauses: at punctuation followed by a space, so '0.05' stays whole. A verdict often
+comes after the result it is about: 'My groundwater has 0.1 ug/L PFOA, does my site fail?'."""
+_OWN = r"(?:my|our|this|that|their|your|his|her)"
+_THING = (
+    r"(?:site|sites|bore|bores|well|wells|water|groundwater|result|results|sample|samples|land|soil|property|block|"
+    r"house|home|reading|readings|level|levels|tank|dam|pool)"
+)
+_OWN_THING = re.compile(rf"\b{_OWN}\s+(?:[\w-]+\s+){{0,2}}?{_THING}\b", re.IGNORECASE)
+"""The visitor's own site, water or result: 'my site', 'our bore water', 'this PFOS result'."""
+_NOT_BETWEEN = r"(?!(?:needs?|needed|has|have|had|must|required|detection|reporting|laboratory|lab)\b)"
+"""Words that never come between the subject and the comparison of a verdict question: 'Does my site need to pass an
+audit?' asks what the rules require, and 'our detection level' and 'the lab reporting limit' are the laboratory's,
+not a result."""
+_COMPARED = (
+    r"(?:(?:fail(?:s|ed)?|pass(?:es|ed)?|exceed\w*)\b(?!\s+(?:the\s+|its\s+|their\s+)?holding\s+times?\b)|"
+    rf"(?:over|above|under|below|within|beyond)\s+(?:the\s+|a\s+)?(?:{_NOT_BETWEEN}[\w.-]+\s+){{0,3}}?"
+    r"(?:limits?|guidelines?|values?|levels?|criteri(?:on|a)|standards?|thresholds?)\b"
+    r"(?!\s+of\s+(?:reporting|detection|quantitation)\b))"
+    r"(?!(?:\s+[\w-]+){0,3}?\s+(?:reportable|notifiable|report\w*|notif\w*)\b)"
+)
+"""A result compared with a limit ('fail', 'exceed', 'over the drinking water limit'). Not a sample past its holding
+time, a result below the laboratory's limit of reporting, or a comparison followed by a question about reporting it
+('Is my result above the limit reportable to DWER?', 'Does a result above the limit need reporting?'): those ask how
+the rules work."""
+_YES_NO = r"(?:is|are|was|were|has|have|does|do|did|will|would)"
+_CLAUSE_VERDICTS = (
+    re.compile(
+        rf"^{_YES_NO}\s+{_OWN}\s+(?:{_NOT_BETWEEN}[\w-]+\s+){{0,2}}?{_THING}\s+(?:{_NOT_BETWEEN}[\w-]+\s+){{0,2}}?"
+        rf"{_COMPARED}",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^(?:should|do|must)\s+(?:i|we|they)\s+stop\s+(?:drinking|swimming|eating|using\s+(?:the\s+|my\s+|our\s+)?"
+        r"(?:bore\s+|tank\s+|tap\s+|well\s+|rain\s*|ground\s*)?water)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^(?:am\s+i|are\s+we|are\s+(?:my|our)\s+(?:kids|children|family))\s+(?:safe|at\s+risk|in\s+danger|ok|okay|"
+        r"going\s+to\s+be\s+(?:ok|okay|fine|sick))\b(?!\s+(?:to|for|with)\b)"
+        r"(?!\s+of\s+(?:an?\s+)?(?:penalt(?:y|ies)|fines?|prosecution|breach\w*|offences?)\b)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^(?:should|must)\s+(?:i|we)\s+(?:sell|buy|move\s+out\s+of|leave)\s+(?:my|our|the|this|a)\s+"
+        r"(?:house|home|property|land|block)\b",
+        re.IGNORECASE,
+    ),
+)
+"""Verdict questions about the visitor's own situation, at the start of a clause: 'Does my site fail?', 'Is my result
+over the limit?', 'Should I stop drinking my bore water?', 'Am I safe?', 'Should I sell my house because of PFAS?'.
+'Am I OK to wear sunscreen when sampling?' asks about a method, so 'OK to' is left out here, and 'Are we at risk of a
+penalty?' asks about the law."""
+_WHEN_OWN = (
+    re.compile(rf"^{_YES_NO}\s+(?:{_NOT_BETWEEN}[\w.+/-]+\s+){{0,5}}?{_COMPARED}", re.IGNORECASE),
+    re.compile(
+        r"^(?:should|do|must|need)\s+(?:i|we)\s+(?:need\s+to\s+|still\s+)?(?:be\s+)?(?:worr(?:y|ied)|concerned|"
+        r"scared|afraid|alarmed)\b(?!\s+about\s+(?:the\s+|a\s+|any\s+)?(?:cross[\s-]*contamination|holding\s+times?|"
+        r"which|how|what|when|whether|sampling|QA|QC|quality|paperwork|reporting|procedures?|methods?)\b)",
+        re.IGNORECASE,
+    ),
+)
+"""Verdict questions only when the question names the visitor's own site, water or result, or a concentration: 'Is
+PFOS at 0.05 ug/L above the limit?', 'Should I be worried about PFAS in my tap water?'. Without one, 'Is a result
+above the limit reported to DWER?' and 'Do we need to worry about cross contamination when sampling?' ask how the
+rules work. The words before the comparison are few, so 'Do I need to report if our result is over the limit?' is
+a question about reporting, not a verdict."""
 
 
 def drinking_water_analytes(question: str) -> tuple[str, ...]:
     """The analytes whose drinking-water values the question asks for, in a fixed order; empty if none.
 
-    The question must ask for a value (a limit, guideline value, criterion, level or concentration), name PFOS,
-    PFHxS, PFOA, PFBS or the PFOS and PFHxS sum, and not name another medium such as soil or fresh water.
+    The question must not name another medium such as soil or fresh water, and must either ask for a value (a
+    limit, guideline value, criterion, level, concentration or number) and name PFOS, PFHxS, PFOA, PFBS or the PFOS
+    and PFHxS sum, or ask how the 2025 drinking-water values changed ('What did the 2025 update change for PFOS?').
+    A question about the change that names no analyte ('What is the difference between PFAS NEMP 3.0 and the 2025
+    drinking water values?') gets every analyte with a drinking-water value, so both rules' tables are shown.
     """
-    if not NUMERIC_QUESTION.search(question) or _OTHER_MEDIUM.search(question):
+    if _OTHER_MEDIUM.search(question):
+        return ()
+    about_the_update = bool(_COMPARES.search(question) and _THE_UPDATE.search(question))
+    if not (NUMERIC_QUESTION.search(question) or about_the_update):
         return ()
     found: list[str] = []
     if _SUM.search(question):
         found.append(SUM_KEY)
     remaining = _SUM.sub(" ", question)
     found.extend(name for name in DRINKING_WATER_ANALYTES if _ANALYTE[name].search(remaining))
+    if not found and about_the_update and _DRINKING_WATER.search(question):
+        return DRINKING_WATER_ANALYTES
     return tuple(found)
 
 
@@ -102,8 +187,30 @@ def names_other_medium(question: str) -> bool:
     return bool(NUMERIC_QUESTION.search(question) and _OTHER_MEDIUM.search(question))
 
 
+def asks_other_medium_value(question: str) -> bool:
+    """Whether the question asks for one analyte's guideline value in a medium other than drinking water: 'What is
+    the recreational water quality guideline value for PFOS?', 'What is the health investigation level for lead in
+    soil?'. Only drinking-water values are verified, so such a value is never stated, and the model is not asked.
+    A question that names no analyte ('What are health investigation levels for soil?') asks what the levels are,
+    and goes to the model as usual."""
+    return names_other_medium(question) and bool(NAMED_ANALYTE.search(question))
+
+
 def mentions_water(question: str) -> bool:
     return bool(_WATER_WORD.search(question))
+
+
+def _states_a_result(question: str) -> bool:
+    return any(q.kind in {"water", "soil"} for q in read_numbers(question))
+
+
+def _yes_no_verdict(text: str) -> bool:
+    if not _YES_NO_START.search(text):
+        return False
+    if _PREDICATE_VERDICT.search(text):
+        return True
+    soft = _SOFT_VERDICT.search(text)
+    return bool(soft and _ABOUT_SITE.search(text[: soft.start()]))
 
 
 def asks_for_verdict(question: str) -> bool:
@@ -115,15 +222,24 @@ def asks_for_verdict(question: str) -> bool:
     question that only uses such a word as a label ('Are there rules for contaminated sites?') or asks how
     something is done ('When do I have to report a suspected contaminated site?'). Also true for a request to
     declare a verdict ('write that the results prove the site is contaminated'), whatever word it starts with.
+
+    Each clause is also read on its own, so a verdict after the result it is about is caught: 'My bore has PFOS at
+    0.1 ug/L, is that dangerous?', 'our bore tested 0.02 ug/L PFHxS, can my kids still swim in the pool'. So are
+    questions about the visitor's own result ('Does my site fail?', 'Is PFOS at 0.05 ug/L above the limit?') and
+    their own safety or decisions ('Am I safe?', 'Should I stop drinking my bore water?'); see
+    :data:`_CLAUSE_VERDICTS` and :data:`_WHEN_OWN`.
     """
     if any(p.search(question) for p in (_SAFE_TO, _MEANS, _CAN_WE, _ASKED_TO_DECLARE)):
         return True
-    if not _YES_NO_START.search(question):
-        return False
-    if _PREDICATE_VERDICT.search(question):
+    if _yes_no_verdict(question):
         return True
-    soft = _SOFT_VERDICT.search(question)
-    return bool(soft and _ABOUT_SITE.search(question[: soft.start()]))
+    own = bool(_OWN_THING.search(question)) or _states_a_result(question)
+    for clause in _CLAUSE.split(question.strip()):
+        if _yes_no_verdict(clause) or _CAN_WE.search(clause) or any(p.search(clause) for p in _CLAUSE_VERDICTS):
+            return True
+        if own and any(p.search(clause) for p in _WHEN_OWN):
+            return True
+    return False
 
 
 # --- Questions about Evidenceline itself ----------------------------------------------------------------------------
@@ -140,12 +256,50 @@ _TOOL = rf"(?:{_TOOL_STRICT}|this\s+site)"
 """Also 'this site', but only where it can only mean the website: 'what is this site?', 'how does this site work?'."""
 _ME = r"(?:i|we)"
 _WHAT_IS = r"(?:what|wat|wht|wot)(?:\s+(?:exactly|actually))?(?:\s+is|\s*'s|s)"
-_HOW_DOES = r"how(?:\s+(?:exactly|actually))?(?:\s+(?:does|dose|do|would|will|can|did)|\s*'s)"
+_HOW_DOES = r"(?:how|hw)(?:\s+(?:exactly|actually))?(?:\s+(?:does|dose|do|would|will|can|did)|\s*'s)"
 _ADVERB = r"(?:\s+(?:all|exactly|even|actually|really|just))?"
+
+
+def _written(*codes: int) -> str:
+    """Letters given by their code points, so this file stays plain ASCII."""
+    return "".join(map(chr, codes))
+
+
+_POLITE = r"(?:\s+(?:krub|khrap|krap|ka|kha|kah))?"
+"""The Thai polite endings 'khrap' and 'kha' in Latin letters ('sawasdee krub')."""
+_THAI_POLITE = f"(?:{_written(0x0E04, 0x0E23, 0x0E1A)}|{_written(0x0E04, 0x0E30)})?"
+"""The Thai polite endings 'khrap' and 'kha', as :func:`_plain` leaves them (without their vowel and tone marks)."""
+_HELLO_ELSEWHERE = "|".join(
+    [
+        r"hola|bonjour|salut|hallo|guten\s+tag|ciao|namaste|konnichiwa|ni\s*hao|xin\s+chao|sawa?s?dee" + _POLITE,
+        _written(0x0E2A, 0x0E27, 0x0E2A, 0x0E14) + _THAI_POLITE,  # Thai 'sawatdee'
+        _written(0x4F60, 0x597D),  # Chinese 'ni hao'
+        _written(0x60A8, 0x597D),  # Chinese 'nin hao'
+        _written(0x3053, 0x3093, 0x306B, 0x3061, 0x306F),  # Japanese 'konnichiwa'
+        _written(0xC548, 0xB155, 0xD558, 0xC138, 0xC694),  # Korean 'annyeonghaseyo'
+        _written(0x0645, 0x0631, 0x062D, 0x0628, 0x0627),  # Arabic 'marhaba'
+        _written(0x043F, 0x0440, 0x0438, 0x0432, 0x0435, 0x0442),  # Russian 'privet'
+        "xin ch" + _written(0x00E0) + "o",  # Vietnamese 'xin chao', with its accent
+    ]
+)
+"""Hello in other languages a visitor may try first. A question in another language still goes to the search."""
+_THANKS_ELSEWHERE = "|".join(
+    [
+        r"(?:muchas\s+)?gracias|merci(?:\s+beaucoup)?|danke|grazie|obrigad[oa]|terima\s+kasih|arigato|xie\s*xie|"
+        r"kob\s*kh?un" + _POLITE,
+        _written(0x0E02, 0x0E2D, 0x0E1A, 0x0E04, 0x0E13) + _THAI_POLITE,  # Thai 'khop khun'
+        _written(0x8C22, 0x8C22),  # Chinese 'xie xie'
+        _written(0x3042, 0x308A, 0x304C, 0x3068, 0x3046),  # Japanese 'arigatou'
+        _written(0xAC10, 0xC0AC, 0xD569, 0xB2C8, 0xB2E4),  # Korean 'kamsahamnida'
+        _written(0x0634, 0x0643, 0x0631, 0x0627),  # Arabic 'shukran'
+        _written(0x0441, 0x043F, 0x0430, 0x0441, 0x0438, 0x0431, 0x043E),  # Russian 'spasibo'
+        "c" + _written(0x1EA3) + "m " + _written(0x01A1) + "n",  # Vietnamese 'cam on'
+    ]
+)
 _GREETING = (
     r"(?:h+e+l+o+|hal+o+|h+i+|hiy+a+|he+y+a*|howdy|greetings|g'?day|good\s+(?:morning|afternoon|evening|day)|"
-    r"morning|afternoon|evening|yo|sup|gm)(?:\s+(?:there|all|everyone|team|evidence\s*line|claude|bot|you|mate|"
-    r"guys|folks|world))?"
+    rf"morning|afternoon|evening|yo|sup|gm|{_HELLO_ELSEWHERE})(?:\s+(?:there|all|everyone|team|evidence\s*line|"
+    r"claude|bot|you|mate|guys|folks|world))?"
 )
 _GREETING_START = re.compile(rf"^{_GREETING}(?:\s+|$)")
 _SMALL_TALK = re.compile(
@@ -156,14 +310,15 @@ _SMALL_TALK = re.compile(
 _THANKS_WORD = (
     r"(?:(?:many\s+)?thanks|thank\s*(?:you|u)|thnks|thnk\s*(?:you|u)|tysm|thnx|thanx|thks|thx|ty|ta|cheers|"
     r"much\s+appreciated|"
-    r"appreciate\s+it)(?:\s+(?:a\s+lot|so\s+much|very\s+much|heaps|again|kindly|for\s+(?:your|the)\s+help|"
+    rf"appreciate\s+it|{_THANKS_ELSEWHERE})(?:\s+(?:a\s+lot|so\s+much|very\s+much|heaps|again|kindly|"
+    r"for\s+(?:your|the)\s+help|"
     r"for\s+that|for\s+this|evidence\s*line|mate))*"
 )
 _ACK_WORD = (
     r"(?:ok(?:ay)?|great|cool|awesome|perfect|nice|good|brilliant|lovely|sure|alright|wow|interesting|neat|"
     r"impressive|understood|got\s+it|i\s+see|(?:ah|oh)\s+ok(?:ay)?|(?:that\s+)?makes\s+sense|love\s+it|well\s+done|"
     r"great\s+job|nice\s+work|this\s+is\s+(?:great|cool|neat|impressive)|that\s+helps|that'?s\s+helpful|"
-    r"very\s+helpful|(?:good)?bye|see\s+(?:ya|you))"
+    r"very\s+helpful|that\s+was\s+(?:very\s+|really\s+|so\s+)?(?:helpful|useful)|(?:good)?bye|see\s+(?:ya|you))"
 )
 _THANKS = re.compile(rf"(?:{_THANKS_WORD}|{_ACK_WORD})(?:\s+(?:{_THANKS_WORD}|{_ACK_WORD}))*")
 """Thanks, a goodbye, or a bare acknowledgement ('ok', 'great', 'got it thanks')."""
@@ -182,8 +337,9 @@ _ABOUT = re.compile(
             rf"{_WHAT_IS}\s+(?:the\s+)?name\s+of\s+{_TOOL_STRICT}|what(?:\s+is|\s*'s|s)\s+(?:your|its)\s+name",
             r"what\s+do\s+(?:you|they|we|i|people)\s+call\s+(?:this|it|you)|"
             r"(?:does|do)\s+(?:this|it|you)\s+have\s+a\s+name",
-            rf"{_WHAT_IS}\s+this\s+(?:web\s*)?site(?:\s+about)?",
-            r"what\s+are\s+you(?:\s+(?:for|exactly|about|called))?",
+            rf"{_WHAT_IS}\s+this\s+(?:web\s*)?site(?:\s+(?:about|for))?",
+            r"(?:what|who)\s+(?:are|r)\s+(?:you|u)(?:\s+(?:for|exactly|about|called))?",
+            r"(?:your\s+)?name",
             rf"{_WHAT_IS}\s+(?:the\s+)?(?:point|purpose|idea|deal)\s+(?:of|with)\s+{_TOOL_STRICT}",
             rf"{_WHAT_IS}\s+the\s+idea(?:\s+here)?",
             r"what'?s\s+going\s+on(?:\s+here)?|what'?s\s+in(?:\s+here)?",
@@ -204,23 +360,26 @@ _ABOUT = re.compile(
             r"(?:i|we|you)\s+(?:ask|answer|cover)(?:\s+(?:you|it|here|about))?",
             r"what\s+are\s+you\s+able\s+to\s+(?:answer|do)|what\s+are\s+your\s+capabilities",
             rf"can\s+{_ME}\s+ask(?:\s+you)?\s+anything",
+            r"(?:i\s+have|i'?ve\s+got|(?:can|could|may)\s+i\s+ask(?:\s+you)?)\s+a\s+(?:quick\s+)?question",
             # examples
             r"(?:(?:can|could)\s+you\s+)?(?:show|give)\s+me\s+(?:an?\s+|some\s+)?examples?(?:\s+questions?)?",
             r"(?:any\s+)?examples?|(?:a\s+)?sample\s+questions?|suggest\s+(?:a\s+)?questions?|how\s+about\s+an\s+example",
             rf"{_WHAT_IS}\s+a\s+good\s+question(?:\s+to\s+ask)?",
             # who made it
             rf"who\s+(?:made|built|created|wrote|runs|owns|designed|developed|maintains|is\s+behind)\s+{_TOOL_STRICT}",
-            r"who\s+is\s+the\s+(?:developer|author|creator|maker)|who\s+are\s+you",
+            r"who\s+is\s+the\s+(?:developer|author|creator|maker)",
             r"is\s+this\s+yours|is\s+this\s+your\s+(?:project|work|tool)",
             # help
             r"(?:can|could|will|would)\s+you\s+help(?:\s+me)?",
             rf"how\s+(?:can|could|do|does|will)\s+{_TOOL_STRICT}\s+help(?:\s+me)?",
             r"(?:i\s+need\s+(?:some\s+)?|can\s+i\s+get\s+(?:some\s+)?)?help(?:\s+me)?",
+            r"(?:(?:can|could|will|would)\s+you\s+)?help\s+me\s+with\s+something",
             # AI
             r"(?:are|is)\s+(?:you|this|it)\s+(?:an?\s+)?(?:real\s+)?(?:ai|a\.i|bot|robot|chat\s*bot|human|person|real|"
             r"claude|chat\s*gpt|gpt|llm)(?:[\s-]+powered|\s+or\s+(?:an?\s+)?(?:ai|bot|human|person|real\s+person))?",
             r"(?:does|do)\s+(?:this|it|you)\s+use\s+(?:ai|chat\s*gpt|gpt|claude|an?\s+llm)|"
-            r"is\s+(?:this|it)\s+using\s+(?:ai|chat\s*gpt|gpt|claude)",
+            r"is\s+(?:this|it)\s+(?:using|powered\s+by|run\s+by|built\s+(?:on|with))\s+(?:an?\s+)?"
+            r"(?:ai|chat\s*gpt|gpt|claude|llm)",
             r"(?:which|what)\s+(?:model|ai|llm)(?:\s+(?:is\s+(?:this|it)|are\s+you|do\s+you\s+use|"
             r"does\s+(?:it|this|evidence\s*line)\s+use))?",
             r"am\s+i\s+(?:talking|speaking|chatting)\s+(?:to|with)\s+(?:an?\s+)?(?:bot|ai|robot|human|person|real\s+person)",
@@ -249,9 +408,11 @@ _ABOUT = re.compile(
             r"how\s+much\s+(?:does\s+(?:this|it)\s+cost|is\s+(?:this|it))",
             # visitors introducing themselves, and a bare "what?"
             r"(?:i'?m|i\s+am)\s+(?:new(?:\s+here)?|just\s+(?:looking|browsing))",
+            r"(?:i'?m|i\s+am)\s+(?:from|with|a|an)(?:\s+[\w'-]+){1,3}|(?:i'?m|i\s+am|my\s+name\s+is)\s+[a-z][\w'-]*"
+            r"(?:\s+(?:from|with|at)(?:\s+[\w'-]+){1,3})?",
             r"first\s+time(?:\s+here)?|(?:just\s+)?(?:looking|browsing|checking\s+(?:this|it)\s+out)",
             r"huh|what|hmm+|eh",
-            r"test(?:ing)?(?:\s+\d+)*",
+            r"test(?:ing)?(?:\s+(?:test(?:ing)?|\d+))*",
         ]
     )
 )
@@ -266,8 +427,6 @@ _FILLER_ONLY = re.compile(_FILLER_WORDS)
 _SENTENCE_BREAK = re.compile(r"[?.!,;:\n" + chr(0x2013) + chr(0x2014) + r"]+|\s+-\s+")
 _EMOTICON = re.compile(r"(?<!\w)(?:[:;=8][-'^]?[)(\]\[dpo3/\\|*]+|<3+|x-?d+)(?!\w)")
 _QUOTES = str.maketrans({chr(0x2018): "'", chr(0x2019): "'", '"': " ", chr(0x201C): " ", chr(0x201D): " "})
-_HAZARD_INDEX = re.compile(r"\W*HI\W*")
-"""A bare 'HI' in capitals is the risk-assessment term hazard index, not a greeting."""
 
 
 @dataclass(frozen=True)
@@ -279,9 +438,14 @@ class AboutQuestion:
 
 
 def _plain(question: str) -> str:
-    """Lower case, straight quotes, no emoji, symbols or emoticons: 'Hi' with a waving hand and ':)' reads 'hi'."""
-    text = _EMOTICON.sub(" ", question.translate(_QUOTES).lower())
-    return "".join(" " if unicodedata.category(ch) in {"So", "Sk", "Cf", "Mn"} else ch for ch in text)
+    """Lower case, straight quotes, no emoji, symbols or emoticons: 'Hi' with a waving hand and ':)' reads 'hi'.
+    Full-width letters read as plain ones (NFKC), and combining marks are dropped, so the Thai 'sawatdee' keeps its
+    letters in one word."""
+    text = _EMOTICON.sub(" ", unicodedata.normalize("NFKC", question).translate(_QUOTES).lower())
+    return "".join(
+        "" if unicodedata.category(ch) == "Mn" else " " if unicodedata.category(ch) in {"So", "Sk", "Cf"} else ch
+        for ch in text
+    )
 
 
 def _strip_start(segment: str) -> tuple[str, bool]:
@@ -307,7 +471,7 @@ def about_evidenceline(question: str) -> AboutQuestion | None:
     'Hi, what is the PFOS limit?', 'Can you help me find the PFOS limit?' and 'Who owns this site?' do not: they go
     to the guidance search as usual.
     """
-    if len(question) > _MAX_ABOUT_CHARS or _HAZARD_INDEX.fullmatch(question):
+    if len(question) > _MAX_ABOUT_CHARS:
         return None
     if question.strip() and not any(ch.isalnum() for ch in question):
         return AboutQuestion("about", greeted=False)  # only emoji or punctuation, such as a waving hand or '??'

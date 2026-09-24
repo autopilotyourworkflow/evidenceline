@@ -25,6 +25,10 @@ stage 2.
   connector (`/mcp`). People only ever see the website's address; the Worker forwards to Render.
 - **The Anthropic key** lives only in Render's settings, in a dedicated workspace with a 15 USD monthly limit.
   Without it, the question box still works but shows passages only.
+- **Limits** (set in `render.yaml`): each visitor's address may ask 10 questions an hour and 30 a day that reach the
+  AI model. Each question counts once, even when the model writes a second answer. Greetings, the fixed replies,
+  "not covered" and passages-only answers use none of these; they have their own fixed limit of 120 an hour, which
+  only stops a flood. Every model call, second answers included, counts against 300 a day across everyone.
 - **Turnstile** (the "not a robot" check in the question box, optional): its public site key is baked into the website
   build (`VITE_TURNSTILE_SITE_KEY`); its secret lives only on Render (`TURNSTILE_SECRET`).
 

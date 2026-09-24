@@ -5,31 +5,39 @@
    numbers, phone numbers). A message that is only a greeting, thanks, or a question about Evidenceline itself
    ('Hello, how does this work?') gets a fixed reply here: no search and no model.
 2. If it asks for a PFAS drinking-water value, take BOTH rules' values from ``guidelines.json`` (never from text).
-3. Search the indexed guidance for up to 8 passages. A "not covered" result carries questions to try instead
-   (:mod:`evidenceline.answer.suggest`) and, when the question looks misspelt and a corrected spelling finds
-   passages, that spelling as ``did_you_mean`` (:mod:`evidenceline.guidance.spelling`). It is only offered: the
-   question is never rewritten, and the corrected one is asked only if the visitor chooses it. "Not covered" stops
-   here, and so does a question asking for a verdict (is the site contaminated, is the water safe): both return
-   without calling a model. The one exception
+3. Search the indexed guidance for up to 8 passages. A question asking for a verdict (is the site contaminated, is
+   the water safe, does my site fail) stops here with a fixed reply, whatever the search found. A "not covered"
+   result carries questions to try instead (:mod:`evidenceline.answer.suggest`) and, when the question looks
+   misspelt and a corrected spelling finds passages, that spelling as ``did_you_mean``
+   (:mod:`evidenceline.guidance.spelling`). It is only offered: the question is never rewritten, and the corrected
+   one is asked only if the visitor chooses it. "Not covered" stops here without calling a model. The one exception
    is a borderline "not covered" (the search's closest passages are a near miss, see
    :data:`evidenceline.guidance.search.BORDERLINE_COVERAGE`): with live answers on, those passages go to the model
    with an added instruction to reply NOT_COVERED unless they answer the question. Another state's rules, prices,
    an instruction to the system, a document that is not indexed, or anything below the band never reach a model.
-4. Otherwise ask the model for 2 to 4 cited sentences from the passages and values only.
-5. Check the answer in code: every check in :mod:`evidenceline.answer.verify`, plus two of the prompt's plain-wording
-   rules (every sentence under :data:`~evidenceline.answer.prompt.MAX_SENTENCE_WORDS` words, and no run of more
-   than :data:`~evidenceline.answer.prompt.MAX_QUOTED_WORDS` words copied from a passage). If any check fails, the
-   model is asked once more; if that fails too, the answer is withheld and only the passages are shown, with the
-   names of the checks it failed. Its text is never shown, not even in part.
+   Nor do two kinds of question the passages were found for: one asking for another medium's value (soil,
+   recreational water), which Evidenceline never states, and one whose only searchable content is one everyday
+   word ('time', 'coffee'). Both get the passages without a written answer.
+4. Otherwise ask the model for 2 or 3 cited sentences from the passages and values only.
+5. Check the answer in code: every check in :mod:`evidenceline.answer.verify`, plus three plain-wording checks
+   (every sentence under :data:`~evidenceline.answer.prompt.MAX_SENTENCE_WORDS` words, no run of more than
+   :data:`~evidenceline.answer.prompt.MAX_QUOTED_WORDS` words copied from a passage, and no talk about what the
+   answer was or was not given). If any check fails, the model is asked once more, unless the question has already
+   taken :data:`SECOND_ATTEMPT_WITHIN` seconds; if that fails too, the answer is withheld and only the passages are
+   shown, with the names of the checks it failed. Its text is never shown, not even in part.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
+import traceback
+import unicodedata
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
+from time import monotonic
 
 from evidenceline.answer import routing
 from evidenceline.answer.clients import ModelClient, ModelPausedError, ModelUnavailableError
@@ -50,18 +58,29 @@ from evidenceline.answer.verify import citations, sentences, verify
 from evidenceline.errors import EvidencelineError
 from evidenceline.guidance.models import GuidanceSearch, Passage
 from evidenceline.guidance.scope import NUMERIC_NOTE, read_question
-from evidenceline.guidance.search import default_index_path, indexed_words, search_guidelines
+from evidenceline.guidance.search import default_index_path, indexed_words, one_everyday_word, search_guidelines
 from evidenceline.guidance.spelling import corrected
 from evidenceline.redact import RedactionConfig, Redactor
 from evidenceline.screening import INVESTIGATION_LEVEL, RULE_CHOICE
 
-MAX_PASSAGES = 8
+logger = logging.getLogger("evidenceline.answer")
 
-GUARD_RAIL_REPLY = (
+MAX_PASSAGES = 8
+SECOND_ATTEMPT_WITHIN = 25.0
+"""Seconds from the question's arrival after which an answer that failed a check gets no second attempt. A model
+call may take up to 25 s (:data:`evidenceline.answer.clients.TIMEOUT`) and the website gives up after 60 s, so one
+question always finishes well inside that."""
+
+GUARD_RAIL_CORE = (
     "Evidenceline does not decide whether a site is contaminated or whether water is safe. A guideline value is "
     "an investigation level, not a finding that water is unsafe or a site is contaminated: a result above it "
     "means look further. In Western Australia, DWER classifies sites under the Contaminated Sites Act 2003 on the "
-    "evidence. The passages below are what the indexed guidance says on the subject."
+    "evidence."
+)
+GUARD_RAIL_REPLY = GUARD_RAIL_CORE + " The passages below are what the indexed guidance says on the subject."
+"""The fixed reply to a verdict question; :data:`GUARD_RAIL_CORE` alone when the search found no passages."""
+GUARD_RAIL_EXPLANATION = (
+    "This question asks for a verdict that Evidenceline does not give. No model was called; the reply below is fixed"
 )
 ABOUT_REPLY = (
     'This is Evidenceline. Ask it about assessing contaminated sites, such as PFAS (the "forever chemicals") in '
@@ -96,6 +115,18 @@ VALUES_SOURCE_NOTE = (
 OTHER_MEDIUM_NOTE = (
     "Only PFAS drinking-water values are loaded, so no soil, sediment, recreational or ecological values are given."
 )
+OTHER_MEDIUM_VALUE = (
+    "Evidenceline states only its verified PFAS drinking-water values, so it does not write an answer that gives "
+    "this value, and no AI model was used. Read the value on the cited pages of the official documents below."
+)
+"""Why a question asking for another medium's value (soil, recreational water, fresh water) gets passages only."""
+ONE_WORD = (
+    "The question has only one word to search for, so the passages that use it are shown without a written answer, "
+    "and no AI model was used. Ask a fuller question, such as 'How should groundwater samples be collected?', to get "
+    "a written answer."
+)
+"""Why a question whose only searchable content is one everyday word ('time', 'coffee') gets passages only."""
+SEARCH_FAILED = "The search could not be run just now, so nothing was looked up. Try again in a moment."
 BORDERLINE_INSTRUCTION = (
     "The search found no passage that clearly covers this question: the passages above are the closest ones. "
     f"Answer only if they answer the question itself. If they do not, reply with exactly {NOT_COVERED} and nothing "
@@ -149,12 +180,16 @@ class _Question:
     """One question on its way through the pipeline: holds what every result needs."""
 
     def __init__(self, question: str, index_path: Path | None) -> None:
-        self.text, self.redactions = _redact(question)
+        self.started = monotonic()
+        # Full-width letters and other compatibility forms read as plain ones (NFKC) everywhere below.
+        self.text, self.redactions = _redact(unicodedata.normalize("NFKC", question))
         self.did_you_mean: str | None = None
         self.suggest_from = self.text
         """What suggestions are ranked against: the proposed spelling, when there is one."""
         self.index_path = index_path or default_index_path()
-        analytes = routing.drinking_water_analytes(self.text)
+        self.off_topic = read_question(self.text).off_topic is not None
+        """Prices, pay or an instruction to the system: no value route and no value notes ('price per tonne')."""
+        analytes = () if self.off_topic else routing.drinking_water_analytes(self.text)
         self.values: list[GuidelineValue] = guideline_values(analytes) if analytes else []
         self.notes: list[str] = []
         if self.redactions:
@@ -164,7 +199,7 @@ class _Question:
             )
         if self.values:
             self.notes += [VALUES_SOURCE_NOTE, INVESTIGATION_LEVEL, RULE_CHOICE]
-        elif routing.names_other_medium(self.text):
+        elif routing.names_other_medium(self.text) and not self.off_topic:
             self.notes.append(OTHER_MEDIUM_NOTE)
         self.passages: list[Passage] = []
 
@@ -197,10 +232,35 @@ class _Question:
         found = search_guidelines(self.text, MAX_PASSAGES, index_path=self.index_path)
         self.passages = list(found.passages)
         for note in found.notes:
+            if note == NUMERIC_NOTE and self.off_topic:
+                continue
             shown = VALUE_NOTE if note == NUMERIC_NOTE else note
             if shown not in self.notes and not (self.values and note == NUMERIC_NOTE):
                 self.notes.append(shown)
         return found
+
+
+def _fixed_reply(item: _Question) -> AnswerResult | None:
+    about = routing.about_evidenceline(item.text)
+    if about is None:
+        return None
+    reply = THANKS_REPLY if about.kind == "thanks" else ("Hello. " if about.greeted else "") + ABOUT_REPLY
+    return item.result("about", ABOUT_EXPLANATION, answer=reply)
+
+
+def about_reply(question: str) -> AnswerResult | None:
+    """The fixed reply when the message is only a greeting, thanks or a question about Evidenceline itself, exactly
+    as :func:`answer` gives it; None for any other message. No search and no model, so the web API answers these
+    without a robot check, and they never count against the limits on questions that reach the model."""
+    return _fixed_reply(_Question(question, None))
+
+
+def _log_failure(step: str, exc: Exception) -> None:
+    """Log what failed and where, never the message: it can hold words of the question, and question text is never
+    logged."""
+    frames = traceback.extract_tb(exc.__traceback__)
+    where = f"{Path(frames[-1].filename).name}:{frames[-1].lineno}" if frames else "unknown"
+    logger.error("answer: the %s failed with %s at %s", step, type(exc).__name__, where)
 
 
 def answer(
@@ -210,41 +270,52 @@ def answer(
     index_path: Path | None = None,
     off_note: str = LIVE_OFF_NOTE,
 ) -> AnswerResult:
-    """Answer one question from the indexed guidance, or say plainly why not. Never raises for bad input.
+    """Answer one question from the indexed guidance, or say plainly why not. Never raises for bad input, and never
+    for a failed search: that is an ``error`` result in plain words.
 
     ``client`` None means live answers are off: the passages are returned with ``off_note``.
     """
     item = _Question(question, index_path)
-    about = routing.about_evidenceline(item.text)
-    if about is not None:
-        reply = THANKS_REPLY if about.kind == "thanks" else ("Hello. " if about.greeted else "") + ABOUT_REPLY
-        return item.result("about", ABOUT_EXPLANATION, answer=reply)
+    fixed = _fixed_reply(item)
+    if fixed is not None:
+        return fixed
     try:
         found = item.search()
     except EvidencelineError as exc:
         return item.result("error", str(exc))
     except sqlite3.Error:
         return item.result("error", "The guidance index could not be read. It needs to be rebuilt on the server.")
+    except Exception as exc:  # any other failure is still a plain reply, never a server error
+        _log_failure("search", exc)
+        return item.result("error", SEARCH_FAILED)
 
+    # Before "not covered", so a verdict question gets the fixed reply, never the not-covered wording. Except for a
+    # question about prices or one that tries to instruct the system: its reason for "not covered" says more.
+    if routing.asks_for_verdict(item.text) and not item.off_topic:
+        if not item.passages:
+            return item.result("guard_rail", GUARD_RAIL_EXPLANATION + ".", answer=GUARD_RAIL_CORE)
+        return item.result(
+            "guard_rail",
+            GUARD_RAIL_EXPLANATION + ", and the passages are from the indexed guidance.",
+            answer=GUARD_RAIL_REPLY,
+        )
     if found.status == "not covered":
         item.did_you_mean = _did_you_mean(item)
         closest = list(found.closest_passages)
         # A misspelt question goes no further: the corrected spelling is offered instead of asking the model.
-        if closest and client is not None and item.did_you_mean is None and not routing.asks_for_verdict(item.text):
+        if closest and client is not None and item.did_you_mean is None:
             item.passages = closest
             return _ask_model(item, client, borderline=True)
         extra = " The verified guideline values are shown below." if item.values else ""
         return item.result("not_covered", found.explanation + extra)
-    if routing.asks_for_verdict(item.text):
-        return item.result(
-            "guard_rail",
-            "This question asks for a verdict that Evidenceline does not give. No model was called; the reply "
-            "below is fixed, and the passages are from the indexed guidance.",
-            answer=GUARD_RAIL_REPLY,
-        )
     if client is None:
         item.notes.append(off_note)
         return item.result("passages_only", "Passages from the indexed guidance, best match first. " + off_note)
+    # Passages without a model call: another medium's value, which is never stated, and one everyday word.
+    if routing.asks_other_medium_value(item.text):
+        return item.result("passages_only", OTHER_MEDIUM_VALUE)
+    if one_everyday_word(item.text):
+        return item.result("passages_only", ONE_WORD)
     return _ask_model(item, client)
 
 
@@ -261,6 +332,9 @@ def _did_you_mean(item: _Question) -> str | None:
         item.suggest_from = fixed
         second = search_guidelines(fixed, MAX_PASSAGES, index_path=item.index_path)
     except (EvidencelineError, sqlite3.Error):
+        return None
+    except Exception as exc:  # the offer is optional: without it the question is still answered "not covered"
+        _log_failure("spelling search", exc)
         return None
     return fixed if second.status == "passages found" else None
 
@@ -337,14 +411,47 @@ def _check_copied_runs(answer: str, passages: Sequence[PassageText]) -> Verifica
     )
 
 
+_INSIDE_WORDING = re.compile(
+    r"\b(?:verified\s+(?:guideline\s+)?(?:values?|table)|guideline\s+values?\s+(?:list|given|supplied|provided)|"
+    r"(?:was|were|is|are)\s+(?:not\s+)?(?:supplied|provided|given)\s+(?:here|to\s+(?:me|you|quote|state))|"
+    r"(?:given|provided|supplied)\s+passages?|passages?\s+(?:given|provided|supplied)|available\s+here|"
+    r"to\s+(?:quote|state)\s+here)\b",
+    re.IGNORECASE,
+)
+"""Wording about what the model was or was not given ('no verified value was supplied to quote here', 'the
+passages given do not say'): it tells the reader how Evidenceline works inside instead of what the guidance says.
+'The passages do not give a holding time' is allowed: the page calls its sources passages too."""
+
+
+def _check_inside_wording(answer: str) -> VerificationCheck:
+    """An answer speaks about the guidance, never about its own inputs. The detail names sentences, never words."""
+    found = [str(n) for n, sentence in enumerate(sentences(answer), 1) if _INSIDE_WORDING.search(sentence)]
+    if found:
+        detail = (
+            f"sentence {', '.join(found)} talks about what the answer was or was not given (the passages or the "
+            "verified values) instead of what the guidance says: say what the guidance says, or leave it out."
+        )
+        return VerificationCheck(name="about the guidance", passed=False, detail=detail)
+    return VerificationCheck(
+        name="about the guidance",
+        passed=True,
+        detail="Every sentence speaks about the guidance, not about what the answer was given.",
+    )
+
+
 def _check_answer(
     answer: str, passages: Sequence[PassageText], values: Sequence[GuidelineValue], value_lines: Sequence[str]
 ) -> Verification:
-    """Every check in :func:`evidenceline.answer.verify.verify`, then the two plain-wording checks, in one record."""
+    """Every check in :func:`evidenceline.answer.verify.verify`, then the plain-wording checks, in one record."""
     record = verify(answer, passages, values, value_lines)
     if not answer.strip():
         return record
-    checks = [*record.checks, _check_sentence_length(answer), _check_copied_runs(answer, passages)]
+    checks = [
+        *record.checks,
+        _check_sentence_length(answer),
+        _check_copied_runs(answer, passages),
+        _check_inside_wording(answer),
+    ]
     failed = [c for c in checks if not c.passed]
     if failed:
         summary = f"{len(failed)} of {len(checks)} checks failed: " + "; ".join(c.name for c in failed) + "."
@@ -354,9 +461,10 @@ def _check_answer(
 
 
 def _ask_model(item: _Question, client: ModelClient, *, borderline: bool = False) -> AnswerResult:
-    """Ask the model; if its answer fails a check, ask once more with the names of the failed checks. Each answer
-    is checked in full; one that fails is never shown. ``borderline``: the passages are the search's near miss, and
-    the prompt says so (BORDERLINE_INSTRUCTION)."""
+    """Ask the model; if its answer fails a check, ask once more with the names of the failed checks, unless the
+    question has already taken :data:`SECOND_ATTEMPT_WITHIN` seconds. Each answer is checked in full; one that
+    fails is never shown. ``borderline``: the passages are the search's near miss, and the prompt says so
+    (BORDERLINE_INSTRUCTION)."""
     texts = passage_texts(item.passages, item.index_path)
     value_lines = [describe(value) for value in item.values]
     prompt = build_prompt(item.text, texts, value_lines)
@@ -373,6 +481,8 @@ def _ask_model(item: _Question, client: ModelClient, *, borderline: bool = False
     record = _check_answer(reply.text, texts, item.values, value_lines)
     attempts = 1
     if not record.passed:
+        if monotonic() - item.started > SECOND_ATTEMPT_WITHIN:  # no time for a second answer before the page gives up
+            return _withheld(item, record, reply.model, attempts, borderline)
         retry = "\n\n".join([prompt, RETRY_NOTE.format(reasons=_reasons(record))])
         try:
             second = client.complete(SYSTEM, retry)

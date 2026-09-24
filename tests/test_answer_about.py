@@ -130,6 +130,9 @@ ABOUT = [
     "What's your name?",
     "What are you called?",
     "Does it have a name?",
+    # No indexed document covers a hazard index, so a bare "HI" in capitals is a greeting too.
+    "HI",
+    "HI?",
 ]
 
 THANKS = [
@@ -185,9 +188,6 @@ NOT_ABOUT = [
     "Who developed this site?",
     "How was this site used?",
     "What is this site used for?",
-    # HI in capitals is the hazard index.
-    "HI",
-    "HI?",
     "What is a HI?",
     "HI > 1?",
     "What's the deal with auditors?",

@@ -379,10 +379,20 @@ export const TRY = {
     'The check that you are not a robot could not load in this browser, so the question was not sent. The prepared questions above still work.',
   robotLabel: 'Check that you are not a robot',
   loading: 'Looking through the guidelines. This can take up to a minute.',
+  /** The loading line while a question waits for the "not a robot" check, before it is sent. */
+  checking: 'Checking that you are not a robot before your question is sent.',
+  /** The loading line when the check needs the visitor to tick its box; the question is sent with the tick. */
+  tickToSend: 'Please tick the box above to show you are not a robot. Your question is sent as soon as you do.',
+  /** What screen readers hear when an answer is shown, instead of the whole answer. */
+  answerReady: (question: string) => `Answer ready: ${question}`,
   rateLimited: (wait: string) =>
     `Too many questions in a short time. Please try again${wait}, or pick a prepared example above.`,
+  dailyLimit: (wait: string) => `You have reached today's limit of questions. Please try again${wait}, or pick a prepared example above.`,
   paused: 'Live answers are paused for now. The prepared examples above still work.',
   errorTail: 'Please try again later, or pick a prepared example above.',
+  /** After a message that already says to try again or that answers are paused. */
+  stillWorks: 'The prepared examples above still work.',
+  questionLimit: (max: number) => `Questions can be up to ${max} characters, so anything longer is cut off. Please ask one short question at a time.`,
   /** The small print under a live result; only a checked answer is called "answered". */
   liveNote: (kind: AnswerKind, hasSources: boolean): string =>
     kind === 'answered'
@@ -423,6 +433,7 @@ export const TRY = {
   /** The card's text while the connector link is not switched on (VITE_MCP_URL is empty). */
   connectTextLater: 'Once the connector is switched on, anyone who uses Claude will be able to add Evidenceline to it and ask in their own words.',
   copyDone: 'Copied',
+  copyDoneNote: 'Link copied.',
   copyIdle: 'Copy',
   copyFailed: 'Not copied',
   copyFailedNote: 'Your browser did not allow copying, so the link above is selected. Copy it from there.',

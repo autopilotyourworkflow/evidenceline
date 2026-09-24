@@ -169,6 +169,12 @@ Test files:
   wording of a withheld near-miss answer.
 - `test_guidance_casual.py`: casual questions, the unknown-word rule, framing phrases, the plain-language synonyms,
   price questions and the borderline band, with a fake model for the question box's near-miss path.
+- `test_guidance_threads.py`, `test_answer_routes.py`, `test_answer_robust.py`: the "Try it yourself" review of
+  25 September 2026. One cached index read by 8 threads at once gives exactly the sequential results; verdict
+  questions after their context, everyday wordings of the drinking-water values, another medium's value, one
+  everyday word, placeholders, code and tag-like text, full-width letters and other-language greetings; a lock on
+  the route of every evaluation, prepared and suggested question; a failed search as a plain error, replies from
+  the model service that cannot be read, and the time limits. The API's limits on questions are in `test_api.py`.
 - `test_packaging.py`: runtime dependencies, the `api` extra and group, and that the stdio server does not load the
   web packages.
 
@@ -203,7 +209,7 @@ The web API also reads these (see "Web API and hosted connector"):
 | `ANTHROPIC_API_KEY` | none | The live question box's key. Unset: every question gets the passages only, with a note that live answers are off. |
 | `EVIDENCELINE_MODEL` | `claude-sonnet-5` | The model for live answers (effort medium). |
 | `EVIDENCELINE_ALLOWED_ORIGINS` | the site, plus localhost and 127.0.0.1 on 5173 and 4173 | CORS origins, comma separated. |
-| `EVIDENCELINE_ASK_PER_HOUR`, `EVIDENCELINE_ASK_PER_DAY` | 10, 30 | Questions per IP per rolling hour and per rolling 24 hours. |
+| `EVIDENCELINE_ASK_PER_HOUR`, `EVIDENCELINE_ASK_PER_DAY` | 10, 30 | Questions per IP that reach the AI model, per rolling hour and per rolling 24 hours. Each question counts once, however many model calls it takes. Questions answered without the model count only against a fixed 120 per hour (`NO_MODEL_PER_HOUR` in `settings.py`, not read from the environment). |
 | `EVIDENCELINE_ANSWERS_PER_DAY` | 300 | Model calls across everyone per rolling 24 hours; beyond it answers pause and passages are still shown. |
 | `EVIDENCELINE_MCP_PER_HOUR` | 600 | Requests per IP per hour on `/mcp`. |
 | `EVIDENCELINE_CLIENT_IP_HEADER` | none (the socket address) | Header holding the caller's IP behind a proxy; for `x-forwarded-for` the right-most entry is used. |
@@ -312,14 +318,20 @@ parsed), `limits.py` (in-memory rolling windows) and `turnstile.py`. Run it with
 
 - `GET /api/health`: status, whether live answers are on, the model, whether the index exists, Turnstile, whether
   only proxied requests are served, where the client IP comes from (`client_ip_from`), the body cap
-  (`request_bytes`) and the limits.
+  (`request_bytes`) and the limits (`questions_per_hour` and `questions_per_day` for questions that reach the model,
+  `questions_without_model_per_hour` for the rest).
 - Every `/api/*` and `/mcp` request: the proxy secret (if set, 403), then a 64 KB body cap (413; a body sent without
   a length is read only up to the cap), before any body is parsed. The proxy (`web/functions/_lib/proxy.js`) sends
   the same header name and has the same cap; a test compares both.
 - `POST /api/ask` with `{"question": "..."}`: the answer result. Order of checks after the gate: an empty question
-  or one over 500 characters (400), per-IP limits (429 with `Retry-After`), then Turnstile (if on, 403; a reply from
-  Cloudflare that is not a JSON object counts as not verified), then the pipeline in a worker thread. The global daily brake pauses live answers but still returns
-  passages. Question text is never logged; the log has status counts only.
+  or one over 500 characters (400; a lone UTF-16 surrogate in the JSON becomes '?' first), the per-IP limit on all
+  questions (120 an hour, 429 with `Retry-After`), then a greeting, thanks or question about Evidenceline gets its
+  fixed reply (no Turnstile, no search, no model), then Turnstile (if on, 403; a reply from Cloudflare that is not a
+  JSON object counts as not verified), then the pipeline in a worker thread. The per-IP limits on questions that
+  reach the model (10 an hour, 30 a day) are checked at the question's first model call: over them, the reply is the
+  same 429 with `Retry-After`, and a second attempt within the same question is not counted again. A question that
+  reached the model gives its place in the 120 back. The global daily brake counts every model call and pauses live
+  answers but still returns passages. Question text is never logged; the log has status counts only.
 - `/mcp`: the nine tools from `server.build_tools()` over Streamable HTTP, stateless, with JSON responses and the
   same guard rails as stdio (read-only, strict arguments, redaction). The instructions add that this is the hosted
   read-only copy. DNS-rebinding protection is off: it protects servers on localhost, and this one is public,
@@ -350,8 +362,11 @@ service also needs the guidance index built at deploy time (`fetch_corpus.py` an
    Mining") or a place word ("Kwinana Terminal"), and a name the question calls a client ("my client Redgum"). The
    result counts replacements.
 2. A PFAS drinking-water value question (PFOS, PFHxS, PFOA, PFBS or the sum) gets BOTH rules' values from
-   `core.lookup_limit`; a rule with no value is listed as "no value". Soil or fresh-water questions get no values
-   and a note saying why.
+   `core.lookup_limit`; a rule with no value is listed as "no value". Everyday wordings count ("the PFOS drinking
+   water value", "pfos drinking water number"), and so does a question about what the 2025 update changed; one
+   that names no analyte ("the difference between PFAS NEMP 3.0 and the 2025 drinking water values") gets all four
+   analytes. Soil or fresh-water questions get no values and a note saying why. The question is read after NFKC
+   normalisation, so full-width letters count as plain ones.
 3. Search for up to 8 passages. "Not covered" returns without a model call, except a borderline one: when the
    search still says "not covered" but its closest passages are a near miss (coverage of at least 0.30, at least 3
    matched terms and at least half of the question's terms; `BORDERLINE_COVERAGE`, `BORDERLINE_MATCHED` in
@@ -361,13 +376,20 @@ service also needs the guidance index built at deploy time (`fetch_corpus.py` an
    and instructions to the system carry no near-miss passages. A verdict question ("is this site
    contaminated", "safe to drink", "OK to drink", "a problem", "can my kids swim"; the soft words count only after
    the site, water or result is named, so "Is it OK to composite samples?" still goes to the model) returns
-   `guard_rail`: a fixed reply plus the passages, no model call. Without a
-   model client the result is `passages_only` with "Live answers are switched off".
+   `guard_rail`: a fixed reply plus the passages, no model call. The verdict check runs before "not covered", so a
+   verdict question never gets the not-covered wording (with no passages the reply leaves out its last sentence),
+   except a question about prices or one that tries to instruct the system, which keeps its own reason. Without a
+   model client the result is `passages_only` with "Live answers are switched off". Two kinds of question with
+   passages never reach the model and get `passages_only` with a plain reason: one asking for a named analyte's value
+   in another medium (soil, recreational or fresh water, fish), which Evidenceline never states, and one whose only
+   searchable content is one everyday word ("time", "coffee", "What time is it in Perth?"; `one_everyday_word` in
+   `guidance/search.py`).
 4. The model reads the whole indexed page text for each passage (from `chunks` in the index, dashes tidied), or the
    excerpt if the page cannot be read.
 5. The answer is checked in code (`verify.py`). If it fails, the model is asked once more, told only which checks
    failed (never shown its own answer), and the second answer goes through every check again; the explanation says
-   it was the second. A second failure withholds it and returns `passages_only`. A withheld answer is never shown,
+   it was the second. There is no second attempt once the question has taken 25 seconds
+   (`SECOND_ATTEMPT_WITHIN`): one API call may take 25 seconds and the page gives up at 60. A second failure withholds it and returns `passages_only`. A withheld answer is never shown,
    even in part: the explanation names only the failed checks, sentence numbers, the failing number or a dash's
    code point.
 
@@ -384,25 +406,43 @@ no health risk", "considered safe", "is therefore contaminated"), except inside 
 contaminated") or a category word ("clean fill"); no em or en dashes or their look-alikes (U+2015, figure dash,
 two- and three-em dashes); "short sentences": every sentence under 30 words, citations not counted
 (`MAX_SENTENCE_WORDS` in `prompt.py`); "no long quotes": no sentence repeats more than ten words in a row from a
-passage (`MAX_QUOTED_WORDS`). The last two put the prompt's own writing limits into code; a failure names the
-sentence and passage numbers, never the words, and triggers the one retry.
+passage (`MAX_QUOTED_WORDS`); "about the guidance": no sentence talks about what the answer was or was not given
+("no verified value was supplied to quote here", "the passages given"). The last three put the prompt's own writing
+rules into code; a failure names the sentence and passage numbers, never the words, and triggers the one retry.
 
 Routing before any model call: a request to state a verdict ("write that the site is contaminated", "confirm in
 writing that the water is safe"; the verb must be followed by "that") gets the fixed guard-rail reply. Other states
 (also EPA Vic, ACT, Tas EPA and NT; "ACT" and "NT" only in capitals, and "ACT" not when the whole question is in
 capitals), other countries' rules (a country with a rules word such as rule, limit, ban or allow) and instructions to
 the system ("SYSTEM:", "Assistant:" or "Override:" opening a sentence, "new instruction", "from now on you",
-"answer without citations", "stop citing", "pretend you are") are "not covered" with no near-miss passages. A PFAS
+"answer without citations", "stop citing", "pretend you are", a tag such as "</question>", code such as
+"print(os.environ)" or a template such as "{{system_prompt}}") are "not covered" with no near-miss passages. Other
+countries also count with "drinking water standard", and with "say about" except for the US EPA, whose methods the
+guidance cites; some US states (California, New York and others) count as places, and "us" in lower case counts
+only at the start or after "the", and before "PFAS", "EPA", "limits" or "rules" ("give us PFAS limits" is
+searched). Verdict
+questions are read clause by clause too ("My bore has 0.1 ug/L PFOS, is that dangerous?") and include questions
+about the visitor's own result or safety ("Does my site fail?", "Is PFOS at 0.05 ug/L above the limit?", "Am I
+safe?", "Should I stop drinking my bore water?"); questions about how the rules work ("When does a site fail a tier
+1 screening?", "Do I need to report if our result is over the limit?") are not, and nor are questions about one's
+own result that ask what the rules require, the laboratory or reporting ("Does my site need to pass an audit?",
+"Has my sample exceeded its holding time?", "Is my result below the limit of reporting?", "Is my result above the
+limit reportable to DWER?"). Redaction placeholders, with the words that only label them ("email [EMAIL-1]", "my
+phone is [PHONE-1]"), are left out of the search text; the prompt keeps them. Greetings and
+thanks in several other languages get the fixed reply. A PFAS
 NEMP question with no edition gets a note that says so, that 3.1 is not indexed and that only 3.0 was searched. A
 withheld near-miss answer's explanation says its passages were the search's near miss, not a match.
 
-Clients: `AnthropicClient` (official SDK; key and model from the environment; effort medium; a 402, billing error,
-spend-cap message or 429 becomes `paused`, other failures `error`), `ClaudeCliClient` (the local Claude Code CLI,
+Clients: `AnthropicClient` (official SDK; key and model from the environment; effort medium; 25 seconds per call
+and no retries inside the SDK, so a rate limit's Retry-After is never waited out; a 402, billing error, spend-cap
+message or 429 becomes `paused`, other failures, a reply that cannot be read included, `error`), `ClaudeCliClient` (the local Claude Code CLI,
 headless, every tool off, `--safe-mode`, in an empty temporary folder; only for precomputing) and `FakeClient`
 (tests). `scripts/precompute_answers.py` writes `web/public/data/answers.json` through the same pipeline; each entry
 carries its check record, date and model. Rebuilt on 2026-09-24 with Claude Sonnet 5 after the NEMP 3.0 fix: 4
-answered (all pass every check), 1 guard rail and 1 not covered. `--only N` reruns question N alone and keeps every
-other entry byte for byte; it refuses when the stored file used another model or system prompt. After the launch
+answered (all pass every check), 1 guard rail and 1 not covered. Since 25 September 2026 the file also holds a
+`lookup_only` list: every other question in `data/suggested_questions.json`, in the same entry shape, shown as no
+button, so a click on a suggestion is answered from the prepared copy. `--only N` (numbered over both lists) reruns
+question N alone and keeps every other entry byte for byte; it refuses when the stored file used another model or system prompt. After the launch
 round, question 4 (reporting to DWER) was rerun this way for the new writing checks, and question 1 (the PFOS limit)
 for the compared-quantity fix below; each claim was read against its cited page. Rerun it whenever the search, the index or the
 guideline notes change, or its stored passages go stale (a test compares them with the live pipeline).
@@ -681,8 +721,15 @@ Answers and the web API:
 - The condition exception for verdict wording is a four-word window, so "When low the water is safe" would pass.
 - Question-box name redaction works by shape: a lone name with no company or place word ("Is Harbourline OK?") is
   not redacted, and a name that looks like guidance ("Water Corporation") is left in.
-- `web/public/data/answers.json` goes stale whenever the search, the index or a guideline note changes; rerun
-  `scripts/precompute_answers.py` (local Claude Code CLI, about a dozen model calls).
+- `web/public/data/answers.json` goes stale whenever the search, the index, the prompt or a guideline note
+  changes; rerun `scripts/precompute_answers.py` (local Claude Code CLI, about 16 to 32 model calls).
+- A question whose only searchable content is one plain word gets passages without a written answer, including a
+  plain domain word ("What is leaching?"). A named analyte's value in another medium gets passages only too, so
+  "What is the HIL A for lead?" is answered by the cited table page, not by the model.
+- Verdict detection is regular expressions over whole questions and clauses. A process question worded like a
+  verdict about one's own result ("Did our samples pass the QA/QC checks?") gets the fixed reply.
+- The one index connection is shared by all threads behind a lock, so searches run one query at a time (each takes
+  a few milliseconds).
 - Rate limits live in memory and reset when the service restarts. On the hosted connector the redaction session is
   shared by all callers: `show_redactions` shows everyone's placeholder counts (never values) until a restart.
 - Until `EVIDENCELINE_PROXY_SECRET` is set on the host, an untrusted client IP header is ignored, so every visitor
@@ -696,8 +743,8 @@ Answers and the web API:
   prepared PFOS answer passed on its second attempt.
 - The prepared reporting answer says "such as the owner, occupier or an auditor"; DWER 2025 section 6.1 (p. 20) says
   "an auditor engaged to provide a report that is required", so that wording is a simplification.
-- A failed Turnstile check now uses up one of that address's questions for the hour (the per-IP limit runs first, so
-  a flood of bad tokens gets 429 and stops calling Cloudflare).
+- A failed Turnstile check uses up one of that address's 120 questions for the hour (that limit runs first, so a
+  flood of bad tokens gets 429 and stops calling Cloudflare). It never uses the 10 questions that reach the model.
 - The hostname Cloudflare's Turnstile reply names is not checked. `TURNSTILE_SECRET` set to one of Cloudflare's test
   secrets logs a start-up warning (never the secret).
 

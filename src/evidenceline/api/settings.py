@@ -22,6 +22,10 @@ DEFAULT_ORIGINS = (
 logger = logging.getLogger("evidenceline.api")
 
 MAX_QUESTION_CHARS = 500
+NO_MODEL_PER_HOUR = 120
+"""Questions one IP address may ask per rolling hour that are answered without the AI model (greetings, fixed
+replies, "not covered", passages only). Fixed here, not read from the environment: it only stops a flood of
+searches, and a person reading the page never reaches it."""
 MAX_BODY_BYTES = 64 * 1024
 """Largest request body /api/ask and /mcp read, the same cap as the website's proxy (MAX_BODY_BYTES in
 web/functions/_lib/proxy.js). A question is at most 500 characters; an MCP call is a few kilobytes."""
@@ -41,9 +45,12 @@ local testing: in production the check would pass everyone, or no one."""
 class Settings:
     allowed_origins: tuple[str, ...] = DEFAULT_ORIGINS
     ask_per_hour: int = 10
-    """Questions one IP address may ask per rolling hour."""
+    """Questions from one IP address that reach the AI model, per rolling hour. Each counts once, even when the model
+    is asked a second time; questions answered without the model count against ``no_model_per_hour`` instead."""
     ask_per_day: int = 30
-    """Questions one IP address may ask per rolling 24 hours."""
+    """The same, per rolling 24 hours."""
+    no_model_per_hour: int = NO_MODEL_PER_HOUR
+    """Other questions from one IP address per rolling hour (:data:`NO_MODEL_PER_HOUR`)."""
     answers_per_day: int = 300
     """Model calls across everyone per rolling 24 hours (the global spending brake)."""
     mcp_per_hour: int = 600

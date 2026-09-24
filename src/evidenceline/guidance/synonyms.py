@@ -68,6 +68,8 @@ SYNONYM_GROUPS: tuple[SynonymGroup, ...] = (
     SynonymGroup("detailed site investigation", ("detailed site investigation", "dsi")),
     SynonymGroup("preliminary site investigation", ("preliminary site investigation", "psi")),
     SynonymGroup("sampling and analysis quality plan", ("sampling and analysis quality plan", "saqp")),
+    # ASC NEPM Schedule B1 (PDF p. 11) and PFAS NEMP 3.0 (PDF p. 33): "conceptual site model (CSM)".
+    SynonymGroup("conceptual site model", ("conceptual site model", "csm")),
     SynonymGroup("DWER", ("dwer", "department of water and environmental regulation")),
     SynonymGroup("health investigation level", ("health investigation level", "hil")),
     SynonymGroup("health screening level", ("health screening level", "hsl")),
@@ -398,6 +400,7 @@ _STOPWORD_TEXT = """
     apply applies applied applying
     ordinary usual usually typical typically normally instead enough
     ask asks asked asking keep keeps kept reckons reckoned sorry dumb silly stupid
+    whats wats wots
 """
 STOPWORDS = frozenset(_STOPWORD_TEXT.split())
 """Question words and fillers that carry no search meaning. 'guideline' alone is dropped because every document
@@ -410,7 +413,8 @@ The second block (added 2026-09-24) is conversation: light verbs ('give'), hedge
 also holds the stems contractions leave behind ("don't" is tokenised as 'don' and 't', "we're" as 'we' and 're'),
 'apply' in any form ("which values apply" frames a question; "What earthquake design loads apply to buildings?"
 matched a passage on the verb), plain hedges ('ordinary', 'usual', 'instead', 'enough') and conversation verbs
-('asking', 'keeps', 'reckons', 'sorry')."""
+('asking', 'keeps', 'reckons', 'sorry'). 'Whats' and its misspellings are "what's" typed without the apostrophe:
+searched as a word, 'whats CSM' found only two passages."""
 
 FRAMING_PHRASES: tuple[str, ...] = (
     "can you tell me",
@@ -457,10 +461,16 @@ FRAMING_PHRASES: tuple[str, ...] = (
     "any ideas",
     "in plain english",
     "in simple terms",
+    "stand for",
+    "stands for",
+    "short for",
+    "abbreviation for",
 )
 """Ways a person frames a question that say nothing about its subject ("can you tell me", "what's the deal with",
-"how do I know if"). They are removed as whole phrases before anything else, so 'know' and 'tell' keep their meaning
-elsewhere ("known contamination", "tell DWER")."""
+"how do I know if", "what does SAQP stand for"). They are removed as whole phrases before anything else, so 'know'
+and 'tell' keep their meaning elsewhere ("known contamination", "tell DWER"). Searched as a word, 'stand' matched
+"stand-alone report" and pushed out the passages that spell the abbreviation out. 'Mean' is not here: it is also a
+statistics term in the guidance ("95% UCL of the mean")."""
 
 PLACE_PHRASES: tuple[str, ...] = ("western australian", "western australia", "australian", "australia", "perth", "wa")
 """Places that only set the scope. Every indexed document is Western Australian or national guidance, so 'in Perth'

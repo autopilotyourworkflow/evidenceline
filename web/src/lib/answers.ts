@@ -54,7 +54,8 @@ export type AnswerView = {
 
 export type Prepared = { readonly date: string | null; readonly model: string | null; readonly label: string | null };
 
-export type PreparedAnswer = { readonly question: string; readonly view: AnswerView; readonly prepared: Prepared };
+/** `chip`: offered as a suggested question; false for an entry from answers.json's lookup_only list. */
+export type PreparedAnswer = { readonly question: string; readonly view: AnswerView; readonly prepared: Prepared; readonly chip: boolean };
 
 const text = (v: unknown): string => (isString(v) ? v.trim() : typeof v === 'number' && Number.isFinite(v) ? String(v) : '');
 const first = (r: Record<string, unknown>, keys: readonly string[]): string => {
@@ -186,8 +187,10 @@ function readPrepared(v: unknown, fallback: Prepared, model: string | null = nul
 const NO_PREPARED: Prepared = { date: null, model: null, label: null };
 
 /**
- * answers.json: {prepared_on, model, label, answers: [{question, prepared_on, label, result}]} as written by
- * scripts/precompute_answers.py. Also read: a bare list, and date and model under a "prepared" object.
+ * answers.json: {prepared_on, model, label, answers: [{question, prepared_on, label, result}], lookup_only: [...]} as
+ * written by scripts/precompute_answers.py. Also read: a bare list, and date and model under a "prepared" object.
+ * lookup_only holds more entries of the same shape (the questions the answers suggest): they are answered when asked,
+ * but not offered as suggested questions.
  */
 export function readAnswersFile(raw: unknown): PreparedAnswer[] {
   const list = Array.isArray(raw) ? raw : isRecord(raw) ? (raw.answers ?? raw.questions ?? raw.items) : undefined;
@@ -195,12 +198,15 @@ export function readAnswersFile(raw: unknown): PreparedAnswer[] {
   const top = isRecord(raw) ? readPrepared(isRecord(raw.prepared) ? raw.prepared : raw, NO_PREPARED) : NO_PREPARED;
   // The top-level label describes the whole file; each answer has its own.
   const shared: Prepared = { ...top, label: null };
-  return list.filter(isRecord).flatMap((entry) => {
-    const question = first(entry, ['question']);
-    const view = readAnswer(entry.result ?? entry);
-    if (question === '' || view === null) return [];
-    return [{ question, view, prepared: readPrepared(isRecord(entry.prepared) ? entry.prepared : entry, shared, view.model) }];
-  });
+  const read = (entries: unknown[], chip: boolean): PreparedAnswer[] =>
+    entries.filter(isRecord).flatMap((entry) => {
+      const question = first(entry, ['question']);
+      const view = readAnswer(entry.result ?? entry);
+      if (question === '' || view === null) return [];
+      return [{ question, view, prepared: readPrepared(isRecord(entry.prepared) ? entry.prepared : entry, shared, view.model), chip }];
+    });
+  const lookups = isRecord(raw) && Array.isArray(raw.lookup_only) ? raw.lookup_only : [];
+  return [...read(list, true), ...read(lookups, false)];
 }
 
 /** The date and model the whole file was prepared with, for the small print under the suggested questions. */
@@ -213,7 +219,7 @@ export const isAnswersFile = (v: unknown): v is unknown => readAnswersFile(v).le
 
 export type LiveOutcome =
   | { readonly kind: 'answer'; readonly view: AnswerView }
-  | { readonly kind: 'rate-limited'; readonly retryAfter: number | null }
+  | { readonly kind: 'rate-limited'; readonly retryAfter: number | null; readonly daily: boolean }
   | { readonly kind: 'paused'; readonly message: string }
   | { readonly kind: 'error'; readonly message: string };
 
@@ -245,12 +251,16 @@ export async function askLive(apiBase: string, question: string, signal: AbortSi
     const body: unknown = await response.json().catch(() => null);
     const said = isRecord(body) ? withoutDashes(first(body, ['error', 'detail', 'message'])) : '';
     if (response.status === 429) {
-      return { kind: 'rate-limited', retryAfter: seconds(response.headers.get('Retry-After')) ?? (isRecord(body) ? seconds(body.retry_after) : null) };
+      const retryAfter = seconds(response.headers.get('Retry-After')) ?? (isRecord(body) ? seconds(body.retry_after) : null);
+      // The service names the daily limit (its windows roll, so that wait can be short too); an hourly limit never
+      // asks for more than an hour, so a longer wait is the daily one.
+      return { kind: 'rate-limited', retryAfter, daily: /per day/i.test(said) || (retryAfter ?? 0) > 3600 };
     }
     if (response.status === 503) return { kind: 'paused', message: said };
+    // The service's own reason when it gives a short one, never the status code, which means nothing to a reader.
     if (!response.ok) {
-      const quote = said !== '' && said.length <= 200 ? ` The service said: "${said}"` : '';
-      return { kind: 'error', message: `The question could not be answered (HTTP ${response.status}).${quote}` };
+      if (said === '' || said.length > 200) return { kind: 'error', message: 'The question could not be answered.' };
+      return { kind: 'error', message: /[.!?]$/.test(said) ? said : `The question could not be answered: ${said}.` };
     }
     const view = readAnswer(isRecord(body) && isRecord(body.result) ? body.result : body);
     if (view === null) return { kind: 'error', message: 'The answer came back in a form this page cannot show.' };

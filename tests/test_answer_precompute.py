@@ -88,8 +88,11 @@ def test_prepared_answers_file() -> None:
     assert "same pipeline" in data["label"]
     if "system_prompt_sha256" in data:  # recorded from the --model change on; older files predate it
         assert data["system_prompt_sha256"] == script.prompt_fingerprint(), "answers.json predates the prompt"
+    # Every other suggested question is prepared too, for lookup only (no button), so a click needs no live call.
+    lookups = [entry["question"] for entry in data.get("lookup_only", [])]
+    assert lookups == list(script.LOOKUP_QUESTIONS), "answers.json predates the lookup-only entries"
     assert script.check(data) == []
-    for entry in data["answers"]:
+    for entry in [*data["answers"], *data.get("lookup_only", [])]:
         result = AnswerResult.model_validate(entry["result"])
         assert entry["label"].startswith("Prepared in advance on ")
         assert "same pipeline as the live question box" in entry["label"]
@@ -106,6 +109,28 @@ def test_prepared_answers_file() -> None:
     statuses = {entry["question"]: entry["result"]["status"] for entry in data["answers"]}
     assert statuses["Is this site contaminated?"] == "guard_rail"
     assert statuses["What are the NSW rules for PFAS in soil?"] == "not_covered"
+
+
+def test_every_other_suggested_question_is_prepared_for_lookup_only() -> None:
+    script = _script()
+    pool = json.loads((REPO_ROOT / "src" / "evidenceline" / "data" / "suggested_questions.json").read_text("utf-8"))
+    suggested = [str(item["question"]) for item in pool["questions"]]
+    assert list(script.LOOKUP_QUESTIONS) == [q for q in suggested if q not in script.QUESTIONS]
+    assert not set(script.QUESTIONS) & set(script.LOOKUP_QUESTIONS)
+
+
+def test_build_puts_lookup_entries_after_the_buttons_and_checks_them(fake_search: None) -> None:
+    script = _script()
+    data = script.build(
+        FakeClient(reply=GOOD), ["What is a conceptual site model?"], dt.date(2026, 9, 25), lookups=["What is PFAS?"]
+    )
+    assert [e["question"] for e in data["answers"]] == ["What is a conceptual site model?"]
+    assert [e["question"] for e in data["lookup_only"]] == ["What is PFAS?"]
+    assert data["lookup_only"][0]["result"]["status"] == "answered"
+    assert data["lookup_only"][0]["label"].startswith("Prepared in advance on 25 September 2026")
+    assert script.check(data) == []
+    data["lookup_only"][0]["label"] += f" {DASHES[1]} oops"
+    assert len(script.check(data)) == 1
 
 
 def test_build_records_the_model_and_the_prompt(fake_search: None) -> None:
@@ -185,17 +210,25 @@ def test_counting_client_counts_every_call_and_passes_the_reply_through() -> Non
 def _existing(script: Any, model: str = "claude-sonnet-5") -> dict[str, Any]:
     entries = [
         {"question": q, "prepared_on": "2026-09-20", "label": f"old {n}", "result": {"model": model}}
-        for n, q in enumerate(script.QUESTIONS, start=1)
+        for n, q in enumerate([*script.QUESTIONS, *script.LOOKUP_QUESTIONS], start=1)
     ]
-    return {"model": model, "system_prompt_sha256": script.prompt_fingerprint(), "answers": entries}
+    shown = len(script.QUESTIONS)
+    return {
+        "model": model,
+        "system_prompt_sha256": script.prompt_fingerprint(),
+        "answers": entries[:shown],
+        "lookup_only": entries[shown:],
+    }
 
 
 def test_only_keeps_every_other_entry_exactly() -> None:
     script = _script()
     existing = _existing(script)
-    keep = script.kept_entries(existing, [4], "claude-sonnet-5")
-    assert list(keep) == [q for n, q in enumerate(script.QUESTIONS, start=1) if n != 4]
-    assert all(keep[e["question"]] is e for e in existing["answers"] if e["question"] in keep)
+    keep = script.kept_entries(existing, [4, 9], "claude-sonnet-5")
+    every = [*script.QUESTIONS, *script.LOOKUP_QUESTIONS]
+    assert list(keep) == [q for n, q in enumerate(every, start=1) if n not in {4, 9}]
+    kept = [e for e in [*existing["answers"], *existing["lookup_only"]] if e["question"] in keep]
+    assert all(keep[e["question"]] is e for e in kept)
 
 
 @pytest.mark.parametrize(
@@ -204,6 +237,7 @@ def test_only_keeps_every_other_entry_exactly() -> None:
         ({"system_prompt_sha256": "0" * 64}, "system prompt changed"),
         ({"model": "claude-opus-5"}, "was written with"),
         ({"answers": []}, "other questions"),
+        ({"lookup_only": []}, "other questions"),  # a file from before the lookup-only entries
     ],
 )
 def test_only_refuses_a_file_it_cannot_keep_from(change: dict[str, Any], says: str) -> None:
@@ -213,10 +247,11 @@ def test_only_refuses_a_file_it_cannot_keep_from(change: dict[str, Any], says: s
         script.kept_entries(existing, [4], "claude-sonnet-5")
 
 
-@pytest.mark.parametrize("number", [0, 7, -1])
+@pytest.mark.parametrize("number", [0, 19, -1])
 def test_only_refuses_a_question_number_out_of_range(number: int) -> None:
     script = _script()
-    with pytest.raises(ValueError, match="question numbers from 1 to 6"):
+    assert len(script.QUESTIONS) + len(script.LOOKUP_QUESTIONS) == 18
+    with pytest.raises(ValueError, match="question numbers from 1 to 18"):
         script.kept_entries(_existing(script), [number], "claude-sonnet-5")
 
 
@@ -241,7 +276,12 @@ def test_main_with_only_rewrites_only_that_question(
     index = tmp_path / "index.sqlite"
     index.write_bytes(b"")
     out = tmp_path / "answers.json"
-    first = script.build(FakeClient(reply=GOOD, model="claude-sonnet-5"), script.QUESTIONS, dt.date(2026, 9, 20))
+    first = script.build(
+        FakeClient(reply=GOOD, model="claude-sonnet-5"),
+        script.QUESTIONS,
+        dt.date(2026, 9, 20),
+        lookups=script.LOOKUP_QUESTIONS,
+    )
     out.write_text(json.dumps(first), encoding="utf-8")
     fakes: list[FakeClient] = []
 
@@ -259,5 +299,6 @@ def test_main_with_only_rewrites_only_that_question(
     assert [e for n, e in enumerate(written["answers"], 1) if n != 3] == [
         e for n, e in enumerate(first["answers"], 1) if n != 3
     ]
+    assert written["lookup_only"] == first["lookup_only"]
     assert written["answers"][2]["prepared_on"] == dt.date.today().isoformat()
     assert script.main(["--model", "claude-opus-5", "--only", "3"]) == 1, "another model: run everything again"

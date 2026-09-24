@@ -23,10 +23,10 @@ from fastapi.testclient import TestClient
 from mcp import Client
 from mcp.client.streamable_http import streamable_http_client
 
-from evidenceline.answer import FakeClient, ModelClient
+from evidenceline.answer import FakeClient, ModelClient, ModelReply
 from evidenceline.answer import pipeline as pipeline_module
 from evidenceline.api.app import client_ip, create_app
-from evidenceline.api.settings import DEFAULT_ORIGINS, Settings, from_env
+from evidenceline.api.settings import DEFAULT_ORIGINS, NO_MODEL_PER_HOUR, Settings, from_env
 from evidenceline.api.turnstile import CloudflareTurnstile
 from evidenceline.errors import EvidencelineError
 from evidenceline.guidance.models import GuidanceSearch
@@ -211,6 +211,114 @@ def test_global_daily_cap_pauses_live_answers() -> None:
         clock.now += 86401
         assert _ask(test_client).json()["status"] == "answered"
     assert len(model.calls) == 2
+
+
+class FirstFailsThenPasses:
+    """Each question's first answer has an uncited sentence; the second passes: two model calls per question."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    @property
+    def model_id(self) -> str:
+        return "fake-model"
+
+    def complete(self, system: str, prompt: str) -> ModelReply:
+        del system, prompt
+        self.calls += 1
+        return ModelReply(text="An uncited sentence. " + GOOD if self.calls % 2 else GOOD, model="fake-model")
+
+
+def _not_covered_for_nsw(monkeypatch: pytest.MonkeyPatch) -> None:
+    def search(question: str, k: int = 5, *, index_path: Path | None = None) -> GuidanceSearch:
+        found = "NSW" not in question
+        return GuidanceSearch.model_construct(
+            question=question,
+            status="passages found" if found else "not covered",
+            explanation="2 passages." if found else "The question is about NSW rules.",
+            passages=PASSAGES if found else [],
+            notes=[],
+        )
+
+    monkeypatch.setattr(pipeline_module, "search_guidelines", search)
+
+
+def test_questions_answered_without_the_model_use_none_of_the_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Greetings, thanks, the verdict reply, "not covered" and passages only never use up the written answers."""
+    _not_covered_for_nsw(monkeypatch)
+    model = FakeClient(reply=GOOD)
+    with TestClient(_app(Settings(ask_per_hour=2, ask_per_day=5), model)) as test_client:
+        free = ["Hello", "How does this work?", "Thanks!", "Is this site contaminated?", "What are the NSW rules?"]
+        free += ["coffee", "Does my site fail?"]
+        statuses = [_ask(test_client, q).json()["status"] for q in free * 2]
+        assert model.calls == []
+        assert set(statuses) == {"about", "guard_rail", "not_covered", "passages_only"}
+        assert [_ask(test_client).status_code for _ in range(2)] == [200, 200]
+        refused = _ask(test_client)
+        assert refused.status_code == 429
+        assert refused.json() == {
+            "error": "Too many questions: the limit is 2 questions per hour sent to the AI model.",
+            "retry_after": 3601,
+        }
+        assert refused.headers["retry-after"] == "3601"
+        # Over the limit on written answers, a greeting or the verdict reply still works.
+        assert _ask(test_client, "Hello").json()["status"] == "about"
+        assert _ask(test_client, "Is this site contaminated?").json()["status"] == "guard_rail"
+    assert len(model.calls) == 2
+
+
+def test_a_second_attempt_within_one_question_is_counted_once() -> None:
+    model = FirstFailsThenPasses()
+    with TestClient(_app(Settings(ask_per_hour=2), model)) as test_client:
+        assert [_ask(test_client).json()["status"] for _ in range(2)] == ["answered", "answered"]
+        assert _ask(test_client).status_code == 429
+    assert model.calls == 4
+
+
+def test_the_global_brake_still_counts_every_model_call() -> None:
+    model = FirstFailsThenPasses()
+    with TestClient(_app(Settings(answers_per_day=3), model)) as test_client:
+        assert _ask(test_client).json()["status"] == "answered"  # two calls
+        assert _ask(test_client).json()["status"] == "passages_only"  # the third call, then the brake
+        assert _ask(test_client).json()["status"] == "paused"
+    assert model.calls == 3
+
+
+def test_a_greeting_needs_no_robot_check() -> None:
+    turnstile = FakeTurnstile()
+    with TestClient(_app(model=FakeClient(reply=GOOD), turnstile=turnstile)) as test_client:
+        assert _ask(test_client, "Hi, how does this work?").json()["status"] == "about"
+        assert _ask(test_client, "Thanks!").json()["status"] == "about"
+        assert _ask(test_client).status_code == 403
+    assert turnstile.seen == []
+
+
+def test_the_limit_on_questions_without_the_model() -> None:
+    """A generous fixed limit on everything else, so nobody can flood the search. A question that reaches the model
+    counts against its own limit instead, and gives its place back."""
+    clock = Clock()
+    model = FakeClient(reply=GOOD)
+    with TestClient(_app(Settings(no_model_per_hour=2), model, clock)) as test_client:
+        assert test_client.get("/api/health").json()["limits"]["questions_without_model_per_hour"] == 2
+        assert [_ask(test_client).json()["status"] for _ in range(4)] == ["answered"] * 4
+        assert [_ask(test_client, "Hello").status_code for _ in range(3)] == [200, 200, 429]
+        refused = _ask(test_client, "Hello")
+        assert refused.json()["error"] == "Too many questions: the limit is 2 questions per hour."
+        assert int(refused.headers["retry-after"]) > 3000
+        clock.now += 3601
+        assert _ask(test_client, "Hello").status_code == 200
+
+
+def test_health_shows_the_fixed_limit_on_questions_without_the_model(client: TestClient) -> None:
+    assert client.get("/api/health").json()["limits"]["questions_without_model_per_hour"] == NO_MODEL_PER_HOUR == 120
+    assert from_env({"EVIDENCELINE_NO_MODEL_PER_HOUR": "5"}).no_model_per_hour == 120  # not read from the environment
+
+
+@pytest.mark.parametrize("raw", [rb'{"question": "What is PFAS? \ud800"}', rb'{"question": "hi \ud83d"}'])
+def test_a_lone_surrogate_is_not_a_server_error(client: TestClient, raw: bytes) -> None:
+    response = client.post("/api/ask", content=raw, headers={"content-type": "application/json"})
+    assert response.status_code == 200
+    assert "?" in response.json()["question"]
 
 
 # --- CORS ----------------------------------------------------------------------------------------------------------
@@ -429,9 +537,10 @@ def test_a_real_turnstile_secret_is_not_warned_about(caplog: pytest.LogCaptureFi
 
 
 def test_the_question_limit_comes_before_turnstile() -> None:
-    """A flood of bad tokens from one address stops at the limit, without a Cloudflare call for each one."""
+    """A flood of bad tokens from one address stops at the limit on questions answered without the model, without
+    a Cloudflare call for each one."""
     turnstile = FakeTurnstile()
-    app = _app(Settings(ask_per_hour=2), model=FakeClient(reply=GOOD), turnstile=turnstile)
+    app = _app(Settings(no_model_per_hour=2), model=FakeClient(reply=GOOD), turnstile=turnstile)
     with TestClient(app) as test_client:
         codes = [_ask(test_client, turnstile_token="bad-token").status_code for _ in range(5)]
     assert codes == [403, 403, 429, 429, 429]
