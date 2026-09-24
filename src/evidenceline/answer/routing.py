@@ -154,7 +154,8 @@ _SMALL_TALK = re.compile(
 )
 """Counted as a greeting: 'Hi, how are you?'."""
 _THANKS_WORD = (
-    r"(?:(?:many\s+)?thanks|thank\s*(?:you|u)|tysm|thnx|thanx|thks|thx|ty|ta|cheers|much\s+appreciated|"
+    r"(?:(?:many\s+)?thanks|thank\s*(?:you|u)|thnks|thnk\s*(?:you|u)|tysm|thnx|thanx|thks|thx|ty|ta|cheers|"
+    r"much\s+appreciated|"
     r"appreciate\s+it)(?:\s+(?:a\s+lot|so\s+much|very\s+much|heaps|again|kindly|for\s+(?:your|the)\s+help|"
     r"for\s+that|for\s+this|evidence\s*line|mate))*"
 )
@@ -170,7 +171,7 @@ _ABOUT = re.compile(
     "|".join(
         [
             # how it works
-            rf"{_HOW_DOES}\s+{_TOOL}{_ADVERB}\s+(?:work|works|function|operate)(?:\s+(?:exactly|under\s+the\s+hood))?",
+            rf"{_HOW_DOES}\s+{_TOOL}{_ADVERB}\s+(?:work|works|wrk|wrok|werk|function|operate)(?:\s+(?:exactly|under\s+the\s+hood))?",
             rf"how\s+(?:is|was)\s+{_TOOL_STRICT}\s+(?:supposed\s+to\s+work|meant\s+to\s+work|used|built|made)",
             r"how\s+(?:did|do)\s+you\s+(?:build|make|create)\s+(?:this|it)",
             rf"how\s+(?:do|can|should|would)\s+{_ME}\s+(?:use|start|begin|get\s+started|ask(?:\s+a\s+question)?)"

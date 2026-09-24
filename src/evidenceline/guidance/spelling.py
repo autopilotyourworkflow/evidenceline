@@ -1,17 +1,27 @@
-"""Correct a misspelt question to the words the indexed guidance uses: 'waht is the pfos limt' becomes 'what is the
-pfos limit'.
+"""Propose a spelling correction for a question that found nothing: 'waht is the pfos limt' becomes 'what is the pfos
+limit'.
 
-Used only as a second try, by the question box, when the question as typed found nothing
-(:mod:`evidenceline.answer.pipeline`); a question that already finds passages is never changed. A word is corrected
-only when all of these hold:
+A proposal only. The question box offers it as "Did you mean ...?" and asks it only if the visitor chooses it
+(:mod:`evidenceline.answer.pipeline`); a question is never rewritten behind the visitor's back, because without a
+dictionary a real word the guidance does not use ('chlorate', 'eighty', 'Bunnings') cannot be told from a typo.
 
-- no indexed passage contains it, and it has at least :data:`MIN_LENGTH` letters;
-- it is written in lower case or with only a first capital, so an acronym or a name ('RAAF', 'Kwinana') is left alone;
+A word is changed only when all of these hold:
+
+- no indexed passage contains it, it has at least :data:`MIN_LENGTH` letters, and it is written in lower case (or with
+  a first capital at the start of a sentence), so a name ('Kwinana', 'Leda', 'Bunnings') or an acronym is left alone;
+- it is not a number word ('eighty'), a contraction typed without its apostrophe ('cant', 'dont': changing them flips
+  the meaning), a PFAS-family abbreviation ('pfhxsa') or a chemical name ('chlorate', 'tetrachloroethane'), because a
+  near neighbour of one of those is a different thing;
 - a word the guidance uses at least :data:`MIN_USES` times starts with the same letter and is within one edit (two
-  for a word of :data:`LONG_WORD` letters or more), counting two swapped neighbouring letters as one edit.
+  for a word of :data:`LONG_WORD` letters or more), counting two swapped neighbouring letters as one edit;
+- that word is clearly the best: the closest, then the same letters in another order ('laed' is 'lead', not
+  'land'), and no other word as close is nearly as common ('limt' is 'limit', used about twice as often as 'list');
+- it is not a common word ('plus', 'want', 'done') unless the typed word holds the same letters in another order
+  ('waht'), and it is not already in the question.
 
-The closest such word wins, then the more frequent one. Placeholders put in by redaction ('[CLIENT-1]') and anything
-with a digit are left alone.
+The question must also show it is on the guidance's subject: a word the guidance uses, as typed ('pfos' in 'waht is
+the pfos limt'), or a correction that only swapped two letters ('teir' to 'tier'). A question made only of words the
+guidance never uses ('How do I bake sourdough bread?') is off topic, not misspelt.
 """
 
 from __future__ import annotations
@@ -23,7 +33,214 @@ from functools import cache
 MIN_LENGTH = 4
 LONG_WORD = 7
 MIN_USES = 2
+CLEAR_WINNER = 1.5
+"""The best word must be used at least this many times as often as any other word just as close."""
+
 _TOKEN = re.compile(r"\[[^\]]*\]|[A-Za-z0-9][A-Za-z0-9']*")
+_CHEMICAL = re.compile(
+    r"(?:chlor|fluor|brom|iod|meth|eth|prop|benz|phen|tolu|xyl|sulf|sulph|nitr|phosph|cyan|ars|carb|hydr|oxy|amin|"
+    r"amid|chrom|cadm|merc|mangan|tetra|tri|hex|pent|hept|oct|non|dec)[a-z]*(?:ate|ite|ide|ane|ene|yne|ine|ol|one|"
+    r"ium|yl|ic)$"
+)
+"""A chemical name: a chemical root and ending ('chlorate', 'tetrachloroethane', 'arsenite'). Its near neighbour
+('chloride', 'tetrachloroethene', 'arsenic') is a different chemical, so neither is ever corrected to the other."""
+_NUMBER_WORDS = frozenset(
+    [
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+        "eighteen",
+        "nineteen",
+        "twenty",
+        "thirty",
+        "forty",
+        "fifty",
+        "sixty",
+        "seventy",
+        "eighty",
+        "ninety",
+        "hundred",
+        "thousand",
+        "million",
+        "billion",
+        "half",
+        "quarter",
+        "first",
+        "second",
+        "third",
+    ]
+)
+_CONTRACTIONS = frozenset(
+    [
+        "cant",
+        "dont",
+        "wont",
+        "isnt",
+        "arent",
+        "doesnt",
+        "didnt",
+        "hasnt",
+        "havent",
+        "hadnt",
+        "wasnt",
+        "werent",
+        "shouldnt",
+        "couldnt",
+        "wouldnt",
+        "mustnt",
+        "neednt",
+        "aint",
+        "youre",
+        "theyre",
+        "thats",
+        "whats",
+        "heres",
+        "theres",
+        "wheres",
+        "whos",
+        "hows",
+        "youve",
+        "theyve",
+        "youll",
+        "theyll",
+        "shes",
+        "itll",
+    ]
+)
+_COMMON = frozenset(
+    [
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "whom",
+        "whose",
+        "that",
+        "this",
+        "these",
+        "those",
+        "there",
+        "their",
+        "them",
+        "they",
+        "then",
+        "than",
+        "with",
+        "from",
+        "into",
+        "onto",
+        "have",
+        "been",
+        "being",
+        "does",
+        "done",
+        "doing",
+        "should",
+        "would",
+        "could",
+        "must",
+        "will",
+        "shall",
+        "also",
+        "plus",
+        "want",
+        "wants",
+        "made",
+        "make",
+        "many",
+        "much",
+        "more",
+        "most",
+        "some",
+        "such",
+        "only",
+        "over",
+        "very",
+        "well",
+        "were",
+        "your",
+        "yours",
+        "about",
+        "above",
+        "after",
+        "again",
+        "against",
+        "before",
+        "below",
+        "between",
+        "both",
+        "each",
+        "other",
+        "same",
+        "under",
+        "until",
+        "upon",
+        "change",
+        "need",
+        "needs",
+        "know",
+        "tell",
+        "help",
+        "find",
+        "like",
+        "work",
+        "good",
+        "best",
+        "used",
+        "using",
+        "give",
+        "take",
+        "look",
+        "come",
+        "going",
+        "thing",
+        "things",
+        "people",
+        "time",
+        "year",
+        "years",
+        "place",
+        "part",
+        "case",
+        "point",
+        "number",
+        "show",
+        "still",
+        "just",
+        "even",
+        "back",
+        "first",
+        "last",
+        "long",
+        "great",
+        "little",
+        "right",
+        "high",
+        "every",
+        "never",
+        "always",
+        "here",
+    ]
+)
+"""Everyday words: never a correction's target unless the letters only swapped ('waht' to 'what'), and never the
+word that shows a question is on the guidance's subject."""
+_WORD = re.compile(r"[a-z]+")
 
 
 def _edit_distance(a: str, b: str, limit: int) -> int:
@@ -54,42 +271,71 @@ def _by_first_letter(words: tuple[tuple[str, int], ...]) -> dict[str, tuple[tupl
     return {letter: tuple(items) for letter, items in grouped.items()}
 
 
-def _closest(word: str, candidates: tuple[tuple[str, int], ...]) -> str | None:
-    limit = 2 if len(word) >= LONG_WORD else 1
-    best: tuple[int, int, str] | None = None
-    for known, uses in candidates:
-        distance = _edit_distance(word, known, limit)
-        if distance <= limit and (best is None or (distance, -uses, known) < best):
-            best = (distance, -uses, known)
-    return None if best is None else best[2]
+def _allowed_target(typed: str, known: str, question_words: frozenset[str]) -> bool:
+    if known in question_words or known in _NUMBER_WORDS or known.startswith("pf") or _CHEMICAL.search(known):
+        return False
+    return known not in _COMMON or sorted(known) == sorted(typed)
 
 
-def _eligible(token: str, words: Counter[str]) -> bool:
+def _closest(typed: str, candidates: tuple[tuple[str, int], ...], question_words: frozenset[str]) -> str | None:
+    """The one clearly best word for ``typed``, or None when there is none or two are about as likely."""
+    limit = 2 if len(typed) >= LONG_WORD else 1
+    # Closest first; among equally close words, the same letters in another order first ('laed' is 'lead', not
+    # 'land'): swapped letters are the commonest slip. Then the more used word.
+    scored = sorted(
+        (distance, sorted(known) != sorted(typed), -uses, known)
+        for known, uses in candidates
+        if (distance := _edit_distance(typed, known, limit)) <= limit
+    )
+    if not scored:
+        return None
+    distance, reordered, uses, known = scored[0]
+    rivals = [u for d, r, u, _ in scored[1:] if (d, r) == (distance, reordered)]
+    if rivals and -rivals[0] * CLEAR_WINNER > -uses:
+        return None
+    return known if _allowed_target(typed, known, question_words) else None
+
+
+def _may_change(token: str, start: int, question: str, words: Counter[str]) -> bool:
     lower = token.lower()
+    before = question[:start].rstrip()
+    at_sentence_start = before == "" or before[-1] in ".?!"
     return (
         token.isalpha()
         and len(token) >= MIN_LENGTH
         and lower not in words
-        and (token == lower or token == lower.capitalize())
+        and (token == lower or (token == lower.capitalize() and at_sentence_start))
+        and lower not in _NUMBER_WORDS
+        and lower not in _CONTRACTIONS
+        and not lower.startswith("pf")
+        and not _CHEMICAL.search(lower)
     )
 
 
 def corrected(question: str, words: Counter[str]) -> str | None:
-    """The question with each misspelt word replaced by the closest word the guidance uses, or None when no word
-    changes. A corrected word keeps a first capital if the typed one had it."""
+    """A proposed spelling of the question, with each misspelt word replaced by the one word the guidance uses that
+    it clearly meant. None when no word changes, or when nothing shows the question is on the guidance's subject: no
+    word the guidance uses as typed, and no correction that only swapped two letters ('teir' to 'tier')."""
     groups = _by_first_letter(tuple(sorted(words.items())))
+    question_words = frozenset(_WORD.findall(question.lower()))
     changed = False
+    anchored = False
     pieces: list[str] = []
     last = 0
     for match in _TOKEN.finditer(question):
         token = match.group(0)
         replacement = token
-        if _eligible(token, words):
-            found = _closest(token.lower(), groups.get(token[0].lower(), ()))
+        lower = token.lower()
+        if _may_change(token, match.start(), question, words):
+            found = _closest(lower, groups.get(lower[0], ()), question_words)
             if found is not None:
                 replacement = found.capitalize() if token[0].isupper() else found
                 changed = True
+                # Swapped letters ('teir' for 'tier') are a sure sign of a slip, and show the question is on topic.
+                anchored = anchored or (sorted(found) == sorted(lower) and found not in _COMMON)
+        elif token.isalpha() and len(token) >= MIN_LENGTH and lower in words and lower not in _COMMON:
+            anchored = True
         pieces.append(question[last : match.start()] + replacement)
         last = match.end()
     pieces.append(question[last:])
-    return "".join(pieces) if changed else None
+    return "".join(pieces) if changed and anchored else None

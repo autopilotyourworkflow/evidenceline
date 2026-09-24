@@ -46,8 +46,8 @@ export type AnswerView = {
   readonly checkSummary: string;
   readonly redactions: number;
   readonly model: string | null;
-  /** The question with its spelling corrected, when the words as typed found nothing; '' otherwise. */
-  readonly corrected: string;
+  /** A not-covered result's proposed spelling ("Did you mean ..."), asked only if the visitor picks it; or ''. */
+  readonly didYouMean: string;
   /** Questions to try instead (a not-covered result, or the reply about Evidenceline itself), closest first. */
   readonly suggestions: readonly string[];
 };
@@ -169,7 +169,7 @@ export function readAnswer(raw: unknown): AnswerView | null {
     checkSummary: summary,
     redactions,
     model: first(raw, ['model']) || null,
-    corrected: withoutDashes(first(raw, ['corrected_question'])),
+    didYouMean: withoutDashes(first(raw, ['did_you_mean'])),
     suggestions: texts(raw.suggestions).map(withoutDashes).slice(0, 3),
   };
 }

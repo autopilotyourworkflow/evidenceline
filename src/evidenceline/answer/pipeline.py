@@ -5,11 +5,10 @@
    numbers, phone numbers). A message that is only a greeting, thanks, or a question about Evidenceline itself
    ('Hello, how does this work?') gets a fixed reply here: no search and no model.
 2. If it asks for a PFAS drinking-water value, take BOTH rules' values from ``guidelines.json`` (never from text).
-3. Search the indexed guidance for up to 8 passages. If nothing matches the words as typed, and the question is not
-   ruled out for a plain reason (another state, prices, a document that is not indexed), its misspelt words are
-   corrected to words the guidance uses (:mod:`evidenceline.guidance.spelling`) and it is searched once more; the
-   result then names the corrected question (``corrected_question``), which the website shows first. A "not
-   covered" result also carries questions to try instead (:mod:`evidenceline.answer.suggest`). "Not covered" stops
+3. Search the indexed guidance for up to 8 passages. A "not covered" result carries questions to try instead
+   (:mod:`evidenceline.answer.suggest`) and, when the question looks misspelt and a corrected spelling finds
+   passages, that spelling as ``did_you_mean`` (:mod:`evidenceline.guidance.spelling`). It is only offered: the
+   question is never rewritten, and the corrected one is asked only if the visitor chooses it. "Not covered" stops
    here, and so does a question asking for a verdict (is the site contaminated, is the water safe): both return
    without calling a model. The one exception
    is a borderline "not covered" (the search's closest passages are a near miss, see
@@ -149,12 +148,11 @@ def _citations(passages: Sequence[Passage], cited: set[int]) -> list[Citation]:
 class _Question:
     """One question on its way through the pipeline: holds what every result needs."""
 
-    def __init__(self, question: str, index_path: Path | None, *, redacted: int | None = None) -> None:
-        """``redacted``: the question was redacted already (a spelling-corrected copy), with this many replaced."""
-        self.text, self.redactions = _redact(question) if redacted is None else (question, redacted)
-        self.corrected: str | None = None
+    def __init__(self, question: str, index_path: Path | None) -> None:
+        self.text, self.redactions = _redact(question)
+        self.did_you_mean: str | None = None
         self.suggest_from = self.text
-        """What suggestions are ranked against: the spelling-corrected words when a correction was tried."""
+        """What suggestions are ranked against: the proposed spelling, when there is one."""
         self.index_path = index_path or default_index_path()
         analytes = routing.drinking_water_analytes(self.text)
         self.values: list[GuidelineValue] = guideline_values(analytes) if analytes else []
@@ -191,7 +189,7 @@ class _Question:
             notes=self.notes,
             verification=verification,
             model=model,
-            corrected_question=self.corrected,
+            did_you_mean=self.did_you_mean if status == "not_covered" else None,
             suggestions=suggestions(self.suggest_from) if status in {"not_covered", "about"} else [],
         )
 
@@ -229,10 +227,10 @@ def answer(
         return item.result("error", "The guidance index could not be read. It needs to be rebuilt on the server.")
 
     if found.status == "not covered":
-        item, found = _spelling_retry(item, found)
-    if found.status == "not covered":
+        item.did_you_mean = _did_you_mean(item)
         closest = list(found.closest_passages)
-        if closest and client is not None and not routing.asks_for_verdict(item.text):
+        # A misspelt question goes no further: the corrected spelling is offered instead of asking the model.
+        if closest and client is not None and item.did_you_mean is None and not routing.asks_for_verdict(item.text):
             item.passages = closest
             return _ask_model(item, client, borderline=True)
         extra = " The verified guideline values are shown below." if item.values else ""
@@ -250,26 +248,21 @@ def answer(
     return _ask_model(item, client)
 
 
-def _spelling_retry(item: _Question, found: GuidanceSearch) -> tuple[_Question, GuidanceSearch]:
-    """The question with its misspelt words corrected and searched again, when that finds passages; otherwise the
-    first try, unchanged. Not tried for a plain-reason "not covered" (another state, an off-topic subject, a named
-    document that is not indexed)."""
+def _did_you_mean(item: _Question) -> str | None:
+    """A corrected spelling of a question that found nothing, when that spelling finds passages; None otherwise.
+    Never for a question ruled out for a plain reason (another state or country, an off-topic subject)."""
     scope = read_question(item.text)
-    if scope.other_jurisdiction is not None or scope.off_topic is not None or scope.named_documents:
-        return item, found
+    if scope.other_jurisdiction is not None or scope.off_topic is not None:
+        return None
     try:
         fixed = corrected(item.text, indexed_words(item.index_path))
         if fixed is None:
-            return item, found
-        retry = _Question(fixed, item.index_path, redacted=item.redactions)
-        second = retry.search()
-    except (EvidencelineError, sqlite3.Error):
-        return item, found
-    if second.status != "passages found":
+            return None
         item.suggest_from = fixed
-        return item, found
-    retry.corrected = fixed
-    return retry, second
+        second = search_guidelines(fixed, MAX_PASSAGES, index_path=item.index_path)
+    except (EvidencelineError, sqlite3.Error):
+        return None
+    return fixed if second.status == "passages found" else None
 
 
 RETRY_NOTE = (

@@ -137,13 +137,15 @@ export function AnswerBody({ view, note, onAsk }: { readonly view: AnswerView; r
   const explanationShownAsMain = !notCovered && view.answer === '' && view.explanation !== '';
   return (
     <>
-      {view.corrected !== '' && (
-        <p className="searched">
-          {TRY.searchedFor}
-          <b>{view.corrected}</b>
+      {title !== null && <p className="akind">{title}</p>}
+      {notCovered && view.didYouMean !== '' && onAsk !== undefined && (
+        <p className="didyoumean">
+          {TRY.didYouMean}{' '}
+          <button type="button" onClick={() => onAsk(view.didYouMean)}>
+            {view.didYouMean}
+          </button>
         </p>
       )}
-      {title !== null && <p className="akind">{title}</p>}
       {paragraphs(main).map((para) => (
         <p key={para}>{prettyUnits(para)}</p>
       ))}

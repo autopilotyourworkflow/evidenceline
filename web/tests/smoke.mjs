@@ -95,7 +95,10 @@ const b = await puppeteer.launch({ executablePath: chromePath, headless: true })
  * Opens a page. `respond` maps a path such as "/data/answers.json" to a canned response; `handle(request)` may answer
  * any other request itself and return true (used to mock the live API). Everything else goes to the preview server.
  */
-async function open(vp, path = '/', { origin = base, respond = {}, handle = null } = {}) {
+async function open(vp, path = '/', { origin = base, respond: extra = {}, handle = null } = {}) {
+  // Cloudflare's Turnstile script is always the local stand-in: nothing here reaches the internet, and the real
+  // widget (refused on this preview's address) would open and close its box at random times.
+  const respond = { '/turnstile/v0/api.js': turnstileScript, ...extra };
   const p = await b.newPage();
   const errors = [];
   const failed = [];
@@ -922,7 +925,7 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     else if (q.includes('bare')) await r.respond(json(answer));
     else if (q.includes('how does this work')) await r.respond(json({ question: q, result: aboutResult }));
     else if (q.includes('poem')) await r.respond(json({ question: q, result: notCoveredResult }));
-    else if (q.includes('waht')) await r.respond(json({ question: q, result: { ...answer, corrected_question: 'what is a tier 1 screening assessment' } }));
+    else if (q.includes('waht')) await r.respond(json({ question: q, result: { ...notCoveredResult, did_you_mean: 'what is a tier 1 screening assessment' } }));
     else if (q.includes('budget')) await r.respond(json({ status: 'paused', explanation: "Live answers are paused: today's limit has been reached.", answer: null, citations: answer.citations, guideline_values: [], notes: [] }));
     else await r.respond(json({ question: q, result: answer }));
     return true;
@@ -1001,11 +1004,15 @@ if (existsSync(join(distDir, 'data', 'answers.json'))) {
     JSON.stringify(asked.slice(askedBefore)),
   );
   const typo = await ask('waht is a teir 1 screening assesment');
-  const searched = await p.$eval('#answer', (a) => a.querySelector('.searched')?.textContent ?? '');
+  const offered = await p.$eval('#answer', (a) => ({ text: a.querySelector('.didyoumean')?.textContent ?? '', asked: 0 }));
+  const askedBeforeTypo = asked.length;
+  await p.click('.didyoumean button');
+  await p.waitForFunction(() => document.querySelector('#answer')?.getAttribute('data-state') === 'live' && document.querySelector('.didyoumean') === null, { timeout: 5000 }).catch(() => undefined);
   ok(
-    'Live: a corrected spelling is said first, with the question that was searched',
-    typo.after.state === 'live' && searched === 'Nothing matched the words as typed, so it searched for: what is a tier 1 screening assessment',
-    searched,
+    'Live: a misspelt question is offered "Did you mean", which is asked only when picked',
+    typo.after.state === 'live' && offered.text === 'Did you mean: what is a tier 1 screening assessment' && asked.length === askedBeforeTypo + 1 &&
+      asked.at(-1)?.q === 'what is a tier 1 screening assessment' && (await p.$eval('#q', (i) => i.value)) === 'what is a tier 1 screening assessment',
+    JSON.stringify({ offered: offered.text, asked: asked.slice(askedBeforeTypo) }),
   );
   const limited = await ask('rate limited question');
   ok('Live: rate-limited gets a friendly message', limited.after.state === 'rate-limited' && limited.after.text.includes('Too many questions') && limited.after.text.includes('try again in a minute'), limited.after.text);

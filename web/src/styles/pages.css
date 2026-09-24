@@ -140,8 +140,9 @@ footer a:hover{color:#fff}
 .robot{max-width:100%}
 .robot:not([data-interactive="true"]){height:0;overflow:hidden}
 .robot[data-interactive="true"]{margin-top:12px;min-height:65px}
-.answer .searched{font-size:14px;color:var(--muted);margin:0 0 10px}
-.answer .searched b{font-weight:500;color:var(--ink)}
+.answer .didyoumean{margin:0 0 10px}
+.answer .didyoumean button{font:inherit;font-weight:500;color:var(--brown);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.answer .didyoumean button:hover{color:var(--ink)}
 .answer .chips.suggest{margin:4px 0 14px}
 
 /* Accuracy notes: the note column holds the wording, so it keeps a readable width beside four verdict columns. */

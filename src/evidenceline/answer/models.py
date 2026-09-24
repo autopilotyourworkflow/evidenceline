@@ -97,10 +97,10 @@ class AnswerResult(_Model):
     notes: list[str]
     verification: Verification
     model: str | None = Field(description="The model that wrote the answer, or null when none was called.")
-    corrected_question: str | None = Field(
+    did_you_mean: str | None = Field(
         default=None,
-        description="The question with its spelling corrected, when the words as typed found nothing and the "
-        "corrected ones did; null otherwise.",
+        description="With a not_covered result: the question with its spelling corrected, when that spelling finds "
+        "passages. Offered to the visitor, never asked on their behalf; null otherwise.",
     )
     suggestions: list[str] = Field(
         default_factory=list,

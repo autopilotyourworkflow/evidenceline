@@ -408,7 +408,7 @@ export const TRY = {
     (hasSuggestions ? ' You could ask yours another way, or try one of these:' : ' You could ask yours another way.'),
   whyNotCovered: "Why it wasn't found",
   suggestTitle: 'Try one of these',
-  searchedFor: 'Nothing matched the words as typed, so it searched for: ',
+  didYouMean: 'Did you mean:',
   guardRailDefault:
     'Whether a site is contaminated or water is unsafe is a professional judgement. Evidenceline can show which results are above or below each guideline and where each value comes from.',
   valuesTitle: 'Guideline values',

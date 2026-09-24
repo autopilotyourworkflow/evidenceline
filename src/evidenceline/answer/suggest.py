@@ -1,8 +1,12 @@
 """Questions to try instead, when the question box cannot answer: the ones closest to what was asked.
 
 The pool is ``data/suggested_questions.json``: plain questions, each known to find the right section of the indexed
-guidance. They are ranked by the words they share with the question, a shared word counting more the fewer questions
-in the pool contain it (so 'groundwater' outweighs 'site'). When nothing is shared, the file's default questions are
+guidance. The question and each pool question are read into the same concepts the search uses
+(:func:`evidenceline.guidance.synonyms.query_concepts`), so 'SAQP' meets 'sampling and analysis quality plan', 'HIL'
+meets 'health investigation levels' and 'dirt' meets 'soil'. A shared concept counts twice as much as a shared word,
+and either counts more the fewer pool questions hold it (so 'groundwater' outweighs 'site'). Words that say what
+kind of thing is wanted rather than its subject ('limits', 'rules', 'include') count for nothing, so a soil question
+gets the soil question first, not the drinking-water one. When nothing is shared, the file's default questions are
 offered. No model is called.
 """
 
@@ -13,9 +17,12 @@ import re
 from functools import cache
 from importlib import resources
 
+from evidenceline.guidance.synonyms import query_concepts
+
 HOW_MANY = 3
+CONCEPT_WEIGHT = 2.0
 _WORD = re.compile(r"[a-z]+")
-_COMMON = frozenset(
+_GENERIC = frozenset(
     [
         "a",
         "an",
@@ -68,6 +75,44 @@ _COMMON = frozenset(
         "any",
         "some",
         "into",
+        "limit",
+        "limits",
+        "level",
+        "levels",
+        "value",
+        "values",
+        "criteria",
+        "criterion",
+        "standard",
+        "standards",
+        "guideline",
+        "guidelines",
+        "guidance",
+        "rule",
+        "rules",
+        "requirement",
+        "requirements",
+        "required",
+        "need",
+        "needed",
+        "include",
+        "includes",
+        "cover",
+        "covers",
+        "check",
+        "checks",
+        "collect",
+        "collected",
+        "category",
+        "categories",
+        "information",
+        "info",
+        "say",
+        "says",
+        "mean",
+        "means",
+        "tell",
+        "know",
     ]
 )
 
@@ -80,35 +125,65 @@ def _stem(word: str) -> str:
     return word
 
 
-def _stems(text: str) -> frozenset[str]:
-    return frozenset(_stem(w) for w in _WORD.findall(text.lower()) if w not in _COMMON and len(w) >= 3)
+def _units(text: str) -> frozenset[str]:
+    """The question's concepts (as 'c:label') and their words (as 'w:stem'), without the generic ones."""
+    units: set[str] = set()
+    for concept in query_concepts(text):
+        label = concept.label.lower()
+        words = [w for w in _WORD.findall(label) if w not in _GENERIC and len(w) >= 3]
+        if not words:
+            continue
+        units.add("c:" + label)
+        units.update("w:" + _stem(w) for w in words)
+    return frozenset(units)
 
 
 def _same(a: str, b: str) -> bool:
-    """The same word, or one starts the other and both have at least 5 letters ('audit', 'auditor')."""
-    return a == b or (min(len(a), len(b)) >= 5 and (a.startswith(b) or b.startswith(a)))
+    """The same unit, or two words where one starts the other and both have at least 5 letters ('audit', 'auditor')."""
+    if a == b:
+        return True
+    if not (a.startswith("w:") and b.startswith("w:")):
+        return False
+    x, y = a[2:], b[2:]
+    return min(len(x), len(y)) >= 5 and (x.startswith(y) or y.startswith(x))
 
 
 @cache
 def _pool() -> tuple[tuple[str, ...], int]:
     raw = json.loads((resources.files("evidenceline") / "data" / "suggested_questions.json").read_text("utf-8"))
-    return tuple(raw["questions"]), int(raw["defaults"])
+    return tuple(str(item["question"]) for item in raw["questions"]), int(raw["defaults"])
+
+
+@cache
+def _pool_units() -> tuple[frozenset[str], ...]:
+    return tuple(_units(q) for q in _pool()[0])
 
 
 def suggestions(question: str) -> list[str]:
     """Up to :data:`HOW_MANY` questions to try instead, closest to ``question`` first; never ``question`` itself."""
     pool, defaults = _pool()
     asked = question.strip().lower()
-    candidates = [q for q in pool if q.lower() != asked]
-    stems = [_stems(q) for q in candidates]
-    rarity = {s: 1 / sum(s in found for found in stems) for found in stems for s in found}
-    wanted = _stems(question)
-    scores = [sum(rarity[s] for s in found if any(_same(s, w) for w in wanted)) for found in stems]
-    order = sorted(range(len(candidates)), key=lambda i: (-scores[i], i))
-    picked = [candidates[i] for i in order if scores[i] > 0][:HOW_MANY]
-    for q in candidates[:defaults] + candidates:
+    keep = [i for i, q in enumerate(pool) if q.lower() != asked]
+    units = _pool_units()
+    held: dict[str, int] = {}
+    for i in keep:
+        for unit in units[i]:
+            held[unit] = held.get(unit, 0) + 1
+    wanted = _units(question)
+
+    def score(i: int) -> float:
+        total = 0.0
+        for unit in units[i]:
+            if any(_same(unit, w) for w in wanted):
+                total += (CONCEPT_WEIGHT if unit.startswith("c:") else 1.0) / held[unit]
+        return total
+
+    scores = {i: score(i) for i in keep}
+    order = sorted(keep, key=lambda i: (-scores[i], i))
+    picked = [pool[i] for i in order if scores[i] > 0][:HOW_MANY]
+    for i in [*keep[:defaults], *keep]:
         if len(picked) == HOW_MANY:
             break
-        if q not in picked:
-            picked.append(q)
+        if pool[i] not in picked:
+            picked.append(pool[i])
     return picked
