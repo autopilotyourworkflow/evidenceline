@@ -276,20 +276,23 @@ const allText = (p) =>
   ok('Every menu link goes to a real section', anchors.length === 5 && anchors.every((a) => a.exists), anchors.map((a) => a.href).join(' '));
 
   const step = () => p.$eval('#count', (c) => c.textContent);
+  /** Waits (up to 3 s, for a slow CI runner) until the walkthrough shows step n; a lost click still fails. */
+  const reach = (n) =>
+    p.waitForFunction((want) => document.querySelector('#count')?.textContent === want, { timeout: 3000 }, `Step ${n} of 5`).catch(() => undefined);
   ok('Walkthrough starts at step 1', (await step()) === 'Step 1 of 5');
   ok('Back button hidden on step 1', await p.$eval('#back', (x) => getComputedStyle(x).display === 'none'));
   for (let k = 2; k <= 5; k++) {
     await p.click('#next');
-    await sleep(120);
+    await reach(k);
   }
   ok('Next reaches step 5', (await step()) === 'Step 5 of 5');
   ok('Only one step visible at a time', await p.evaluate(() => document.querySelectorAll('.pane.on').length === 1));
   ok('Last button offers to start again', (await p.$eval('#next', (x) => x.textContent)) === 'Start again');
   await p.click('#back');
-  await sleep(120);
+  await reach(4);
   ok('Back goes to step 4', (await step()) === 'Step 4 of 5');
   await p.click('#steps button[data-i="1"]');
-  await sleep(120);
+  await reach(2);
   ok('Clicking a step name jumps to it', (await step()) === 'Step 2 of 5');
   const rulers = await p.evaluate(() => {
     document.querySelector('#steps button[data-i="3"]').click();
