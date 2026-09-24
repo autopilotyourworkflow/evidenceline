@@ -10,8 +10,9 @@ services:
     name: evidenceline-api
     runtime: python
     region: singapore
-    # Render's Starter instance (0.5 CPU, 512 MB, about 7 USD a month). Render's Blueprint spec names plans by size.
-    plan: 0.5c-512mb
+    # Render's Starter instance (0.5 CPU, 512 MB, about 7 USD a month). The classic name is used because some Render
+    # workspaces reject the size-based name (0.5c-512mb) when the Blueprint is created.
+    plan: starter
     branch: main
     # Deploy a new commit only after its GitHub checks (.github/workflows/ci.yml) have passed.
     autoDeployTrigger: checksPass
