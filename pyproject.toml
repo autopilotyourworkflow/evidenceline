@@ -55,6 +55,7 @@ dev = [
     "anyio>=4.9",
     "ruff>=0.12",
     "pyright>=1.1.400",
+    "pathspec>=1.1",  # scripts/prepublish_check.py reads .gitignore rules outside a git checkout
 ]
 
 [tool.hatch.build.targets.wheel]
