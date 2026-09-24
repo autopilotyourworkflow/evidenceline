@@ -26,6 +26,27 @@ Evidenceline is a set of nine read-only tools that run inside Claude through MCP
 A guideline value is an investigation level. Evidenceline never says water is unsafe or a site is contaminated; those
 are a scientist's judgement.
 
+## Screenshots
+
+The home page. It works from the real public guidelines, with a sample site and lab results standing in for client data.
+
+![The Evidenceline home page](docs/images/home.jpg)
+
+Step 3 of the walkthrough. Claude's draft says PFOS went up; the lab results show it went slightly down, so the
+checker stops that sentence before anyone signs the report.
+
+![Walkthrough step 3: the checker flags a sentence the lab results do not support](docs/images/check.png)
+
+The question box. The answer gives both drinking-water values side by side, each with its document, table and page,
+and the source it quotes.
+
+<img src="docs/images/ask.png" alt="The question box answering what the drinking-water limit for PFOS is" width="572">
+
+Tidy lab files. Each thing the files disagree on comes with the rows it is based on, the rule, the source, and what
+the scientist decides.
+
+![Tidy lab files: a sample id written two ways, with its evidence and rule](docs/images/tidy.png)
+
 ## Choices I made
 
 - **Deterministic checks in code, not in the model.** Screening, sums, non-detects, unit conversion and the paragraph
