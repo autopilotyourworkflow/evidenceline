@@ -37,8 +37,8 @@ checker stops that sentence before anyone signs the report.
 
 ![Walkthrough step 3: the checker flags a sentence the lab results do not support](docs/images/check.png)
 
-The question box. The answer gives both drinking-water values side by side, each with its document, table and page,
-and the source it quotes.
+The question box. The answer starts with a short paragraph in plain words, then the detail, and gives both
+drinking-water values side by side, each with its document, table and page.
 
 <img src="docs/images/ask.png" alt="The question box answering what the drinking-water limit for PFOS is" width="572">
 
