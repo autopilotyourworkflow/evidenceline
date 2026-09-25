@@ -5,6 +5,7 @@ Usage::
     .venv/Scripts/python scripts/precompute_answers.py                            # the default model
     .venv/Scripts/python scripts/precompute_answers.py --model claude-sonnet-5    # name the model explicitly
     .venv/Scripts/python scripts/precompute_answers.py --only 4                   # rerun question 4, keep the rest
+    .venv/Scripts/python scripts/precompute_answers.py --workers 5                # 5 questions at a time
 
 Runs :func:`evidenceline.answer.answer` (the code behind ``POST /api/ask``) for each example question, with the
 local Claude Code CLI as the model (headless, every tool off), and writes ``web/public/data/answers.json``. Each
@@ -23,13 +24,17 @@ The file records the model asked for (``model``), the model names the CLI report
 prompt has changed since the answers were prepared.
 
 Needs the local guidance index (scripts/fetch_corpus.py, scripts/build_index.py) and a Claude Code login. About
-16 to 32 model calls (one per answered question, two when the first answer fails a check); questions that need no
+12 to 24 model calls (one per answered question, two when the first answer fails a check); questions that need no
 model (a verdict, a question the guidance does not cover) make none. The script prints how many calls it made.
 
 ``--only N`` (repeatable, numbered from 1 in the order of :data:`QUESTIONS` and then :data:`LOOKUP_QUESTIONS`)
 reruns only those questions and keeps every other entry exactly as it is in the existing file. It refuses unless that
 file holds the same questions and was written under the same system prompt with the same model, so a kept entry is
 never mixed with a changed prompt.
+
+``--workers N`` prepares up to N questions at the same time (a thread pool; default 1, one after another). The
+entries, the file and the call count are the same whatever N is: each question is answered on its own, the entries
+keep the fixed order, and the file is written once, at the end.
 """
 
 from __future__ import annotations
@@ -40,7 +45,9 @@ import hashlib
 import json
 import re
 import sys
+import threading
 from collections.abc import Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -62,7 +69,7 @@ start with a hyphen, so it can never be read as another CLI option."""
 QUESTIONS = (
     "What is the drinking-water limit for PFOS?",
     "Is this site contaminated?",
-    "What should a detailed site investigation report include?",
+    "What quality checks should a lab report include?",
     "When do I have to report a suspected contaminated site to DWER?",
     "What is a conceptual site model?",
     "What are the NSW rules for PFAS in soil?",
@@ -89,13 +96,15 @@ class CountingClient:
     def __init__(self, inner: ModelClient) -> None:
         self.inner = inner
         self.calls = 0
+        self._lock = threading.Lock()
 
     @property
     def model_id(self) -> str:
         return self.inner.model_id
 
     def complete(self, system: str, prompt: str) -> ModelReply:
-        self.calls += 1
+        with self._lock:  # questions may run in parallel (--workers)
+            self.calls += 1
         return self.inner.complete(system, prompt)
 
 
@@ -138,9 +147,12 @@ def build(
     day: dt.date,
     keep: Mapping[str, dict[str, Any]] | None = None,
     lookups: Sequence[str] = (),
+    *,
+    workers: int = 1,
 ) -> dict[str, Any]:
     """Run every question (the buttons' ``questions``, then ``lookups``) through the pipeline, except those in
-    ``keep`` (question to its existing entry), which are copied unchanged."""
+    ``keep`` (question to its existing entry), which are copied unchanged. ``workers`` questions run at the same
+    time; the entries come back in the same order, with the same content, whatever it is."""
     kept = keep or {}
 
     def prepared(question: str) -> dict[str, Any]:
@@ -154,9 +166,13 @@ def build(
             "result": result.model_dump(mode="json"),
         }
 
-    entries = [prepared(question) for question in questions]
-    lookup = [prepared(question) for question in lookups]
-    every = [*entries, *lookup]
+    asked = [*questions, *lookups]
+    if workers > 1:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            every = list(pool.map(prepared, asked))  # map keeps the order the questions were given in
+    else:
+        every = [prepared(question) for question in asked]
+    entries, lookup = every[: len(questions)], every[len(questions) :]
     reported = {str(e["result"]["model"]) for e in every if e["result"]["model"] is not None}
     days = [dt.date.fromisoformat(str(e["prepared_on"])) for e in every] or [day]
     return {
@@ -232,6 +248,17 @@ def model_name(text: str) -> str:
     return name
 
 
+def worker_count(text: str) -> int:
+    """argparse type for --workers: a whole number from 1 to 16."""
+    try:
+        count = int(text)
+    except ValueError:
+        count = 0
+    if not 1 <= count <= 16:
+        raise argparse.ArgumentTypeError("use a whole number from 1 to 16")
+    return count
+
+
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="precompute_answers.py",
@@ -249,6 +276,13 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         action="append",
         metavar="N",
         help="rerun only question N (from 1, buttons then lookups; repeatable) and keep every other entry",
+    )
+    parser.add_argument(
+        "--workers",
+        type=worker_count,
+        default=1,
+        metavar="N",
+        help="prepare up to N questions at the same time (default 1); the file is the same whatever N is",
     )
     return parser.parse_args(list(argv))
 
@@ -270,7 +304,7 @@ def main(argv: Sequence[str]) -> int:
             print(f"precompute_answers: {exc}", file=sys.stderr)
             return 1
     client = CountingClient(ClaudeCliClient(model=args.model))
-    data = build(client, QUESTIONS, dt.date.today(), keep, LOOKUP_QUESTIONS)
+    data = build(client, QUESTIONS, dt.date.today(), keep, LOOKUP_QUESTIONS, workers=args.workers)
     problems = check(data)
     if problems:
         for line in problems:

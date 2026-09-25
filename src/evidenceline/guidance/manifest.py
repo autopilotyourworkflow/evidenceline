@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from functools import cache
 from importlib import resources
@@ -24,6 +25,16 @@ CACHE_ENV = "EVIDENCELINE_CORPUS_DIR"
 """Environment variable that overrides the cache folder."""
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
+
+_CC_BY = re.compile(r"CC BY \d+(?:\.\d+)?")
+"""A plain Creative Commons Attribution licence ('CC BY 4.0'): not NC, ND or SA."""
+
+
+def allows_reuse(licence_lane: str, licence: str) -> bool:
+    """True when a document's licence allows reuse with attribution: licence lane A and a plain CC BY licence
+    ('CC BY 4.0'). Lane B (WA Government copyright) and lane C (NHMRC) allow only short excerpts, and so does any
+    lane A entry whose licence text is not a plain CC BY one."""
+    return licence_lane == "A" and _CC_BY.fullmatch(licence.strip()) is not None
 
 
 @dataclass(frozen=True, slots=True)

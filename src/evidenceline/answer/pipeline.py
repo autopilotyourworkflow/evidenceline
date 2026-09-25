@@ -18,13 +18,21 @@
    Nor do two kinds of question the passages were found for: one asking for another medium's value (soil,
    recreational water), which Evidenceline never states, and one whose only searchable content is one everyday
    word ('time', 'coffee'). Both get the passages without a written answer.
-4. Otherwise ask the model for 2 or 3 cited sentences from the passages and values only.
-5. Check the answer in code: every check in :mod:`evidenceline.answer.verify`, plus three plain-wording checks
-   (every sentence under :data:`~evidenceline.answer.prompt.MAX_SENTENCE_WORDS` words, no run of more than
-   :data:`~evidenceline.answer.prompt.MAX_QUOTED_WORDS` words copied from a passage, and no talk about what the
-   answer was or was not given). If any check fails, the model is asked once more, unless the question has already
-   taken :data:`SECOND_ATTEMPT_WITHIN` seconds; if that fails too, the answer is withheld and only the passages are
-   shown, with the names of the checks it failed. Its text is never shown, not even in part.
+4. Otherwise ask the model for a cited answer from the passages and values only: an easy first paragraph of 1 to 3
+   plain sentences, then, only when the passages give more that a scientist would want, one or two detail
+   paragraphs. Paragraph breaks are tidied to one blank line (:func:`~evidenceline.answer.verify.tidy_paragraphs`),
+   which is where the website starts a new paragraph.
+5. Check the whole answer in code: every check in :mod:`evidenceline.answer.verify`, plus four plain-wording checks
+   ("easy first paragraph": 1 to :data:`~evidenceline.answer.prompt.MAX_EASY_SENTENCES` sentences, each under
+   :data:`~evidenceline.answer.prompt.MAX_SENTENCE_WORDS` words; "no run-on sentences": no later sentence over
+   :data:`~evidenceline.answer.prompt.LONG_SENTENCE_WORDS` words; "no long quotes": no run of more than
+   :data:`~evidenceline.answer.prompt.MAX_QUOTED_WORDS` words copied from a passage, except up to
+   :data:`~evidenceline.answer.prompt.MAX_REUSED_WORDS` from a CC BY document after the first paragraph; and no talk
+   about what the answer was or was not given). If any check fails, the model is asked once more, unless the
+   question has already taken :data:`SECOND_ATTEMPT_WITHIN` seconds. That prompt names the failed checks and, after
+   a copying failure, quotes the passage's own words that were copied (:data:`COPIED_NOTE`), never the answer. If
+   the second answer fails too, it is withheld and only the passages are shown, with the names of the checks it
+   failed. Its text is never shown, not even in part.
 """
 
 from __future__ import annotations
@@ -51,10 +59,19 @@ from evidenceline.answer.models import (
     VerificationCheck,
 )
 from evidenceline.answer.names import find_names
-from evidenceline.answer.prompt import MAX_QUOTED_WORDS, MAX_SENTENCE_WORDS, NOT_COVERED, SYSTEM, build_prompt
+from evidenceline.answer.prompt import (
+    LONG_SENTENCE_WORDS,
+    MAX_EASY_SENTENCES,
+    MAX_QUOTED_WORDS,
+    MAX_REUSED_WORDS,
+    MAX_SENTENCE_WORDS,
+    NOT_COVERED,
+    SYSTEM,
+    build_prompt,
+)
 from evidenceline.answer.suggest import suggestions
 from evidenceline.answer.values import describe, guideline_values
-from evidenceline.answer.verify import citations, sentences, verify
+from evidenceline.answer.verify import citations, paragraphs, sentences, tidy_paragraphs, verify
 from evidenceline.errors import EvidencelineError
 from evidenceline.guidance.models import GuidanceSearch, Passage
 from evidenceline.guidance.scope import NUMERIC_NOTE, read_question
@@ -86,14 +103,15 @@ ABOUT_REPLY = (
     'This is Evidenceline. Ask it about assessing contaminated sites, such as PFAS (the "forever chemicals") in '
     "groundwater. It answers only from public guidance: national guidance on site contamination and PFAS, and two "
     "Western Australian government guidelines on contaminated sites. It is free to use.\n\n"
-    "It finds the pages that best match your question, and an AI model writes a short answer from those pages only. "
+    "It finds the pages that best match your question, and an AI model writes an answer from those pages only, "
+    "starting with a short paragraph in plain words. "
     "Before you see it, code (not AI) checks that every sentence cites a source and that every number comes from "
     "one. An answer that fails the checks is never shown. Each answer lists its sources with links, so you can check "
     "them yourself.\n\n"
     "It won't say whether a particular site is contaminated or water is safe. That judgement belongs to the "
     "scientist who signs the report and to the regulator.\n\n"
-    'To start, pick one of the questions below, or ask your own, such as "How should groundwater samples be '
-    'collected?" To see who built it and why, read About further down this page.'
+    'To start, pick one of the questions below, or ask your own, such as "What is a preliminary site '
+    'investigation?" To see who built it and why, read About further down this page.'
 )
 """The fixed reply to a greeting or a question about Evidenceline itself (routing.about_evidenceline)."""
 THANKS_REPLY = "Ask another question whenever you like, or pick one of the questions below."
@@ -122,7 +140,7 @@ OTHER_MEDIUM_VALUE = (
 """Why a question asking for another medium's value (soil, recreational water, fresh water) gets passages only."""
 ONE_WORD = (
     "The question has only one word to search for, so the passages that use it are shown without a written answer, "
-    "and no AI model was used. Ask a fuller question, such as 'How should groundwater samples be collected?', to get "
+    "and no AI model was used. Ask a fuller question, such as 'What is a preliminary site investigation?', to get "
     "a written answer."
 )
 """Why a question whose only searchable content is one everyday word ('time', 'coffee') gets passages only."""
@@ -344,6 +362,15 @@ RETRY_NOTE = (
     "following every rule."
 )
 """Added to the prompt for the one second attempt. It names the failed checks, not the previous answer."""
+COPIED_NOTE = (
+    "The words copied too closely are these, as the passages word them: {phrases}. Say each point in your own "
+    "words or shorten it, and never repeat more than ten of a passage's words in a row."
+)
+"""Added after :data:`RETRY_NOTE` when "no long quotes" failed. It quotes the passage's own words (from the passage
+text, never from the answer), so the model knows what to paraphrase. It goes only to the model: the check's detail,
+which the website shows, names sentence and passage numbers only."""
+MAX_COPIED_PHRASES = 6
+"""At most this many copied phrases are quoted in :data:`COPIED_NOTE`, longest first."""
 
 
 def _reasons(record: Verification) -> str:
@@ -359,7 +386,8 @@ PLAIN_REASONS: dict[str, str] = {
     "no rule picked": "it chose one rule over the other",
     "no verdict wording": "it judged whether a site or its water is safe",
     "no dashes": "its punctuation did not follow the house style",
-    "short sentences": "a sentence was too long",
+    "easy first paragraph": "its first paragraph was not short and plain enough",
+    "no run-on sentences": "a sentence was far too long",
     "no long quotes": "it copied too many words in a row from a source",
     "about the guidance": "it talked about its instructions instead of the guidance",
 }
@@ -385,53 +413,178 @@ def _tokens(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", _CITATION.sub(" ", text).replace(_RIGHT_QUOTE, "'").lower())
 
 
-def _check_sentence_length(answer: str) -> VerificationCheck:
-    """Rule 2 of the prompt: every sentence under MAX_SENTENCE_WORDS words, citations not counted."""
-    found = sentences(answer)
-    counts = [len(_WORD.findall(_CITATION.sub(" ", s))) for s in found]
-    failures = [
-        f"sentence {n} of {len(found)} has {words} words"
-        for n, words in enumerate(counts, 1)
-        if words >= MAX_SENTENCE_WORDS
+def _word_count(sentence: str) -> int:
+    return len(_WORD.findall(_CITATION.sub(" ", sentence)))
+
+
+def _numbered(answer: str) -> list[tuple[int, int, str]]:
+    """(paragraph, sentence number, sentence) for every sentence of the answer: paragraphs count from 0 (the easy
+    first paragraph), sentences from 1 across the whole answer."""
+    found: list[tuple[int, int, str]] = []
+    for paragraph, text in enumerate(paragraphs(answer)):
+        for sentence in sentences(text):
+            found.append((paragraph, len(found) + 1, sentence))
+    return found
+
+
+EASY_SHAPE = (
+    f"Open with an easy paragraph of 1 to {MAX_EASY_SENTENCES} sentences, each under {MAX_SENTENCE_WORDS} words, in "
+    "everyday words that answer the question directly; then put a blank line, and move any detail a scientist "
+    "would want into one or two later paragraphs, or leave it out; if a sentence is too long, split it into two "
+    "short cited sentences rather than swapping plain words for technical ones"
+)
+"""How a failed "easy first paragraph" check tells the model the shape, on its one second attempt."""
+
+
+def _check_easy_first(answer: str) -> VerificationCheck:
+    """Rule 2 of the prompt: the first paragraph has 1 to MAX_EASY_SENTENCES sentences, each under
+    MAX_SENTENCE_WORDS words, citations not counted, and it holds words, not only citations. The detail names
+    sentence numbers, never words."""
+    first = [(n, _word_count(sentence)) for paragraph, n, sentence in _numbered(answer) if paragraph == 0]
+    failures: list[str] = []
+    if not any(words for _, words in first):  # '[1]' alone: the reader's first paragraph would hold no answer
+        failures.append("the first paragraph has no words, only citations")
+    if len(first) > MAX_EASY_SENTENCES:
+        failures.append(f"the first paragraph has {len(first)} sentences, and it may have at most {MAX_EASY_SENTENCES}")
+    failures += [
+        f"sentence {n}, in the first paragraph, has {words} words" for n, words in first if words >= MAX_SENTENCE_WORDS
     ]
     if failures:
-        detail = (
-            "; ".join(failures)
-            + f", and every sentence must be under {MAX_SENTENCE_WORDS} words: split or shorten each long one."
-        )
-        return VerificationCheck(name="short sentences", passed=False, detail=detail)
+        detail = "; ".join(failures) + f". {EASY_SHAPE}."
+        return VerificationCheck(name="easy first paragraph", passed=False, detail=detail)
     return VerificationCheck(
-        name="short sentences",
+        name="easy first paragraph",
         passed=True,
-        detail=f"All {len(found)} sentence(s) are under {MAX_SENTENCE_WORDS} words.",
+        detail=f"The first paragraph has {len(first)} sentence(s), each under {MAX_SENTENCE_WORDS} words.",
     )
 
 
+def _check_run_on(answer: str) -> VerificationCheck:
+    """Rule 3 of the prompt: a sentence after the first paragraph may be longer, but has at most
+    LONG_SENTENCE_WORDS words, citations not counted."""
+    later = [(n, _word_count(sentence)) for paragraph, n, sentence in _numbered(answer) if paragraph > 0]
+    failures = [f"sentence {n} has {words} words" for n, words in later if words > LONG_SENTENCE_WORDS]
+    if failures:
+        detail = (
+            "; ".join(failures)
+            + f", and a sentence in a detail paragraph may have at most {LONG_SENTENCE_WORDS} words: split it."
+        )
+        return VerificationCheck(name="no run-on sentences", passed=False, detail=detail)
+    if not later:
+        return VerificationCheck(
+            name="no run-on sentences", passed=True, detail="The answer has no paragraph after the first."
+        )
+    return VerificationCheck(
+        name="no run-on sentences",
+        passed=True,
+        detail=f"All {len(later)} sentence(s) after the first paragraph have {LONG_SENTENCE_WORDS} words or fewer.",
+    )
+
+
+def _runs(words: Sequence[str], size: int) -> set[tuple[str, ...]]:
+    """Every run of ``size`` words in a row."""
+    return {tuple(words[i : i + size]) for i in range(len(words) - size + 1)}
+
+
 def _check_copied_runs(answer: str, passages: Sequence[PassageText]) -> VerificationCheck:
-    """Rule 9 of the prompt: no run of more than MAX_QUOTED_WORDS words copied from a passage. The detail names the
-    sentence and the passage, never the words."""
-    size = MAX_QUOTED_WORDS + 1
-    runs = {
-        p.number: {tuple(words[i : i + size]) for i in range(len(words) - size + 1)}
-        for p in passages
-        for words in [_tokens(p.body)]
-    }
+    """Rule 9 of the prompt, by licence: no run of more than MAX_QUOTED_WORDS words copied from a passage, except
+    that a sentence after the first paragraph may copy a run of up to MAX_REUSED_WORDS words from a passage whose
+    document allows reuse with attribution (CC BY, :attr:`PassageText.reusable`). The first paragraph is always
+    paraphrased, and a document that allows only short excerpts keeps the short limit everywhere. The detail names
+    the sentence and the passage, never the words."""
+    short = {p.number: _runs(_tokens(p.body), MAX_QUOTED_WORDS + 1) for p in passages}
+    long = {p.number: _runs(_tokens(p.body), MAX_REUSED_WORDS + 1) for p in passages if p.reusable}
     failures: list[str] = []
-    for n, sentence in enumerate(sentences(answer), 1):
+    for paragraph, n, sentence in _numbered(answer):
         words = _tokens(sentence)
-        pieces = {tuple(words[i : i + size]) for i in range(len(words) - size + 1)}
-        failures += [
-            f"sentence {n} copies more than {MAX_QUOTED_WORDS} words in a row from passage {number}: paraphrase it"
-            for number, held in runs.items()
-            if pieces & held
-        ]
+        pieces = _runs(words, MAX_QUOTED_WORDS + 1)
+        for number, held in short.items():
+            if not pieces & held:
+                continue
+            if paragraph == 0:
+                failures.append(
+                    f"sentence {n} copies more than {MAX_QUOTED_WORDS} words in a row from passage {number}: "
+                    "paraphrase it, since the first paragraph is always in your own words"
+                )
+            elif number not in long:
+                failures.append(
+                    f"sentence {n} copies more than {MAX_QUOTED_WORDS} words in a row from passage {number}: "
+                    "paraphrase it"
+                )
+            elif _runs(words, MAX_REUSED_WORDS + 1) & long[number]:
+                failures.append(
+                    f"sentence {n} copies more than {MAX_REUSED_WORDS} words in a row from passage {number}: "
+                    "paraphrase it"
+                )
     if failures:
         return VerificationCheck(name="no long quotes", passed=False, detail="; ".join(failures) + ".")
     return VerificationCheck(
         name="no long quotes",
         passed=True,
-        detail=f"No run of more than {MAX_QUOTED_WORDS} words is copied from a passage.",
+        detail=(
+            f"No sentence copies more than {MAX_QUOTED_WORDS} words in a row from a passage, apart from runs of up "
+            f"to {MAX_REUSED_WORDS} words after the first paragraph from a document whose licence allows reuse "
+            "with credit."
+        ),
     )
+
+
+_WORD_PART = re.compile(r"[A-Za-z0-9]+")
+
+
+def _placed_tokens(text: str) -> list[tuple[str, int, int]]:
+    """The words of ``text`` as :func:`_tokens` reads them, each with where it starts and ends in ``text``.
+    Citations are blanked with spaces of the same length, so every position still points into ``text``."""
+    blanked = _CITATION.sub(lambda m: " " * len(m.group()), text)
+    return [(m.group().lower(), m.start(), m.end()) for m in _WORD_PART.finditer(blanked)]
+
+
+def _source_runs(words: Sequence[str], source: Sequence[str], limit: int) -> list[tuple[int, int]]:
+    """(start, length) in ``source`` of every longest run of more than ``limit`` words that ``words`` repeats."""
+    size = limit + 1
+    starts: dict[tuple[str, ...], list[int]] = {}
+    for k in range(len(source) - size + 1):
+        starts.setdefault(tuple(source[k : k + size]), []).append(k)
+    found: list[tuple[int, int]] = []
+    for i in range(len(words) - size + 1):
+        for k in starts.get(tuple(words[i : i + size]), []):
+            if i and k and words[i - 1] == source[k - 1]:
+                continue  # the same run, found from an earlier word
+            length = size
+            while i + length < len(words) and k + length < len(source) and words[i + length] == source[k + length]:
+                length += 1
+            found.append((k, length))
+    return found
+
+
+def copied_phrases(answer: str, passages: Sequence[PassageText]) -> list[tuple[int, str]]:
+    """(passage number, the passage's own words) for every run the "no long quotes" check fails, longest first and
+    at most :data:`MAX_COPIED_PHRASES`. The words are taken from the passage text, never from the answer, and go
+    only into the prompt for the second attempt (:data:`COPIED_NOTE`), never into the check's detail."""
+    placed = {p.number: _placed_tokens(p.body) for p in passages}
+    found: dict[tuple[int, str], int] = {}
+    for paragraph, _, sentence in _numbered(answer):
+        words = _tokens(sentence)
+        for p in passages:
+            limit = MAX_REUSED_WORDS if paragraph > 0 and p.reusable else MAX_QUOTED_WORDS
+            source = placed[p.number]
+            for start, length in _source_runs(words, [token for token, _, _ in source], limit):
+                phrase = p.body[source[start][1] : source[start + length - 1][2]]
+                found[(p.number, phrase)] = max(found.get((p.number, phrase), 0), length)
+    ranked = sorted(found, key=lambda key: -found[key])  # stable: equal lengths keep the answer's order
+    return ranked[:MAX_COPIED_PHRASES]
+
+
+def _retry_prompt(prompt: str, record: Verification, answer: str, passages: Sequence[PassageText]) -> str:
+    """The prompt for the one second attempt: the first prompt, the failed checks and, after a copying failure,
+    the passages' own words that were copied (:data:`COPIED_NOTE`). Never the previous answer."""
+    parts = [prompt, RETRY_NOTE.format(reasons=_reasons(record))]
+    if any(c.name == "no long quotes" and not c.passed for c in record.checks):
+        phrases = copied_phrases(answer, passages)
+        if phrases:
+            quoted = "; ".join(f'"{phrase}" (passage {number})' for number, phrase in phrases)
+            parts.append(COPIED_NOTE.format(phrases=quoted))
+    return "\n\n".join(parts)
 
 
 _INSIDE_WORDING = re.compile(
@@ -471,7 +624,8 @@ def _check_answer(
         return record
     checks = [
         *record.checks,
-        _check_sentence_length(answer),
+        _check_easy_first(answer),
+        _check_run_on(answer),
         _check_copied_runs(answer, passages),
         _check_inside_wording(answer),
     ]
@@ -501,12 +655,13 @@ def _ask_model(item: _Question, client: ModelClient, *, borderline: bool = False
         return item.result("error", f"{exc} The passages are shown instead.", model=client.model_id)
     if NOT_COVERED in reply.text:
         return _not_covered(item, reply.model, borderline)
-    record = _check_answer(reply.text, texts, item.values, value_lines)
+    text = tidy_paragraphs(reply.text)  # checked and shown with one blank line between paragraphs
+    record = _check_answer(text, texts, item.values, value_lines)
     attempts = 1
     if not record.passed:
         if monotonic() - item.started > SECOND_ATTEMPT_WITHIN:  # no time for a second answer before the page gives up
             return _withheld(item, record, reply.model, attempts, borderline)
-        retry = "\n\n".join([prompt, RETRY_NOTE.format(reasons=_reasons(record))])
+        retry = _retry_prompt(prompt, record, text, texts)
         try:
             second = client.complete(SYSTEM, retry)
         except ModelUnavailableError:  # includes a pause: the first answer's result stands
@@ -514,10 +669,11 @@ def _ask_model(item: _Question, client: ModelClient, *, borderline: bool = False
         attempts = 2
         if NOT_COVERED in second.text:
             return _not_covered(item, second.model, borderline)
-        reply, record = second, _check_answer(second.text, texts, item.values, value_lines)
+        reply, text = second, tidy_paragraphs(second.text)
+        record = _check_answer(text, texts, item.values, value_lines)
         if not record.passed:
             return _withheld(item, record, reply.model, attempts, borderline)
-    cited, _, _ = citations(reply.text)
+    cited, _, _ = citations(text)
     retried = " The first answer failed a check and was not shown; this is the second." if attempts == 2 else ""
     near = BORDERLINE_ANSWERED if borderline else ""
     return item.result(
@@ -525,7 +681,7 @@ def _ask_model(item: _Question, client: ModelClient, *, borderline: bool = False
         f"Written by {reply.model} from the numbered passages only, then checked in code: every citation exists, "
         "every sentence is cited and every number was found in a cited passage or in the verified guideline "
         f"values.{retried}{near} Open a citation to read the source.",
-        answer=reply.text,
+        answer=text,
         cited=set(cited),
         verification=record,
         model=reply.model,

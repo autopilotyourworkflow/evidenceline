@@ -28,14 +28,21 @@ import httpx2
 MODEL_ENV = "EVIDENCELINE_MODEL"
 KEY_ENV = "ANTHROPIC_API_KEY"
 DEFAULT_MODEL = "claude-sonnet-5"
-MAX_TOKENS = 4000
-"""Room for the model's thinking and a 2 or 3 sentence answer."""
+MAX_TOKENS = 8000
+"""Room for the model's thinking and the answer. With no thinking setting sent, Sonnet 5 thinks as it sees fit
+(adaptive), and that thinking counts against this limit. The answer itself (an easy paragraph of up to 3 short
+sentences, then at most two detail paragraphs) is a few hundred tokens. :data:`TIMEOUT`, not this limit, is what
+bounds how long, and so how costly, one call can be."""
 EFFORT = "medium"
 TIMEOUT = 25.0
 """Seconds one API call may take. The website gives up on a question after 60 s and a question may call the model
 twice, so the SDK does not retry by itself: its retry, and the Retry-After of a rate limit (which it waits out
 however long it is), could keep a question running and paid for long after the visitor has gone."""
 UNREADABLE = "The model service sent a reply that could not be read."
+CUT_OFF = "The answer was cut off before it was finished."
+_CUT_OFF_STOPS = frozenset({"max_tokens", "model_context_window_exceeded"})
+"""Stop reasons for a reply that ran out of room. Its text can end just after a citation and pass every check, so
+it is never used: with adaptive thinking the model can spend most of :data:`MAX_TOKENS` thinking."""
 
 CLI_ENV = "EVIDENCELINE_CLAUDE_CLI"
 VSCODE_CLI_DIR = "anthropic.claude-code-*/resources/native-binary"
@@ -155,12 +162,15 @@ class AnthropicClient:
             raise ModelFailedError(UNREADABLE) from exc
         try:
             refused = response.stop_reason == "refusal"
+            cut_off = response.stop_reason in _CUT_OFF_STOPS
             text = "".join(block.text for block in response.content if isinstance(block, anthropic.types.TextBlock))
             model = response.model or self._model
         except (AttributeError, TypeError) as exc:  # a 200 whose body is not a message ('<html>', [1, 2], {})
             raise ModelFailedError(UNREADABLE) from exc
         if refused:
             raise ModelFailedError("The model declined to answer this question.")
+        if cut_off:
+            raise ModelFailedError(CUT_OFF)
         return ModelReply(text=text.strip(), model=model)
 
 
@@ -229,6 +239,8 @@ class ClaudeCliClient:
             raise ModelFailedError(f"The Claude Code CLI reported an error ({payload.get('subtype')}).")
         if payload.get("stop_reason") == "refusal":
             raise ModelFailedError("The model declined to answer this question.")
+        if payload.get("stop_reason") in _CUT_OFF_STOPS:
+            raise ModelFailedError(CUT_OFF)
         usage = cast(dict[str, Any], payload.get("modelUsage") or {})
         model = self.model if self.model in usage else next((m for m in usage if "haiku" not in m), self.model)
         return ModelReply(text=str(payload.get("result", "")).strip(), model=model)

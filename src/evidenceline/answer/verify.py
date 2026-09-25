@@ -5,7 +5,9 @@ Checks, each reported with what it looked at:
 1. **Citations exist.** Every marker such as [2] names a passage that was given, every [G1] a guideline value
    that was given, and there is at least one.
 2. **Every sentence is cited.** A new sentence starts after a full stop, question mark or exclamation mark
-   (whatever letter follows, except after an abbreviation such as 'p.' or 'e.g.') and at every line break.
+   (whatever letter follows, except after an abbreviation such as 'p.' or 'e.g.') and at every line break. A
+   citation just after a full stop counts for the sentence before it only on the same line, never across a
+   paragraph break.
 3. **Every number is traced.** Each number in the answer must appear in the text of a passage the answer cites, or
    in the guideline values given. A concentration (in any unit spelling: ug/L, micrograms per litre, ng/litre,
    parts per trillion...) must be the value of a guideline marker cited in its own sentence, and when the words
@@ -35,7 +37,7 @@ from evidenceline.answer.numbers import Quantity, read_numbers
 from evidenceline.answer.wording import dashes, rule_picks, verdicts
 from evidenceline.units import parse_decimal
 
-__all__ = ["Quantity", "citations", "read_numbers", "sentences", "verify"]
+__all__ = ["Quantity", "citations", "paragraphs", "read_numbers", "sentences", "tidy_paragraphs", "verify"]
 
 _BRACKET = re.compile(r"\[(?=G?\d)([^\]]*)\]")
 """Anything in square brackets that starts like a citation: [1], [G2], [1, 3], [1-3]."""
@@ -52,6 +54,8 @@ _LEADING_MARKERS = re.compile(r"((?:\[G?\d+(?:\s*,\s*G?\d+)*\]\s*)+[.!?]?)\s*(.*
 """Citations at the start of a sentence belong to the sentence before: 'It is needed. [1] Next ...'."""
 _SENTENCE_END = re.compile(r"[.!?]+\s+(?=\S)")
 _LINE_BREAK = re.compile(r"\s*\n\s*")
+_ANY_LINE_BREAK = re.compile(r"[^\S\n]*\n\s*")
+"""A line break with the spaces and blank lines around it (after Windows and old Mac line endings are made '\\n')."""
 _NEMP_30 = re.compile(r"\bNEMP\s*(?:v(?:ersion)?\s*)?3\.0\b|\bversion\s+3\.0\b", re.IGNORECASE)
 _CURRENT = re.compile(
     r"\bcurrent\s+(?:national\s+|NHMRC\s+|ADWG\s+|drinking[\s-]water\s+|australian\s+)*"
@@ -97,17 +101,35 @@ def _split_block(text: str) -> list[str]:
 
 def sentences(text: str) -> list[str]:
     """Split into sentences at every full stop, question mark or exclamation mark followed by a space (not after
-    abbreviations such as 'p.' or 'e.g.'), and at every line break."""
-    parts = [part for block in _LINE_BREAK.split(text) for part in _split_block(block)]
+    abbreviations such as 'p.' or 'e.g.'), and at every line break.
+
+    Citations at the start of a sentence belong to the sentence before only on the same line: after a line break
+    they start a new line or paragraph, which the website shows apart from the sentence above it."""
     merged: list[str] = []
-    for part in parts:
-        leading = _LEADING_MARKERS.fullmatch(part)
-        if merged and leading:
-            merged[-1] = f"{merged[-1]} {leading.group(1).strip()}"
-            part = leading.group(2).strip()  # noqa: PLW2901 - the rest of the sentence, without the moved markers
-        if part:
-            merged.append(part)
+    for block in _LINE_BREAK.split(text):
+        first = len(merged)
+        for part in _split_block(block):
+            leading = _LEADING_MARKERS.fullmatch(part)
+            if len(merged) > first and leading:
+                merged[-1] = f"{merged[-1]} {leading.group(1).strip()}"
+                part = leading.group(2).strip()  # noqa: PLW2901 - the rest of the sentence, without the moved markers
+            if part:
+                merged.append(part)
     return merged
+
+
+def tidy_paragraphs(text: str) -> str:
+    """The answer with one blank line between paragraphs. A model may end a paragraph with a single line break, a
+    blank line or Windows line endings; each becomes one blank line, which is where the website starts a new
+    paragraph. Sentences are split at every line break anyway, so nothing a check reads changes."""
+    unified = text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    return _ANY_LINE_BREAK.sub("\n\n", unified)
+
+
+def paragraphs(text: str) -> list[str]:
+    """The answer's paragraphs, first to last: :func:`tidy_paragraphs`, split at each blank line."""
+    tidied = tidy_paragraphs(text)
+    return tidied.split("\n\n") if tidied else []
 
 
 def _check(name: str, failures: Sequence[str], passed_detail: str) -> VerificationCheck:

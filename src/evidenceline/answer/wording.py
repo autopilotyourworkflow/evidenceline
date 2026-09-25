@@ -36,6 +36,10 @@ _USE = (
 
 VERDICT = re.compile(
     rf"\b{_COPULA}\s+(?:{_ADVERB}\s+){{0,3}}{_STATE}\b(?!-){_NOT_A_VERDICT_NOUN}|"
+    rf"\b(?:considered|deemed|regarded\s+as|judged|thought\s+to\s+be|believed\s+to\s+be)\s+(?:{_ADVERB}\s+){{0,2}}"
+    rf"(?:safe|unsafe|harmless)\b(?!-){_NOT_A_VERDICT_NOUN}|"
+    r"\b(?:unlikely|not\s+(?:expected|likely))\s+to\s+(?:harm|hurt|endanger|cause\s+(?:any\s+)?harm)\b|"
+    r"\b(?:will|would|does|do|did|can|could)\s*(?:not|n['\u2019]t)\s+(?:harm|hurt|endanger)\b|"
     rf"\b(?:safe|fine|ok|okay|alright|fit|unfit)\s+(?:to|for)\s+(?:human\s+)?{_USE}\b|"
     r"\b(?:suitable|unsuitable|acceptable|unacceptable|good)\s+(?:to|for)\s+(?:human\s+)?(?:drink|drinking|swim|"
     r"swimming|bathe|bathing|consumption)\b|"
@@ -45,12 +49,13 @@ VERDICT = re.compile(
     r"\b(?:does|do|did|will|would)\s*(?:not|n['\u2019]t)\s+pose\s+(?:a|any)\s+(?:\w+\s+){0,2}risks?\b|"
     r"\bno\s+(?:\w+\s+)?(?:health\s+)?(?:risk|concern|cause\s+for\s+concern|danger)s?\s+(?:to|for|from)\b|"
     r"\b(?:nothing|no\s+need)\s+to\s+worry\b|"
-    r"\bsafe\s+(?:level|limit|concentration|amount|threshold|dose)s?\b|"
+    r"\bsafe(?:\s+|-)(?:level|limit|concentration|amount|threshold|dose|value|number)s?\b|"
     r"\b(?:results?|samples?|site|water|groundwater|well|bore|land|soil)\s+(?:fails?|failed)\b|"
     r"\b(?:fails?|failed|passes|passed)\s+(?:the\s+)?(?:guideline|limit|criteria|criterion|standard|test|screening)",
     re.IGNORECASE,
 )
-"""Saying that water is safe or unsafe, that a site is or is not contaminated, or that a result passes or fails."""
+"""Saying that water is safe or unsafe, that a site is or is not contaminated, or that a result passes or fails.
+Plain-word forms count too: 'the level considered safe', 'unlikely to harm health', 'will not harm you'."""
 
 _EXCUSE = re.compile(
     r"\b(?:if|whether|unless|once|until|where|when|suspects?|suspected)\b",

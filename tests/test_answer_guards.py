@@ -158,6 +158,14 @@ def test_swap_failure_names_the_number_not_the_sentence() -> None:
         "The result passes the guideline [1].",
         "If you asked, the water is safe [1].",
         "The water is suitable for drinking [1].",
+        "The value is the level considered safe over a lifetime [1].",
+        "These are amounts deemed safe for people [1].",
+        "Water below the value is unlikely to harm health [1].",
+        "PFOS at this level is not expected to cause harm [1].",
+        "Water under this value will not harm you [1].",
+        # the meaning review of 25 September 2026: a Tier 1 answer called screening levels "safe-level numbers"
+        "It compares results with ready-made safe-level numbers [1].",
+        "These are safe values for drinking water [1].",
     ],
 )
 def test_verdict_paraphrases_fail(text: str) -> None:
@@ -176,6 +184,11 @@ def test_verdict_paraphrases_fail(text: str) -> None:
         "It is acceptable to use a composite sample [1].",
         "Known or suspected contaminated sites are reported [1].",
         "Water passes through the soil profile [1].",
+        "Material deemed hazardous waste goes to a licensed facility [1].",
+        "The samples were considered representative of the site [1].",
+        "The conceptual site model is regarded as a key part of the assessment [1].",
+        "Sampling is done so that it does not contaminate the samples [1].",
+        "It asks whether it is unlikely to harm health [1].",
     ],
 )
 def test_wording_that_is_not_a_verdict_passes(text: str) -> None:
@@ -379,10 +392,10 @@ def test_every_check_has_a_plain_reason() -> None:
     names: set[str] = set()
     for source in ("verify.py", "pipeline.py"):
         text = (root / source).read_text(encoding="utf-8")
-        names |= set(re.findall(r'name="([a-z ]+)"', text)) | set(
-            re.findall(r'_check(?:_phrases)?\(\s*"([a-z ]+)"', text)
+        names |= set(re.findall(r'name="([a-z -]+)"', text)) | set(
+            re.findall(r'_check(?:_phrases)?\(\s*"([a-z -]+)"', text)
         )
-    assert names, "no check names found"
+    assert {"easy first paragraph", "no run-on sentences", "no long quotes", "about the guidance"} <= names
     assert names <= set(pipeline_module.PLAIN_REASONS), names - set(pipeline_module.PLAIN_REASONS)
 
 
@@ -464,13 +477,93 @@ def test_value_notes_have_no_dashes() -> None:
 # ---------- the prompt: short, plain answers, and shapes that pass every check ----------
 
 
-def test_prompt_asks_for_two_or_three_plain_sentences() -> None:
-    assert "Write 2 or 3 short sentences" in SYSTEM
-    assert "The first sentence answers the question directly, in everyday words" in SYSTEM
-    assert "Never repeat a fact, a value or a point" in SYSTEM
+def test_prompt_asks_for_an_easy_paragraph_first() -> None:
+    flat = " ".join(SYSTEM.split())
+    assert "Start with an easy paragraph for a reader with no science background: 1 to 3 sentences" in flat
+    assert "each under 30 words" in flat
+    assert "The first sentence answers the question directly, in everyday words" in flat
+    assert "explain any technical term or abbreviation you use in plain words, or leave it out" in flat
+    assert "add a blank line and then one or two detail paragraphs" in flat
+    assert "keep every sentence to 60 words or fewer" in flat
+    assert "Never repeat a fact, a value or a point" in flat
+    assert "no labels such as 'In short:'" in flat
+    assert "2 or 3" not in SYSTEM
     assert "2 to 4" not in SYSTEM
-    assert "2 or 3 short sentences" in REMINDER
+    assert "an easy paragraph of 1 to 3 sentences, each under 30 words" in REMINDER
+    assert "2 or 3" not in REMINDER
     assert "Do not repeat anything" in REMINDER
+
+
+@pytest.mark.parametrize(
+    "rule",
+    [
+        "in 20 words or fewer",  # a short first sentence, well under the 30 words code allows
+        "Put the answer in its first words and any condition after it",
+        "that method or condition is the answer",
+        "start with 'For PFAS', so the reader knows the answer is PFAS guidance",
+        "spell out units ('micrograms per litre' for ug/L)",
+        "Name no document, schedule, table, section or Act here",
+        "A name the question itself uses, such as DWER or PFAS, may stay",
+        "never swap plain words for technical ones to save words",
+        "never as a report about your sources ('The passages say', 'The passages set', 'The guidance states')",
+        "one or two detail paragraphs, never more than two",
+        "do not restate the easy paragraph in technical words or give its values again",
+        "Do not call a site polluted or contaminated unless the passage you cite does",
+        # 'What are PFAS limits for groundwater?': the guidance gives a screening method, not a number
+        "A question that asks for a limit or a number is answered when the passages say how to screen or judge it",
+        # 'When do I have to report ... to DWER?': plain words turned DWER's "not appropriate to wait" into "do not
+        # need to wait" twice, which reads as optional
+        "becomes 'should not wait', never 'do not need to wait'",
+        # the meaning review of 25 September 2026: dropped conditions, an example stated as the rule, and NEMP's
+        # ambient sampling appendix stated as general groundwater practice
+        "Keep who a rule applies to and its conditions",
+        "stays that case, never the general rule",
+        "When a passage's header says 'Part of:' a narrower part of a document",
+        # round 2 of the meaning review: a statutory duty softened to 'should', scope dropped to shorten a sentence,
+        # the appendix named only as 'for PFAS', and a timeframe paired with the wrong row of a flattened table
+        "in the document's own words ('for ambient (background) PFAS monitoring', not only 'for",
+        "A legal duty stays a duty: 'is required to' or 'would be required to' stays 'must'",
+        "Never drop a condition to make a sentence shorter",
+        "pair a value with its row only when the text makes the pairing certain",
+    ],
+)
+def test_prompt_asks_for_a_plain_first_paragraph_since_the_plain_language_review(rule: str) -> None:
+    """The plain-language review of 25 September 2026: answer first, no document names or short forms in the easy
+    paragraph, scope named for PFAS-only guidance, facts stated directly, no site called polluted."""
+    assert rule in " ".join(SYSTEM.split())
+
+
+def test_the_reminders_repeat_the_plain_first_paragraph_rules() -> None:
+    assert "lead with the answer, put any condition after it, and keep it to 20 words or fewer" in REMINDER
+    assert "name no document except a guideline value's rule, spell out units" in REMINDER
+    assert "State facts directly, never 'the passages say'" in REMINDER
+    assert "(never more)" in REMINDER
+    assert "write ug/L as 'micrograms per litre' and name the rules in plain words" in VALUES_REMINDER
+    assert "if a sentence is too long, split it into two short cited sentences" in pipeline_module.EASY_SHAPE
+
+
+def _plain_rule_names() -> tuple[str, str]:
+    found = re.search(
+        r"'(the PFAS [^']+)' for PFAS NEMP 3\.0, and '(the Australian [^']+)' for the current", VALUES_REMINDER
+    )
+    assert found is not None
+    return found.group(1), found.group(2)
+
+
+def test_the_plain_rule_names_in_the_values_reminder_pass_every_check() -> None:
+    """The easy paragraph may name the rules in plain words and spell out the unit: code still ties each value to
+    its own rule, and the same words with the names swapped fail."""
+    nemp, current = _plain_rule_names()
+    lines = [describe(v) for v in PFOS]
+    plain = (
+        f"Under {nemp}, the drinking water value for PFOS is 0.07 micrograms per litre [G1]. "
+        f"Under {current}, it is 0.008 micrograms per litre [G2]."
+    )
+    record = verify(plain, TEXTS, PFOS, lines)
+    assert record.passed, record.summary
+    swapped = plain.replace(nemp, "@").replace(current, nemp).replace("@", current)
+    failed = [c.name for c in verify(swapped, TEXTS, PFOS, lines).checks if not c.passed]
+    assert failed == ["numbers traced"]
 
 
 @pytest.mark.parametrize(

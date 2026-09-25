@@ -6,6 +6,8 @@ import datetime as dt
 import hashlib
 import importlib.util
 import json
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +15,7 @@ import pytest
 
 from evidenceline.answer import AnswerResult, FakeClient
 from evidenceline.answer import pipeline as pipeline_module
-from evidenceline.answer.clients import DEFAULT_MODEL
+from evidenceline.answer.clients import DEFAULT_MODEL, ModelReply
 from evidenceline.answer.prompt import SYSTEM
 from evidenceline.guidance.models import GuidanceSearch
 
@@ -101,7 +103,10 @@ def test_prepared_answers_file() -> None:
             assert result.answer is not None
             assert result.model is not None
             assert result.model in entry["label"]
-            assert any(citation.cited for citation in result.citations)
+            # A source is cited: a passage, or a verified guideline value given with the answer (a value question's
+            # answer may rest on its [G] values alone, as the "citations exist" check allows).
+            cited_values = [v for v in result.guideline_values if f"[{v.marker}]" in result.answer]
+            assert any(citation.cited for citation in result.citations) or cited_values
         else:
             assert result.answer is None or result.status == "guard_rail"
         for text in (entry["label"], result.explanation, result.answer or "", *result.notes):
@@ -247,11 +252,11 @@ def test_only_refuses_a_file_it_cannot_keep_from(change: dict[str, Any], says: s
         script.kept_entries(existing, [4], "claude-sonnet-5")
 
 
-@pytest.mark.parametrize("number", [0, 19, -1])
+@pytest.mark.parametrize("number", [0, 15, -1])
 def test_only_refuses_a_question_number_out_of_range(number: int) -> None:
     script = _script()
-    assert len(script.QUESTIONS) + len(script.LOOKUP_QUESTIONS) == 18
-    with pytest.raises(ValueError, match="question numbers from 1 to 18"):
+    assert len(script.QUESTIONS) + len(script.LOOKUP_QUESTIONS) == 14
+    with pytest.raises(ValueError, match="question numbers from 1 to 14"):
         script.kept_entries(_existing(script), [number], "claude-sonnet-5")
 
 
@@ -302,3 +307,84 @@ def test_main_with_only_rewrites_only_that_question(
     assert written["lookup_only"] == first["lookup_only"]
     assert written["answers"][2]["prepared_on"] == dt.date.today().isoformat()
     assert script.main(["--model", "claude-opus-5", "--only", "3"]) == 1, "another model: run everything again"
+
+
+# --- --workers: questions prepared at the same time ----------------------------------------------------------------
+
+
+class _SlowByQuestion:
+    """Answers each question after a delay that shrinks down the list, so with several workers the later questions
+    finish first. The reply depends on the question: every third one fails a check, so it is retried and withheld."""
+
+    def __init__(self, questions: list[str]) -> None:
+        self.order = questions
+        self.calls: list[str] = []
+        self._lock = threading.Lock()
+
+    @property
+    def model_id(self) -> str:
+        return "claude-sonnet-5"
+
+    def complete(self, system: str, prompt: str) -> ModelReply:
+        del system
+        position = next(n for n, q in enumerate(self.order) if f"<question>\n{q}\n</question>" in prompt)
+        with self._lock:
+            self.calls.append(self.order[position])
+        time.sleep(0.002 * (len(self.order) - position))
+        reply = "It covers 14 wells [1]." if position % 3 == 0 else GOOD
+        return ModelReply(text=reply, model="claude-sonnet-5")
+
+
+def test_workers_do_not_change_the_order_or_the_content(fake_search: None) -> None:
+    script = _script()
+    asked = [*script.QUESTIONS, *script.LOOKUP_QUESTIONS]
+    day = dt.date(2026, 9, 25)
+    runs: list[dict[str, Any]] = []
+    counts: list[int] = []
+    for workers in (1, 5):
+        client = script.CountingClient(_SlowByQuestion(asked))
+        runs.append(script.build(client, script.QUESTIONS, day, lookups=script.LOOKUP_QUESTIONS, workers=workers))
+        counts.append(client.calls)
+    one, five = runs
+    assert five == one
+    assert [e["question"] for e in five["answers"]] == list(script.QUESTIONS)
+    assert [e["question"] for e in five["lookup_only"]] == list(script.LOOKUP_QUESTIONS)
+    assert counts[0] == counts[1] > 0
+    statuses = {e["result"]["status"] for e in [*five["answers"], *five["lookup_only"]]}
+    assert {"answered", "passages_only", "guard_rail"} <= statuses, "the content varies, so a mix-up would show"
+
+
+def test_workers_argument() -> None:
+    script = _script()
+    assert script.parse_args([]).workers == 1
+    assert script.parse_args(["--workers", "5"]).workers == 5
+    for bad in ("0", "17", "-1", "two"):
+        with pytest.raises(SystemExit):
+            script.parse_args(["--workers", bad])
+
+
+def test_main_passes_the_workers_on(
+    fake_search: None, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    script = _script()
+    index = tmp_path / "index.sqlite"
+    index.write_bytes(b"")
+    seen: list[int] = []
+    build = script.build
+
+    def spy(*args: Any, workers: int = 1, **kwargs: Any) -> dict[str, Any]:
+        seen.append(workers)
+        return build(*args, workers=workers, **kwargs)
+
+    monkeypatch.setattr(script, "build", spy)
+    monkeypatch.setattr(script, "default_index_path", lambda: index)
+
+    def cli(*, model: str) -> FakeClient:
+        return FakeClient(reply=GOOD, model=model)
+
+    monkeypatch.setattr(script, "ClaudeCliClient", cli)
+    monkeypatch.setattr(script, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(script, "OUT_PATH", tmp_path / "answers.json")
+    assert script.main(["--workers", "5"]) == 0
+    assert seen == [5]
+    assert "model calls: " in capsys.readouterr().out

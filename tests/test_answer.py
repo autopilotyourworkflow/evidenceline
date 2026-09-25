@@ -384,6 +384,54 @@ def test_anthropic_client_errors(response: httpx2.Response, error: type[Exceptio
         _anthropic(handler).complete("s", "p")
 
 
+def _replying(text: str, stop_reason: str) -> Any:
+    """A mock-transport handler that answers every request with one message."""
+
+    def handler(_: httpx2.Request) -> httpx2.Response:
+        return _message(text, stop_reason)
+
+    return handler
+
+
+def _message(text: str, stop_reason: str) -> httpx2.Response:
+    return httpx2.Response(
+        200,
+        json={
+            "id": "msg_1",
+            "type": "message",
+            "role": "assistant",
+            "model": "claude-sonnet-5",
+            "content": [{"type": "text", "text": text}],
+            "stop_reason": stop_reason,
+            "stop_sequence": None,
+            "usage": {"input_tokens": 10, "output_tokens": 8000},
+        },
+    )
+
+
+@pytest.mark.parametrize("stop_reason", ["max_tokens", "model_context_window_exceeded"])
+def test_anthropic_client_refuses_an_answer_that_was_cut_off(stop_reason: str) -> None:
+    """A reply cut off at the token limit can end just after a citation and pass every check, so it is never used."""
+    with pytest.raises(ModelFailedError, match="cut off"):
+        _anthropic(_replying(GOOD, stop_reason)).complete("s", "p")
+
+
+def test_an_answer_cut_off_at_the_token_limit_is_not_shown(index: Path, searches: list[str]) -> None:
+    client = _anthropic(_replying(GOOD, "max_tokens"))
+    result = answer("What should a detailed site investigation report include?", client, index_path=index)
+    assert result.status == "error"
+    assert result.answer is None
+    assert result.explanation.startswith("The answer was cut off before it was finished.")
+    assert [c.number for c in result.citations] == [1, 2], "the passages are still shown"
+
+
+def test_cli_client_refuses_an_answer_that_was_cut_off() -> None:
+    payload = {"subtype": "success", "is_error": False, "stop_reason": "max_tokens", "result": GOOD}
+    client = ClaudeCliClient(executable=Path("claude.exe"), runner=lambda c, s, w: _cli_result(payload))
+    with pytest.raises(ModelFailedError, match="cut off"):
+        client.complete("s", "p")
+
+
 def test_anthropic_client_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert AnthropicClient.from_env() is None

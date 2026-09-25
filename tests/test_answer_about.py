@@ -238,9 +238,13 @@ def test_the_example_in_the_reply_is_a_real_question() -> None:
     found = re.search(r'ask your own, such as "([^"]+)"', ABOUT_REPLY)
     assert found is not None
     example = found.group(1)
-    assert example == "How should groundwater samples be collected?"
+    # a question with a reviewed prepared answer, so a visitor who copies it gets that answer, not an unreviewed one
+    assert example == "What is a preliminary site investigation?"
     assert about_evidenceline(example) is None
     assert not asks_for_verdict(example)
+    prepared = json.loads((ROOT / "web" / "public" / "data" / "answers.json").read_text(encoding="utf-8"))
+    entry = next(e for e in [*prepared["answers"], *prepared["lookup_only"]] if e["question"] == example)
+    assert entry["result"]["status"] == "answered"
 
 
 @pytest.fixture

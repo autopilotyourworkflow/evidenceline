@@ -37,9 +37,17 @@ from evidenceline.answer import FakeClient, answer
 from evidenceline.answer import pipeline as pipeline_module
 from evidenceline.answer.clients import ModelReply
 from evidenceline.answer.pipeline import BORDERLINE_INSTRUCTION, GUARD_RAIL_CORE, GUARD_RAIL_REPLY
-from evidenceline.answer.prompt import NOT_COVERED
+from evidenceline.answer.prompt import (
+    LONG_SENTENCE_WORDS,
+    MAX_EASY_SENTENCES,
+    MAX_QUOTED_WORDS,
+    MAX_REUSED_WORDS,
+    MAX_SENTENCE_WORDS,
+    NOT_COVERED,
+)
+from evidenceline.answer.verify import paragraphs
 from evidenceline.guidance import evaluate
-from evidenceline.guidance.manifest import load_manifest
+from evidenceline.guidance.manifest import allows_reuse, load_manifest
 from evidenceline.guidance.models import GuidanceSearch, Passage
 from evidenceline.guidance.search import default_index_path, search_guidelines
 
@@ -546,7 +554,7 @@ def test_the_prepared_answers_are_the_six_expected_questions() -> None:
     assert statuses == [
         ("What is the drinking-water limit for PFOS?", "answered"),
         ("Is this site contaminated?", "guard_rail"),
-        ("What should a detailed site investigation report include?", "answered"),
+        ("What quality checks should a lab report include?", "answered"),
         ("When do I have to report a suspected contaminated site to DWER?", "answered"),
         ("What is a conceptual site model?", "answered"),
         ("What are the NSW rules for PFAS in soil?", "not_covered"),
@@ -621,10 +629,20 @@ RULE_PICKING = (
 )
 
 
+def _rule_picks(text: str) -> list[str]:
+    """The RULE_PICKING words in ``text``, as whole words: 'older' is a rule pick, 'duty-holder' is not."""
+    lowered = text.lower()
+    return [w for w in RULE_PICKING if re.search(rf"\b{re.escape(w)}\b", lowered)]
+
+
+def test_rule_picking_words_are_whole_words() -> None:
+    assert _rule_picks("A duty-holder should consider reporting [1].") == []
+    assert _rule_picks("The older rule no longer applies [1].") == ["no longer", "older"]
+
+
 def test_no_prepared_answer_picks_a_rule() -> None:
     for result in _answered():
-        text = str(result["answer"]).lower()
-        assert [w for w in RULE_PICKING if w in text] == [], result["question"]
+        assert _rule_picks(str(result["answer"])) == [], result["question"]
 
 
 def _sentences(text: str) -> list[str]:
@@ -657,7 +675,17 @@ def _word_count(sentence: str) -> int:
 
 
 PLAIN_SENTENCE_LIMIT = 30
-"""The prompt's rule 2: 'Keep every sentence under 30 words.'"""
+"""The prompt's rule 2: the easy first paragraph has 1 to 3 sentences, each under 30 words."""
+LONG_SENTENCE_LIMIT = 60
+"""The prompt's rule 3: a sentence in a later (detail) paragraph has at most 60 words."""
+
+
+def test_the_limits_here_are_the_prompts_limits() -> None:
+    assert (PLAIN_SENTENCE_LIMIT, LONG_SENTENCE_LIMIT, MAX_EASY_SENTENCES) == (
+        MAX_SENTENCE_WORDS,
+        LONG_SENTENCE_WORDS,
+        3,
+    )
 
 
 def test_no_dash_and_no_verdict_wording_in_any_prepared_text() -> None:
@@ -676,14 +704,18 @@ def test_no_dash_and_no_verdict_wording_in_any_prepared_text() -> None:
     [
         "When do I have to report a suspected contaminated site to DWER?",
         "What is the drinking-water limit for PFOS?",
-        "What should a detailed site investigation report include?",
+        "What quality checks should a lab report include?",
         "What is a conceptual site model?",
     ],
 )
-def test_every_sentence_of_a_prepared_answer_is_under_30_words(question: str) -> None:
+def test_a_prepared_answer_opens_with_an_easy_paragraph(question: str) -> None:
     result = next(r for r in _answered() if r["question"] == question)
-    long = [s for s in _sentences(str(result["answer"])) if _word_count(s) >= PLAIN_SENTENCE_LIMIT]
-    assert long == []
+    first, *later = paragraphs(str(result["answer"]))
+    easy = _sentences(first)
+    assert 1 <= len(easy) <= MAX_EASY_SENTENCES
+    assert [s for s in easy if _word_count(s) >= PLAIN_SENTENCE_LIMIT] == []
+    run_on = [s for text in later for s in _sentences(text) if _word_count(s) > LONG_SENTENCE_LIMIT]
+    assert run_on == []
 
 
 # --- citations resolve to real pages (needs the index) ---
@@ -769,97 +801,396 @@ def test_every_number_in_a_written_answer_is_on_a_cited_page_or_a_given_value(in
                 assert re.search(rf"(?<![\d.]){re.escape(number)}(?![\d])", f"{pages} {given}"), (number, sentence)
 
 
+REPORT_Q = "When do I have to report a suspected contaminated site to DWER?"
+CSM_Q = "What is a conceptual site model?"
+PFOS_Q = "What is the drinking-water limit for PFOS?"
+LAB_Q = "What quality checks should a lab report include?"
+
 SOURCE_CLAIMS: tuple[tuple[str, str, int, str], ...] = (
     # (question, words in the answer, passage number cited in that sentence, words that must be on its page)
-    # The answers were prepared again on 25 Sep 2026, after the system prompt changed, so these are the new answers'
-    # load-bearing claims, each checked by hand on its cited page (DWER 2025 guidelines and the ADWG fact sheet).
+    # The answers were prepared again on 25 Sep 2026, so these are every sentence of the report, conceptual site model
+    # and lab-report button answers that cite passages, each read against its cited page by hand (DWER 2021 and 2025
+    # guidelines, and PFAS NEMP 3.0 sections 19.2.3 and 18.2.1 for the lab-report answer, the third button since the
+    # detailed site investigation answer was taken off it). The PFOS answer cites only its guideline values: see
+    # VALUE_CLAIMS.
+    # Where a sentence puts its page's point in plainer words, the pin is the page's own statement of that point: the
+    # report answer's "you should not wait for more testing" is its page's "does not consider it appropriate for the
+    # duty holder to wait until the extent or seriousness of the contamination has been delineated", and the lab-report
+    # answer's "reporting limits low enough to compare with the guideline values being used" is its page's
+    # "sufficiently sensitive limits of reporting that are relevant to the environmental criteria".
     (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "as soon as reasonably practicable",
-        5,
-        "a person with a duty to report would be required to report as soon as reasonably practicable",
-    ),
-    (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "enough information to suspect contamination",
+        REPORT_Q,
+        "You should report as soon as you have enough information to suspect contamination",
         1,
-        "should consider reporting upon receiving sufficient information for them to suspect contamination",
+        "a duty-holder should consider reporting upon receiving sufficient information for them to suspect "
+        "contamination of a site",
     ),
     (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "does not expect them to wait until the extent",
+        REPORT_Q,
+        "You should report as soon as you have enough information to suspect contamination",
         1,
-        "does not consider it appropriate for the duty holder to wait until the extent or seriousness",
+        "Suspected contamination As soon as it is reasonably practicable to do so",
     ),
     (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "Owners, occupiers",
-        7,
-        "an owner or occupier of the site",
-    ),
-    (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "people who caused the contamination",
-        7,
-        "a person who knows, or suspects, that he or she has caused, or contributed to",
-    ),
-    (
-        "When do I have to report a suspected contaminated site to DWER?",
-        "auditors engaged for a required report",
-        7,
-        "an auditor engaged to provide a report that is required",
-    ),
-    (
-        "What should a detailed site investigation report include?",
-        "judge the data against the investigation goals",
-        2,
-        "evaluate the data against the investigation objectives",
-    ),
-    (
-        "What should a detailed site investigation report include?",
-        "how precise and accurate the data are",
-        2,
-        "discuss the data's precision, accuracy or bias",
-    ),
-    (
-        "What should a detailed site investigation report include?",
-        "Schedule B2 of the ASC NEPM",
+        REPORT_Q,
+        "you should not wait for more testing",
         1,
-        "compile a DSI following Schedule B2 of the ASC NEPM",
+        "does not consider it appropriate for the duty holder to wait until the extent or seriousness of the "
+        "contamination has been delineated",
     ),
-    ("What should a detailed site investigation report include?", "document control", 3, "Document control"),
     (
-        "What should a detailed site investigation report include?",
-        "laboratory quality checks",
+        REPORT_Q,
+        "This applies if you are an owner, an occupier",
+        7,
+        "The following persons have a duty to report a site under subsection (3) - (a) an owner or occupier of the "
+        "site",
+    ),
+    (
+        REPORT_Q,
+        "someone who may have caused it",
+        7,
+        "(b) a person who knows, or suspects, that he or she has caused, or contributed to, the contamination",
+    ),
+    (
+        REPORT_Q,
+        "or an auditor engaged for a required report",
+        7,
+        "(c) an auditor engaged to provide a report that is required for the purposes of this Act",
+    ),
+    (
+        REPORT_Q,
+        "A report for known contamination is required within 21 days",
         6,
-        "Laboratory QA/QC report",
+        "circumstances where a person would know that a site is contaminated, and which a person with a duty to "
+        "report a site would be required to report within 21 days",
     ),
     (
-        "What is a conceptual site model?",
-        "where contamination comes from, how it can move",
+        REPORT_Q,
+        "For suspected contamination, a person with a duty must report as soon as reasonably practicable",
+        5,
+        "a situation where a person may suspect that a site is contaminated, and which a person with a duty to report "
+        "would be required to report as soon as reasonably practicable",
+    ),
+    (
+        REPORT_Q,
+        "A consultant's first progress report can trigger the client's duty",
+        2,
+        "Environmental consultants should provide their clients with progress reports (including results) of site "
+        "investigations to enable their clients to fulfil their reporting duties",
+    ),
+    (
+        REPORT_Q,
+        "A consultant's first progress report can trigger the client's duty",
+        2,
+        "the duty to report would be triggered on receipt of the first progress report",
+    ),
+    (
+        REPORT_Q,
+        "if it gives enough information to know or suspect contamination",
+        2,
+        "the first progress report providing sufficient information to know or suspect contamination of the site",
+    ),
+    (
+        REPORT_Q,
+        "The duty is met by submitting a Form 1",
+        2,
+        "Once in possession of the relevant information, the client has a duty to report the site via a Form 1",
+    ),
+    (
+        CSM_Q,
+        "A conceptual site model is a summary of where contamination comes from",
+        1,
+        "The CSM describes the environmental setting, identifies contaminant sources (potential areas of concern and "
+        "associated contaminants)",
+    ),
+    (CSM_Q, "how it can spread", 1, "modes of contaminant movement (migration pathways)"),
+    (
+        CSM_Q,
+        "who or what it could reach",
+        1,
+        "the person/ecosystem components/environmental values that the contamination may affect (potential receptors)",
+    ),
+    (
+        CSM_Q,
+        "It also shows how people or nature could come into contact with it",
+        1,
+        "the contamination may affect (potential receptors) and how exposure may occur (exposure routes)",
+    ),
+    (
+        CSM_Q,
+        "starts in the first stage of a site assessment",
+        1,
+        "Creating a CSM is an iterative process: the initial CSM is developed in the first stage of site assessment",
+    ),
+    (
+        CSM_Q,
+        "is updated as better information on the site arrives",
+        1,
+        "revised as more detailed information on the site and the nature of contamination becomes available",
+    ),
+    (
+        CSM_Q,
+        "It helps pinpoint risks to people and the environment",
+        1,
+        "The CSM is used to identify risks to human health, the environment and environmental values",
+    ),
+    (
+        CSM_Q,
+        "highlights gaps in what is known",
+        1,
+        "as well as uncertainties or critical gaps in information that need to be addressed in subsequent stages",
+    ),
+    (
+        CSM_Q,
+        "Exposure can only happen when a complete link exists from the source through the pathway to the receptor",
+        1,
+        "For exposure to occur, a complete pathway must exist between the source of contamination and the receptor "
+        "(i.e. complete source-pathway-receptor linkage)",
+    ),
+    (
+        CSM_Q,
+        "If that link is incomplete, no risk exists through that pathway under current site conditions",
+        1,
+        "Where the exposure pathway is incomplete, exposure cannot occur and hence no risk is present via that pathway "
+        "under the existing site-specific circumstances",
+    ),
+    (
+        CSM_Q,
+        "but a change such as a new land use should be considered",
+        1,
+        "the potential for new exposure pathways to be created or completed (e.g. by a proposed change of land use) "
+        "should be considered in the CSM",
+    ),
+    (CSM_Q, "The model describes the environmental setting", 1, "The CSM describes the environmental setting"),
+    (
+        CSM_Q,
+        "contaminant sources, migration pathways",
         1,
         "identifies contaminant sources (potential areas of concern and associated contaminants), modes of contaminant "
         "movement (migration pathways)",
     ),
     (
-        "What is a conceptual site model?",
-        "revised as more information",
+        CSM_Q,
+        "potential receptors and exposure routes",
         1,
-        "revised as more detailed information on the site",
+        "the contamination may affect (potential receptors) and how exposure may occur (exposure routes)",
     ),
     (
-        "What is a conceptual site model?",
-        "which risks need further assessment or management",
+        CSM_Q,
+        "a table of source-pathway-receptor linkages and the risks needing further assessment or management",
         2,
-        "risks that require further assessment or management",
+        "use a table to clearly identify source-pathway-receptor linkages and risks that require further assessment or "
+        "management",
     ),
     (
-        "What is the drinking-water limit for PFOS?",
-        "health-based level",
+        CSM_Q,
+        "A graphic can also illustrate these linkages",
         2,
-        "Based on human health considerations, the concentration of perfluorooctane sulfonic acid",
+        "You can also use a graphic (see Figure 2 for an example) to illustrate the linkages",
+    ),
+    (
+        CSM_Q,
+        "It should also record uncertainties or limits of the assessment",
+        2,
+        "uncertainties or limitations of the assessment (e.g. conclusions of the data evaluation or areas that could "
+        "not be sampled",
+    ),
+    (
+        CSM_Q,
+        "It should also record uncertainties or limits of the assessment",
+        2,
+        "You should discuss the above information in appropriate detail",
+    ),
+    (
+        CSM_Q,
+        "such as areas that could not be sampled because of infrastructure",
+        2,
+        "areas that could not be sampled because of the presence of infrastructure",
+    ),
+    (
+        LAB_Q,
+        "For PFAS, a lab report should show",
+        1,
+        "practitioners should ensure that the proposed analytical laboratories (primary and secondary) can provide the "
+        "following",
+    ),
+    (
+        LAB_Q,
+        "a lab report should show whether each quality target was met",
+        1,
+        "details on whether the requested quality criteria were met or not",
+    ),
+    (
+        LAB_Q,
+        "with any misses flagged clearly",
+        1,
+        "including flagging within the lab's analytical and quality assurance/ quality control (QA/QC) reporting",
+    ),
+    (LAB_Q, "It should also say which method was used", 1, "details on the method being used"),
+    (
+        LAB_Q,
+        "which PFAS chemicals were tested for",
+        1,
+        "details on the method being used and the target PFAS analytes",
+    ),
+    (
+        LAB_Q,
+        "The report should also show how the method is accredited or validated",
+        1,
+        "details on accreditation or validation of the method",
+    ),
+    (
+        LAB_Q,
+        "give reporting limits low enough to compare with the guideline values being used",
+        1,
+        "sufficiently sensitive limits of reporting that are relevant to the environmental criteria",
+    ),
+    (
+        LAB_Q,
+        "Laboratory quality reporting can follow QSM 5.4",
+        1,
+        "quality control (QA/QC) reporting - for example, as specified in QSM 5.4 (USDoD and USDoE 2021)",
+    ),
+    (
+        LAB_Q,
+        "which sets quality control criteria to manage uncertainty and give confidence and consistency",
+        1,
+        "it provides quality control criteria to manage uncertainty and provide assurance of confidence and "
+        "consistency in laboratory reporting",
+    ),
+    (LAB_Q, "QSM 5.4 is not an analytical method", 1, "Importantly, QSM 5.4 is not an analytical method"),
+    (
+        LAB_Q,
+        "It indicates that the whole water sample bottle should be extracted using SPE",
+        1,
+        "QSM 5.4 indicates the entire water sample bottle provided should be extracted using SPE",
+    ),
+    (
+        LAB_Q,
+        "An in-house method may be used if it is properly validated against performance criteria such as LOD/LOQ",
+        1,
+        "in-house analytical methods may be used so long as they are properly validated against performance criteria "
+        "(for example, limit of detection (LOD)/limit of quantification (LOQ))",
+    ),
+    (
+        LAB_Q,
+        "and measured uncertainty",
+        1,
+        "limit of quantification (LOQ)) and measured uncertainty",
+    ),
+    (
+        LAB_Q,
+        "The lab should also show whether the method reporting limits can be achieved for the specific guidelines",
+        1,
+        "whether the method reporting limits can be achieved for the specific guidelines and criteria being applied",
+    ),
+    (
+        LAB_Q,
+        "for example for US EPA Method 537.1",
+        1,
+        "being applied (for example, for US EPA Method 537.1)",
+    ),
+    (
+        LAB_Q,
+        "For field quality assurance, other samples include transport blanks and field blanks",
+        3,
+        "other quality assurance samples include transport blanks and field blanks",
+    ),
+    (
+        LAB_Q,
+        "rinsate samples can be collected if there is doubt about whether sampling supplies are PFAS-free",
+        3,
+        "Rinsate samples can be collected if there is any doubt about whether or not sampling consumables and field "
+        "supplies or personal equipment and personal protective equipment (PPE) are PFAS-free",
     ),
 )
+
+VALUE_CLAIMS: tuple[tuple[str, str, str, str], ...] = (
+    # (question, words in the answer, guideline marker cited in that sentence, words in that verified value's
+    # document or note, from guidelines.json via the pipeline). The PFOS answer's sentences, checked by hand.
+    (
+        PFOS_Q,
+        "PFAS National Environmental Management Plan, version 3.0",
+        "G1",
+        "PFAS National Environmental Management Plan Version 3.0",
+    ),
+    (
+        PFOS_Q,
+        "the drinking-water value for PFOS is 0.07 micrograms per litre",
+        "G1",
+        "0.07 ug/L, also applies to PFOS on its own",
+    ),
+    (
+        PFOS_Q,
+        "Under the Australian Drinking Water Guidelines as updated in 2025",
+        "G2",
+        "Australian Drinking Water Guidelines 2011 as updated in 2025",
+    ),
+    (PFOS_Q, "it is 0.008 micrograms per litre", "G2", "Compare PFOS on its own with 0.008 ug/L"),
+    (
+        PFOS_Q,
+        "The version 3.0 value of 0.07 micrograms per litre also applies to PFOS on its own",
+        "G1",
+        "PFAS National Environmental Management Plan Version 3.0",
+    ),
+    (
+        PFOS_Q,
+        "The version 3.0 value of 0.07 micrograms per litre also applies to PFOS on its own",
+        "G1",
+        "0.07 ug/L, also applies to PFOS on its own",
+    ),
+    (
+        PFOS_Q,
+        "because that plan sets one value for PFOS only, PFHxS only, and the sum of the two",
+        "G1",
+        'Table 4, footnote a: "PFOS only, PFHxS only, and the sum of the two"',
+    ),
+    (
+        PFOS_Q,
+        "because that plan sets one value for PFOS only, PFHxS only, and the sum of the two",
+        "G1",
+        "the value for the sum of PFOS and PFHxS, 0.07 ug/L, also applies to PFOS on its own",
+    ),
+    (
+        PFOS_Q,
+        "The updated Australian Drinking Water Guidelines screen PFOS on its own",
+        "G2",
+        "Australian Drinking Water Guidelines 2011 as updated in 2025",
+    ),
+    (
+        PFOS_Q,
+        "The updated Australian Drinking Water Guidelines screen PFOS on its own",
+        "G2",
+        "Compare PFOS on its own with 0.008 ug/L (8 ng/L)",
+    ),
+    (
+        PFOS_Q,
+        "PFOS and PFHxS are screened separately, not as a sum",
+        "G2",
+        "PFOS and PFHxS are screened separately, not as a sum",
+    ),
+)
+
+
+def test_every_sentence_of_the_button_answers_is_pinned() -> None:
+    """Each factual sentence of an answered button answer carries at least one pin above, so a regenerated answer
+    cannot pass with a sentence nobody checked on its page."""
+    for result in _answered():
+        pins = [claim for q, claim, _, _ in SOURCE_CLAIMS if q == result["question"]]
+        pins += [claim for q, claim, _, _ in VALUE_CLAIMS if q == result["question"]]
+        unpinned = [s for s in _sentences(str(result["answer"])) if not any(claim in s for claim in pins)]
+        assert unpinned == [], result["question"]
+
+
+@pytest.mark.parametrize(("question", "claim", "marker", "source"), VALUE_CLAIMS)
+def test_each_value_claim_is_in_the_verified_value_its_sentence_cites(
+    question: str, claim: str, marker: str, source: str
+) -> None:
+    result = next(r for r in _answered() if r["question"] == question)
+    sentence = next(s for s in _sentences(str(result["answer"])) if claim in s)
+    assert f"[{marker}]" in sentence
+    value = next(v for v in cast(list[Json], result["guideline_values"]) if v["marker"] == marker)
+    assert source in f"{value['source_document']} {value['note']}"
 
 
 @pytest.mark.parametrize(("question", "claim", "number", "source"), SOURCE_CLAIMS)
@@ -895,16 +1226,28 @@ def _longest_copied_run(answer_text: str, source: str) -> tuple[int, str]:
     [
         "When do I have to report a suspected contaminated site to DWER?",
         "What is the drinking-water limit for PFOS?",
-        "What should a detailed site investigation report include?",
+        "What quality checks should a lab report include?",
         "What is a conceptual site model?",
     ],
 )
-def test_no_prepared_answer_copies_more_than_ten_words_in_a_row(index: sqlite3.Connection, question: str) -> None:
+def test_no_prepared_answer_copies_more_than_its_licence_allows(index: sqlite3.Connection, question: str) -> None:
+    """Rule 9 by licence, as the pipeline checks it: at most ten words in a row from a cited page in the easy first
+    paragraph, and anywhere from a page whose document allows only short excerpts; after the first paragraph, up to
+    30 from a page whose document allows reuse with credit (CC BY)."""
     result = next(r for r in _answered() if r["question"] == question)
     cited = [c for c in cast(list[Json], result["citations"]) if c["cited"]]
-    source = " ".join(_page_text(index, c) for c in cited)
-    length, run = _longest_copied_run(str(result["answer"]), source)
-    assert length <= 10, run
+    reuse = {doc.id for doc in load_manifest() if allows_reuse(doc.licence_lane, doc.licence)}
+    every = " ".join(_page_text(index, c) for c in cited)
+    short = " ".join(_page_text(index, c) for c in cited if c["document_id"] not in reuse)
+    first, *later = paragraphs(str(result["answer"]))
+    rest = "\n\n".join(later)
+    for text, source, limit in (
+        (first, every, MAX_QUOTED_WORDS),
+        (rest, short, MAX_QUOTED_WORDS),
+        (rest, every, MAX_REUSED_WORDS),
+    ):
+        length, run = _longest_copied_run(text, source)
+        assert length <= limit, run
 
 
 @real_index

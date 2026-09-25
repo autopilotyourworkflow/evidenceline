@@ -1290,7 +1290,7 @@ test('F5', 'Keyboard: Try it, typed question, suggested question and the "how it
 }, async () => {
   const { p } = await open('/');
   await p.focus('#q');
-  await p.keyboard.type('what should a detailed site investigation report include?');
+  await p.keyboard.type('what quality checks should a lab report include?');
   await p.keyboard.press('Enter');
   const s1 = await p.$eval('#answer', (a) => a.getAttribute('data-state'));
   const n = await tabUntil(p, () => document.activeElement?.getAttribute('data-a') === '3', 20);

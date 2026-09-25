@@ -142,7 +142,8 @@ Test files:
   `test_units.py`: the original four tools and their parts.
 - `test_export_web_data.py`: runs `scripts/export_web_data.py --check`.
 - `test_answer.py`, `test_answer_verify.py`, `test_answer_precompute.py`: the answer pipeline with a fake model, the
-  verifier's rules one by one, and the prepared answers in `web/public/data/answers.json`.
+  verifier's rules one by one, and the prepared answers in `web/public/data/answers.json` (with `--workers`, the
+  same entries in the same order whatever the number of workers).
 - `test_api.py`, `test_api_proxy.py`: the web API through FastAPI's test client (limits, Turnstile, CORS, question
   text never logged, the proxy secret), and the hosted MCP connector through the SDK's own Streamable HTTP client,
   in memory and against a real uvicorn server on a local port.
@@ -162,11 +163,19 @@ Test files:
 - `test_adversarial_launch_api.py`, `test_adversarial_launch_search.py`: the launch tester's cases for the web API,
   hosted connector and redaction (names glued to other text, URL-encoded, split words, odd Turnstile replies, unknown
   prompt and resource names), and for search scope, the question box's routing and wording, the prepared answers and
-  the Accuracy data. None is marked `xfail` now.
+  the Accuracy data. None is marked `xfail` now. Every sentence of the answered button answers is pinned to words on
+  its cited page (`SOURCE_CLAIMS`) or in its verified guideline value (`VALUE_CLAIMS`), checked by hand whenever
+  the answers are prepared again.
 - `test_guidance_scope.py`: other states (EPA Vic, ACT, Tas EPA, NT) and other countries' rules, instructions to the
   system, and the ordinary questions that share their words and must still be searched.
-- `test_answer_plain_wording.py`: the two writing limits checked in code (short sentences, no long quotes) and the
+- `test_answer_plain_wording.py`: the writing limits checked in code (easy first paragraph, no long quotes) and the
   wording of a withheld near-miss answer.
+- `test_answer_easy_first.py`: the answer's shape since 25 September 2026: the easy first paragraph (1 to 3
+  sentences, each under 30 words) and the 60-word cap on later sentences, paragraph breaks (a single line break, a
+  blank line, Windows line endings), the copied-words rule by licence, the accuracy checks applying to every
+  paragraph, a citation that opens a paragraph (it does not cite the paragraph before), a first paragraph of
+  citations only, and the second attempt after a copying failure (it quotes the passage's own words, never the
+  answer, and none of them reach the check record).
 - `test_guidance_casual.py`: casual questions, the unknown-word rule, framing phrases, the plain-language synonyms,
   price questions and the borderline band, with a fake model for the question box's near-miss path.
 - `test_guidance_threads.py`, `test_answer_routes.py`, `test_answer_robust.py`: the "Try it yourself" review of
@@ -386,29 +395,67 @@ service also needs the guidance index built at deploy time (`fetch_corpus.py` an
    `guidance/search.py`).
 4. The model reads the whole indexed page text for each passage (from `chunks` in the index, dashes tidied), or the
    excerpt if the page cannot be read.
-5. The answer is checked in code (`verify.py`). If it fails, the model is asked once more, told only which checks
-   failed (never shown its own answer), and the second answer goes through every check again; the explanation says
+5. The answer is checked in code (`verify.py`). If it fails, the model is asked once more, told which checks failed
+   and, after a copying failure, the passage's own words that were copied (`COPIED_NOTE` in `pipeline.py`: quoted
+   from the passage text, never from the answer, and only in that prompt, never in the check details the website
+   shows). It is never shown its own answer, and the second answer goes through every check again; the explanation says
    it was the second. There is no second attempt once the question has taken 25 seconds
    (`SECOND_ATTEMPT_WITHIN`): one API call may take 25 seconds and the page gives up at 60. A second failure withholds it and returns `passages_only`. A withheld answer is never shown,
    even in part: the explanation names only the failed checks, sentence numbers, the failing number or a dash's
    code point.
 
+Answer shape (since 25 September 2026, the owner's call: "Long answers are fine. Just start with easy paragraph
+first."): an easy first paragraph of 1 to 3 sentences that answers the question directly for a reader with no
+science background (everyday words, any abbreviation explained or left out), then, only when the passages give more
+that a scientist would want, a blank line and one or two detail paragraphs where longer sentences and technical
+terms are fine. No headings, lists or labels. The value route still states every guideline value with its rule and
+`[G]` citation; the easy paragraph may give the values plainly. Before this, answers were 2 or 3 sentences, each
+under 30 words, and correct answers were withheld for style alone ("How many field duplicate samples should be
+collected?" for a 45-word sentence and an 11-word run from PFAS NEMP 3.0). `MAX_TOKENS` in `clients.py` went from
+4000 to 8000: Sonnet 5 thinks by default when no thinking setting is sent, and that counts against the limit.
+After a plain-language review the same day, the prompt also asks, for the easy paragraph: the answer in its first
+words and any condition after it; a first sentence of 20 words or fewer; no document, schedule, table, section or
+Act named there (a name the question uses, such as DWER or PFAS, may stay; guideline value rules are named in
+plain words, 'the PFAS National Environmental Management Plan, version 3.0' and 'the Australian Drinking Water
+Guidelines as updated in 2025', which the numbers check still ties to the right rule); units spelled out
+('micrograms per litre'); and 'For PFAS' first when every cited passage is PFAS guidance and the question does
+not say so. For the whole answer: facts stated directly, never 'the passages say'; no site called polluted or
+contaminated unless its passage does; at most two detail paragraphs. Rule 13 says a question asking for a limit
+or a number is answered by the method or condition the passages give instead: without it, 'What are PFAS limits
+for groundwater?' came back NOT_COVERED twice, although DWER 2021 p. 70 gives the screening approach. No check
+changed.
+
 Verifier rules, all deterministic: every `[n]` and `[Gn]` citation exists and there is at least one; every sentence
 is cited (sentences split at every line break and after any letter or digit, with abbreviations such as "Fig." and
-single initials kept whole); every number appears in a cited passage or in the given guideline values (units
+single initials kept whole; a citation just after a full stop counts for the sentence before it only on the same
+line, so a paragraph that ends uncited is not rescued by a citation opening the next one); every number appears in a cited passage or in the given guideline values (units
 normalised in symbols and words: ug/L, µg/L, μg/L, ng/L, mg/L, "micrograms per litre", "ng/litre", "ug L-1", ppt
 and ppb; a mass with no volume is never traced; percentages only match percentages; dotted section numbers match
 exactly); a concentration must equal the value of a `[G]` marker cited in its own sentence, and when the words
 before it name a rule, a marker of that rule, never a number taken from passage text; when values were given, every
 one is stated next to its own marker, with no wording that picks a rule ("rely on", "takes precedence",
 "supersede", "in force", "outdated" and similar); no verdict wording, paraphrases included ("fine to drink", "poses
-no health risk", "considered safe", "is therefore contaminated"), except inside a condition ("if they suspect it is
+no health risk", "considered safe", "the level considered safe", "unlikely to harm health", "will not harm you",
+"is therefore contaminated"), except inside a condition ("if they suspect it is
 contaminated") or a category word ("clean fill"); no em or en dashes or their look-alikes (U+2015, figure dash,
-two- and three-em dashes); "short sentences": every sentence under 30 words, citations not counted
-(`MAX_SENTENCE_WORDS` in `prompt.py`); "no long quotes": no sentence repeats more than ten words in a row from a
-passage (`MAX_QUOTED_WORDS`); "about the guidance": no sentence talks about what the answer was or was not given
-("no verified value was supplied to quote here", "the passages given"). The last three put the prompt's own writing
-rules into code; a failure names the sentence and passage numbers, never the words, and triggers the one retry.
+two- and three-em dashes); "easy first paragraph": the first paragraph has 1 to 3 sentences
+(`MAX_EASY_SENTENCES` in `prompt.py`), each under 30 words, citations not counted (`MAX_SENTENCE_WORDS`), and it
+holds words, not only citations; "no
+run-on sentences": a sentence in a later paragraph has at most 60 words (`LONG_SENTENCE_WORDS`); "no long quotes": no
+sentence repeats more than ten words in a row from a passage (`MAX_QUOTED_WORDS`), except that a sentence after the
+first paragraph may repeat up to 30 (`MAX_REUSED_WORDS`) from a passage whose document allows reuse with
+attribution (`allows_reuse` in `guidance/manifest.py`: licence lane A and a plain "CC BY" licence, so the ASC NEPM
+Schedule B1 and PFAS NEMP 3.0 and 3.1; the two DWER guidelines and the ADWG fact sheet keep ten everywhere);
+"about the guidance": no sentence talks about what the answer was or was not given ("no verified value was supplied
+to quote here", "the passages given"). The last four put the prompt's own writing rules into code; a failure names
+the sentence and passage numbers, never the words, and triggers the one retry (whose prompt alone quotes the
+passage words that were copied). Every accuracy check reads the
+whole answer, every paragraph. Paragraph breaks are tidied before the checks (`tidy_paragraphs` in `verify.py`): a
+single line break, a blank line or Windows line endings each become one blank line, which is where the website
+starts a new paragraph, and the stored answer is the tidied text. A reply the model service marks as cut off
+(`stop_reason` "max_tokens" or "model_context_window_exceeded", from the API or the CLI) is never checked or shown:
+it is an error with the passages ("The answer was cut off before it was finished."), because a reply cut off just
+after a citation passes every check.
 
 Routing before any model call: a request to state a verdict ("write that the site is contaminated", "confirm in
 writing that the water is safe"; the verb must be followed by "that") gets the fixed guard-rail reply. Other states
@@ -442,10 +489,36 @@ carries its check record, date and model. Rebuilt on 2026-09-24 with Claude Sonn
 answered (all pass every check), 1 guard rail and 1 not covered. Since 25 September 2026 the file also holds a
 `lookup_only` list: every other question in `data/suggested_questions.json`, in the same entry shape, shown as no
 button, so a click on a suggestion is answered from the prepared copy. `--only N` (numbered over both lists) reruns
-question N alone and keeps every other entry byte for byte; it refuses when the stored file used another model or system prompt. After the launch
+question N alone and keeps every other entry byte for byte; it refuses when the stored file used another model or system prompt.
+`--workers N` prepares N questions at a time (a thread pool; the entries, their order and the call count are the
+same whatever N is, and the file is written once). Rebuilt in full on 25 September 2026 for the easy-first prompt
+with `--workers 5` (17 model calls, about 20 seconds): 16 answered, 1 guard rail and 1 not covered, all at their
+intended status except the conceptual site model, withheld only for a copied DWER phrase on its retry, which
+passed on `--only 5` (2 calls). Every sentence of the four answered button answers that cite passages was read
+against its cited page and pinned in the tests; the PFOS answer rests on its verified values. After the launch
 round, question 4 (reporting to DWER) was rerun this way for the new writing checks, and question 1 (the PFOS limit)
 for the compared-quantity fix below; each claim was read against its cited page. Rerun it whenever the search, the index or the
 guideline notes change, or its stored passages go stale (a test compares them with the live pipeline).
+
+How the 25 September 2026 answers were chosen. Code checks prove every number and citation, but not meaning, so a
+separate AI reviewer (Claude, told to read as a WA contaminated-sites practitioner) read every sentence of the 16 written answers against its
+cited page. Each full rebuild traded one slip for another: a statutory duty softened to "should", a guideline example
+stated as the rule, NEMP 3.0's ambient sampling appendix stated as general practice, a condition dropped to shorten
+the easy paragraph, a timeframe paired with the wrong row of a table read as flat text. The prompt gained a rule for
+each kind (rule 9), and passage headers now name the headings above a section ("Part of: Appendix B PFAS ambient
+sampling guideline > ..."). Rebuilding again still left a few answers with a slip, so for those the same pipeline
+wrote several drafts and the reviewer chose one with no error a practitioner would call wrong or misleading. Every
+entry is still unedited pipeline output under the same system prompt; the choice between drafts is the only step outside
+the pipeline. Live answers get no such review, which is why the page says to open each source, and why a scientist decides.
+
+Four questions had no draft that passed that review, so the site no longer offers them. The third button, "What
+should a detailed site investigation report include?", is now "What quality checks should a lab report include?",
+whose prepared answer (until then lookup only) passed: every draft of the old one gave the first five sections of
+the DWER Appendix A checklist as if they were the whole checklist. "What are PFAS limits for groundwater?", "How
+should groundwater samples be collected?" and "What are health investigation levels for soil?" left
+`data/suggested_questions.json` for the same reason, so no suggestion leads to a prepared answer that failed the
+review. `answers.json` was rebuilt from the reviewed entries with no model call (only the NSW entry was redone, for
+its suggestions). All four can still be typed, and are then answered live.
 
 ## Guideline verification
 
@@ -722,7 +795,7 @@ Answers and the web API:
 - Question-box name redaction works by shape: a lone name with no company or place word ("Is Harbourline OK?") is
   not redacted, and a name that looks like guidance ("Water Corporation") is left in.
 - `web/public/data/answers.json` goes stale whenever the search, the index, the prompt or a guideline note
-  changes; rerun `scripts/precompute_answers.py` (local Claude Code CLI, about 16 to 32 model calls).
+  changes; rerun `scripts/precompute_answers.py --workers 5` (local Claude Code CLI, about 16 to 32 model calls).
 - A question whose only searchable content is one plain word gets passages without a written answer, including a
   plain domain word ("What is leaching?"). A named analyte's value in another medium gets passages only too, so
   "What is the HIL A for lead?" is answered by the cited table page, not by the model.
@@ -738,9 +811,38 @@ Answers and the web API:
   short excerpts.
 - `cache_dir()` defaults to `.cache/corpus` in the source checkout; a non-editable install needs
   `EVIDENCELINE_CORPUS_DIR`.
-- The live box now withholds answers over the length or copying limit ("short sentences", "no long quotes"), which
-  costs more retries: two of the six model attempts on the prepared reporting question failed on length, and the
-  prepared PFOS answer passed on its second attempt.
+- The live box withholds answers that break the writing limits ("easy first paragraph", "no run-on sentences", "no
+  long quotes"), which costs retries. Measured on 25 September 2026 with Claude Sonnet 5 through the CLI (10
+  questions, 25 calls): the first easy-first prompt answered 7 of the 10 (3 on the first draft, 4 after the one
+  retry). The model's commonest slips were a sentence without its own citation (one citation for two sentences),
+  a first sentence of 30 to 33 words, and a long set phrase copied from a DWER guideline ("risks to human health,
+  the environment and environmental values"), which keeps the ten-word limit because of its licence. The prompt
+  was tightened for each; rerun on the 3 withheld questions (conceptual site model, reporting to DWER, what a DSI
+  report includes), they were still withheld, and on the last rerun (conceptual site model only) the citation and
+  length slips were gone and only the DWER set phrase remained. On the final prompt (plain-first rules, rule 13,
+  and the retry quoting the copied passage words), measured the same day with 5 questions at a time: 9 of the 10
+  answered before rule 13 (6 on the first draft, 3 after the retry, both copying retries fixed by the quoted
+  words), the tenth ('What are PFAS limits for groundwater?') NOT_COVERED twice; after rule 13 it and two others
+  rerun on the final prompt were answered on the first draft (17 CLI calls in all). The full regeneration of the
+  prepared answers then answered 15 of the 16 questions that reach the model on the first draft, and the
+  sixteenth (conceptual site model) on a rerun.
+- The retry after a copying failure quotes the passage's own words, so it usually fixes them; it can still copy a
+  different set phrase (the conceptual site model's retry copied DWER's 'risks to human health, the environment and
+  environmental values' after the first draft missed a citation).
+- The model sometimes writes more than two detail paragraphs (in the prepared answers: the DSI report, site history,
+  Tier 1 and lab report answers have three), or a one-sentence second paragraph that belongs to the easy one. Code
+  does not count paragraphs, by design: style alone never withholds an answer.
+- Adversarial review of the relaxed checks (25 September 2026, fake replies and 6 real first drafts): every
+  accuracy check held in paragraph 2 (verdicts, uncited sentences, untraced numbers, concentrations from passage
+  text, rule picks, DWER and ADWG runs). Not checked in code, by design (style alone never withholds): the number of
+  detail paragraphs, and a bulleted list ("- ", "* ", a bullet character) or a label such as "In short:" with every
+  line cited; none appeared in 31 real replies, and the website would show them as plain text. The copied-words
+  check reads one sentence at a time, so the same run split over two sentences is not caught (true before too).
+  Code cannot check meaning: two real detail sentences dropped a condition ("exceeding ... does not necessarily
+  constitute a risk if other pathways are controlled" became "does not automatically mean there is a risk") or
+  turned a result into a reason (the ADWG's BMDL10 "led to a lower guideline value" became a reason for choosing it).
+  Longer detail sentences leave more room for this, so read the detail paragraphs against their pages when the
+  prepared answers are regenerated.
 - The prepared reporting answer says "such as the owner, occupier or an auditor"; DWER 2025 section 6.1 (p. 20) says
   "an auditor engaged to provide a report that is required", so that wording is a simplification.
 - A failed Turnstile check uses up one of that address's 120 questions for the hour (that limit runs first, so a

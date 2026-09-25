@@ -1,7 +1,9 @@
-"""The prompt's two plain-wording rules, checked in code by the answer pipeline: every sentence under 30 words
-(rule 2) and no run of more than ten words copied from a passage (rule 9). Also the near-miss wording of a withheld
-borderline answer, requests to declare a verdict, and the wording the prompt asks for since the review of 25 September
-2026 (plain names, 'must not', short sentences in the model's own words). No model, no real index."""
+"""The prompt's plain-wording rules, checked in code by the answer pipeline: an easy first paragraph of 1 to 3
+sentences, each under 30 words (rule 2), no later sentence over 60 words (rule 3) and no run of more than ten words
+copied from a passage (rule 9; the licence cases are in test_answer_easy_first.py). Also the near-miss wording of a
+withheld borderline answer, requests to declare a verdict, and the wording the prompt asks for since the review of
+25 September 2026 (plain names, 'must not', an easy first paragraph in the model's own words). No model, no real
+index."""
 
 from __future__ import annotations
 
@@ -14,7 +16,14 @@ import pytest
 from evidenceline.answer import FakeClient, answer
 from evidenceline.answer import pipeline as pipeline_module
 from evidenceline.answer.clients import ModelReply
-from evidenceline.answer.prompt import MAX_QUOTED_WORDS, MAX_SENTENCE_WORDS, REMINDER, SYSTEM, build_prompt
+from evidenceline.answer.prompt import (
+    LONG_SENTENCE_WORDS,
+    MAX_QUOTED_WORDS,
+    MAX_SENTENCE_WORDS,
+    REMINDER,
+    SYSTEM,
+    build_prompt,
+)
 from evidenceline.answer.routing import asks_for_verdict
 from evidenceline.answer.wording import DASHES
 from evidenceline.guidance.models import GuidanceSearch
@@ -55,10 +64,17 @@ def _failed(result_checks: list[tuple[str, bool]]) -> list[str]:
     return [name for name, passed in result_checks if not passed]
 
 
+FLAT_SYSTEM = " ".join(SYSTEM.split())
+"""The system prompt with its line breaks read as spaces."""
+
+
 def test_the_prompt_states_the_limits_the_code_checks() -> None:
-    assert f"under {MAX_SENTENCE_WORDS} words" in SYSTEM
+    assert f"1 to 3 sentences, each under {MAX_SENTENCE_WORDS} words" in FLAT_SYSTEM
+    assert f"keep every sentence to {LONG_SENTENCE_WORDS} words or fewer" in FLAT_SYSTEM
+    assert f"never over {LONG_SENTENCE_WORDS} words" in REMINDER
     assert MAX_QUOTED_WORDS == 10
-    assert "do not quote more than ten words in a row" in SYSTEM
+    assert "do not quote more than ten words in a row" in FLAT_SYSTEM
+    assert "The easy paragraph is always in your own words" in FLAT_SYSTEM
 
 
 def test_the_test_texts_are_what_they_claim() -> None:
@@ -70,7 +86,8 @@ def test_a_short_paraphrased_answer_passes_both_checks(index: Path, searches: li
     out = answer(QUESTION, FakeClient(reply=SHORT), index_path=index)
     assert out.status == "answered"
     checks = {c.name: c for c in out.verification.checks}
-    assert checks["short sentences"].passed
+    assert checks["easy first paragraph"].passed
+    assert checks["no run-on sentences"].passed
     assert checks["no long quotes"].passed
     assert out.verification.summary == f"All {len(checks)} checks passed."
 
@@ -81,9 +98,9 @@ def test_a_sentence_of_30_words_or_more_is_withheld_after_one_retry(index: Path,
     assert out.status == "passages_only"
     assert out.answer is None
     assert len(client.calls) == 2
-    assert _failed([(c.name, c.passed) for c in out.verification.checks]) == ["short sentences"]
-    assert "sentence 1 of 1 has" in client.calls[1]
-    assert "split or shorten" in client.calls[1]
+    assert _failed([(c.name, c.passed) for c in out.verification.checks]) == ["easy first paragraph"]
+    assert "sentence 1, in the first paragraph, has" in client.calls[1]
+    assert "Open with an easy paragraph of 1 to 3 sentences, each under 30 words" in client.calls[1]
     assert LONG_SENTENCE not in client.calls[1], "the retry never shows the model its own answer"
     assert "why each sampling point" not in json.dumps(out.model_dump())
 
@@ -92,7 +109,7 @@ def test_citations_and_a_lone_full_stop_are_not_counted_as_words(index: Path, se
     words = ["word"] * (MAX_SENTENCE_WORDS - 1)
     reply = " ".join(words) + " [1][2] ."
     out = answer(QUESTION, FakeClient(reply=reply), index_path=index)
-    length = next(c for c in out.verification.checks if c.name == "short sentences")
+    length = next(c for c in out.verification.checks if c.name == "easy first paragraph")
     assert length.passed, length.detail
 
 
@@ -103,7 +120,8 @@ def test_copying_more_than_ten_words_from_a_passage_is_withheld(index: Path, sea
     failed = [c for c in out.verification.checks if not c.passed]
     assert [c.name for c in failed] == ["no long quotes"]
     assert failed[0].detail == (
-        f"sentence 1 copies more than {MAX_QUOTED_WORDS} words in a row from passage 1: paraphrase it."
+        f"sentence 1 copies more than {MAX_QUOTED_WORDS} words in a row from passage 1: paraphrase it, since the "
+        "first paragraph is always in your own words."
     )
     assert "conceptual site model" not in out.explanation, "the detail names the sentence, never the words"
 
@@ -186,8 +204,9 @@ def test_a_question_about_contamination_is_not_a_request_to_declare(question: st
 # --- the review of 25 September 2026: wording the prompt asks for, and a question that cannot reshape the prompt ---
 
 
-def test_the_reminder_asks_for_short_sentences_in_the_models_own_words() -> None:
-    assert "2 or 3 short sentences of about 20 words each" in REMINDER
+def test_the_reminder_asks_for_an_easy_paragraph_in_the_models_own_words() -> None:
+    assert "Start with an easy paragraph of 1 to 3 sentences, each under 30 words" in REMINDER
+    assert "everyday words for someone with no science background" in REMINDER
     assert "never copy more than ten words in a row from a passage" in REMINDER
     assert not any(dash in REMINDER for dash in DASHES)
 
@@ -203,7 +222,7 @@ def test_the_reminder_asks_for_short_sentences_in_the_models_own_words() -> None
     ],
 )
 def test_the_prompt_asks_for_plain_names_and_plain_prohibitions(rule: str) -> None:
-    assert rule in SYSTEM
+    assert rule in FLAT_SYSTEM
 
 
 def test_a_question_cannot_close_its_block_in_the_prompt() -> None:

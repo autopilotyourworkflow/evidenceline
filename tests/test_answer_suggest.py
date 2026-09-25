@@ -192,7 +192,7 @@ def test_a_misspelt_question_is_offered_a_spelling_and_not_rewritten() -> None:
     assert result.question == typed
     assert result.did_you_mean == "what is a detailed site investigation"
     assert client.calls == []  # the misspelt question never reaches the model
-    assert "What should a detailed site investigation report include?" in result.suggestions
+    assert "What is a preliminary site investigation?" in result.suggestions
 
 
 @needs_index
@@ -253,24 +253,32 @@ def test_a_shared_prefix_or_a_generic_word_is_not_a_match(asked: str, not_first:
     assert suggestions(asked)[0] != not_first
 
 
-def test_nothing_in_common_gives_the_default_questions() -> None:
-    assert suggestions("write me a poem") == QUESTIONS[: POOL["defaults"]]
+@pytest.mark.parametrize(
+    "asked",
+    [
+        "write me a poem",
+        # no question in the pool names groundwater, lead or soil, so these get the defaults, and never the
+        # drinking-water question
+        "groundwater monitoring wells",
+        "What is the NSW limit for lead in soil?",
+    ],
+)
+def test_nothing_in_common_gives_the_default_questions(asked: str) -> None:
+    assert suggestions(asked) == QUESTIONS[: POOL["defaults"]]
 
 
 @pytest.mark.parametrize(
     ("asked", "first"),
     [
-        ("groundwater monitoring wells", "What are PFAS limits for groundwater?"),
         ("how do I check the lab data quality", "What quality checks should a lab report include?"),
         ("who audits a site", "What does a contaminated sites auditor do?"),
-        # a soil question gets the soil question first, not the drinking-water one
-        ("Victorian PFAS soil limits", "What are health investigation levels for soil?"),
-        ("What is the NSW limit for lead in soil?", "What are health investigation levels for soil?"),
-        # the search's own synonyms: acronyms and everyday words meet the spelt-out questions
+        # a PFAS soil question gets the plain PFAS question first, not the drinking-water one
+        ("Victorian PFAS soil limits", "What is PFAS?"),
+        ("NSW PFAS in dirt", "What is PFAS?"),
+        # the search's own synonyms: acronyms meet the spelt-out questions
         ("NSW SAQP requirements", "What is a sampling and analysis quality plan?"),
-        ("NSW PFAS in dirt", "What are health investigation levels for soil?"),
-        ("Queensland HIL for arsenic", "What are health investigation levels for soil?"),
-        ("NSW DSI requirements", "What should a detailed site investigation report include?"),
+        ("Queensland HIL for arsenic", "What is a preliminary site investigation?"),
+        ("NSW DSI requirements", "What is a preliminary site investigation?"),
         # a PFAS question gets the plain PFAS question
         ("What is the Queensland PFAS policy for firefighting foam?", "What is PFAS?"),
     ],

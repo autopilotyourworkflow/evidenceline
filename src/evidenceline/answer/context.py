@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from evidenceline.guidance.manifest import allows_reuse
 from evidenceline.guidance.models import Passage
 
 MAX_CONTEXT_WORDS = 900
@@ -25,11 +26,16 @@ _DASH = re.compile(r"\s*[\u2013\u2014]\s*")
 
 @dataclass(frozen=True, slots=True)
 class PassageText:
-    """One numbered passage as the model sees it: a header line and the page text."""
+    """One numbered passage as the model sees it: a header line and the page text.
+
+    ``reusable`` is True when the passage's document allows reuse with attribution (CC BY, see
+    :func:`evidenceline.guidance.manifest.allows_reuse`). It is never shown to the model; only the check on copied
+    words reads it."""
 
     number: int
     header: str
     body: str
+    reusable: bool = False
 
     @property
     def text(self) -> str:
@@ -74,7 +80,15 @@ def _page_text(db: sqlite3.Connection, passage: Passage) -> str | None:
 
 
 def header(number: int, passage: Passage) -> str:
-    return f"[{number}] {passage.document_title}, {passage.edition}. {passage.location}."
+    """'[1] Title, edition. p. 216 (PDF p. 225), B.3.5 Quality control samples. Part of: Appendix B PFAS ambient
+    sampling guideline > B.3 Sampling design.' The headings above the passage's own section are named, so the model
+    can see when a page belongs to a narrower part of a document (an appendix for ambient sampling, a worked example)
+    and say so instead of stating it as the general rule."""
+    line = f"[{number}] {passage.document_title}, {passage.edition}. {passage.location}."
+    path = passage.section_path or ""
+    if " > " not in path:
+        return line
+    return f"{line} Part of: {path.rsplit(' > ', 1)[0]}."
 
 
 def _page_texts(passages: Sequence[Passage], index_path: Path) -> list[str | None]:
@@ -95,5 +109,6 @@ def passage_texts(passages: Sequence[Passage], index_path: Path) -> list[Passage
     texts: list[PassageText] = []
     for number, (passage, found) in enumerate(zip(passages, _page_texts(passages, index_path), strict=True), 1):
         body = _trim(_words(found), MAX_CONTEXT_WORDS) if found else passage.excerpt
-        texts.append(PassageText(number, tidy_dashes(header(number, passage)), tidy_dashes(body)))
+        reusable = allows_reuse(passage.licence_lane, passage.licence)
+        texts.append(PassageText(number, tidy_dashes(header(number, passage)), tidy_dashes(body), reusable))
     return texts
