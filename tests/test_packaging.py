@@ -25,7 +25,7 @@ def test_api_extra_and_api_group_list_the_same_packages() -> None:
     extra = cast(list[str], data["project"]["optional-dependencies"]["api"])
     group = cast(list[str], data["dependency-groups"]["api"])
     assert extra == group
-    assert {d.split(">")[0] for d in extra} == {"fastapi", "uvicorn", "anthropic"}
+    assert {d.split(">")[0] for d in extra} == {"fastapi", "uvicorn", "anthropic", "certifi"}
 
 
 def test_stdio_server_does_not_import_the_api_packages() -> None:

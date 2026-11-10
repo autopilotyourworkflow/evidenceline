@@ -25,10 +25,13 @@ classifiers = [
 [project.optional-dependencies]
 # The hosted web API (src/evidenceline/api): the website's question box and the remote MCP connector.
 # Install with `pip install ".[api]"`. The stdio MCP server never needs these.
+# certifi: the Anthropic client checks HTTPS certificates against certifi's list, not the system's; 2026.10.19 is the
+# first release that stops trusting the eMudhra certificates whose keys were stolen (October 2026).
 api = [
     "fastapi>=0.141,<1",
     "uvicorn>=0.53",
     "anthropic>=1.8,<2",
+    "certifi>=2026.10.19",
 ]
 
 [project.scripts]
@@ -42,6 +45,7 @@ api = [
     "fastapi>=0.141,<1",
     "uvicorn>=0.53",
     "anthropic>=1.8,<2",
+    "certifi>=2026.10.19",
 ]
 # Only needed to build the guidance search index (scripts/build_index.py), not to run the server.
 corpus = [
